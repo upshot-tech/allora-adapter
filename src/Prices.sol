@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
+import { IPrices } from './interface/IPrices.sol';
 import { IAggregator } from './interface/IAggregator.sol';
 import { IFeeHandler } from './interface/IFeeHandler.sol';
 import { PriceData } from './interface/IPrices.sol';
@@ -9,7 +10,7 @@ import { Math } from "../lib/openzeppelin-contracts/contracts/utils/math/Math.so
 import { Ownable2Step } from "../lib/openzeppelin-contracts/contracts/access/Ownable2Step.sol";
 
 
-contract Prices is Ownable2Step {
+contract Prices is IPrices, Ownable2Step {
 
     uint256 public minPrices = 1;
 
@@ -60,8 +61,9 @@ contract Prices is Ownable2Step {
 
 
     function getPrice(
-        PriceData[] calldata priceData
-    ) external payable returns (uint256 price) {
+        PriceData[] calldata priceData,
+        bytes calldata
+    ) external payable override returns (uint256 price) {
         if (!switchedOn) {
             revert UpshotOracleNotSwitchedOn();
         }

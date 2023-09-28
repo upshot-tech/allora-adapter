@@ -18,4 +18,8 @@ struct PriceData {
  * @title Prices Interface
  */
 interface IPrices {
+    function getPrice(
+        PriceData[] calldata priceData,
+        bytes calldata extraData
+    ) external payable returns (uint256 price);
 }
