@@ -2,6 +2,7 @@
 pragma solidity ^0.8.13;
 
 import { IAggregator } from './interface/IAggregator.sol';
+import { IFeeHandler } from './interface/IFeeHandler.sol';
 import { PriceData } from './interface/IPrices.sol';
 import { ECDSA } from "../lib/openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
 import { Math } from "../lib/openzeppelin-contracts/contracts/utils/math/Math.sol";
@@ -22,11 +23,7 @@ contract Prices is Ownable2Step {
 
     IAggregator aggregator;
 
-    uint256 public priceFee = 0.001 ether;
-
-    uint256 public protocolFeePortion = 0.2 ether;
-
-    address public protocolFeeReceiver;
+    IFeeHandler feeHandler;
 
     bool public switchedOn = true;
 
@@ -34,12 +31,12 @@ contract Prices is Ownable2Step {
     constructor(
         address _admin,
         address _aggregator,
-        address _protocolFeeReceiver
+        address _feeHandler
     ) {
         _transferOwnership(_admin);
 
         aggregator = IAggregator(_aggregator);
-        protocolFeeReceiver = _protocolFeeReceiver;
+        feeHandler = IFeeHandler(_feeHandler);
     }
 
     // ***************************************************************
@@ -55,10 +52,10 @@ contract Prices is Ownable2Step {
     error UpshotOracleDuplicateSigner();
     error UpshotOracleNotEnoughPrices();
     error UpshotOracleFeedMismatch();
+    error UpshotOracleInvalidFeed();
     error UpshotOracleInvalidNonce();
     error UpshotOracleNonceMismatch();
     error UpshotOracleInsufficientPayment();
-    error UpshotOracleEthTransferFailed();
     error UpshotOracleNotSwitchedOn();
 
 
@@ -69,7 +66,7 @@ contract Prices is Ownable2Step {
             revert UpshotOracleNotSwitchedOn();
         }
 
-        if (msg.value < priceFee) {
+        if (msg.value < feeHandler.totalFee()) {
             revert UpshotOracleInsufficientPayment();
         }
 
@@ -83,6 +80,10 @@ contract Prices is Ownable2Step {
         address[] memory priceProviders = new address[](priceDataCount);
         uint256 feedId = priceData[0].feedId;
         uint256 nonce = priceData[0].feedId;
+
+        if (bytes(feed[feedId]).length == 0) {
+            revert UpshotOracleInvalidFeed();
+        }
 
         _validateNonce(feedId, nonce);
 
@@ -138,7 +139,7 @@ contract Prices is Ownable2Step {
 
         price = aggregator.aggregate(tokenPrices, "");
 
-        _payFees(priceProviders);
+        feeHandler.handleFees{value: msg.value}(priceProviders, "");
     }
 
     /// @notice  
@@ -176,24 +177,6 @@ contract Prices is Ownable2Step {
         feedNonce[feedId] = nonce;
     }
 
-    function _payFees(address[] memory priceProviders) internal {
-        uint256 protocolFee = Math.mulDiv(priceFee, protocolFeePortion, 1 ether);
-        uint256 priceProviderFee = (priceFee - protocolFee) / priceProviders.length;
-
-        _safeTransferETH(protocolFeeReceiver, protocolFee);
-
-        for (uint i = 0; i < priceProviders.length; i++) {
-            _safeTransferETH(priceProviders[i], priceProviderFee);
-        }
-    }
-
-    function _safeTransferETH(address to, uint256 value) internal {
-        (bool success, ) = to.call{value: value}(new bytes(0));
-        if (!success) {
-            revert UpshotOracleEthTransferFailed();
-        }
-    }
-
     // ***************************************************************
     // * ========================= ADMIN =========================== *
     // ***************************************************************
@@ -229,20 +212,6 @@ contract Prices is Ownable2Step {
 
     function updateAggregator(address aggregator_) external onlyOwner {
         aggregator = IAggregator(aggregator_);
-    }
-
-    function updatePriceFee(uint256 priceFee_) external onlyOwner {
-        priceFee = priceFee_;
-    }
-
-    function updateProtocolFeePortion(uint256 protocolFeePortion_) external onlyOwner {
-        if (protocolFeePortion_ <= 1 ether) {
-            protocolFeePortion = protocolFeePortion_;
-        }
-    }
-
-    function updateProtocolFeeReceiver(address protocolFeeReceiver_) external onlyOwner {
-        protocolFeeReceiver = protocolFeeReceiver_;
     }
 
     function turnOff() external onlyOwner {
