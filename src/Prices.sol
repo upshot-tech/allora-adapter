@@ -5,9 +5,10 @@ import { IAggregator } from './interface/IAggregator.sol';
 import { PriceData } from './interface/IPrices.sol';
 import { ECDSA } from "../lib/openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
 import { Math } from "../lib/openzeppelin-contracts/contracts/utils/math/Math.sol";
+import { Ownable2Step } from "../lib/openzeppelin-contracts/contracts/access/Ownable2Step.sol";
 
 
-contract Prices {
+contract Prices is Ownable2Step {
 
     uint256 public minPrices = 1;
 
@@ -17,6 +18,8 @@ contract Prices {
 
     mapping(uint256 feedId => uint256 nonce) public feedNonce;
 
+    mapping(uint256 feedId => string title) public feed;
+
     IAggregator aggregator;
 
     uint256 public priceFee = 0.001 ether;
@@ -25,10 +28,16 @@ contract Prices {
 
     address public protocolFeeReceiver;
 
+    bool public switchedOn = true;
+
+
     constructor(
+        address _admin,
         address _aggregator,
         address _protocolFeeReceiver
     ) {
+        _transferOwnership(_admin);
+
         aggregator = IAggregator(_aggregator);
         protocolFeeReceiver = _protocolFeeReceiver;
     }
@@ -50,11 +59,16 @@ contract Prices {
     error UpshotOracleNonceMismatch();
     error UpshotOracleInsufficientPayment();
     error UpshotOracleEthTransferFailed();
+    error UpshotOracleNotSwitchedOn();
 
 
     function getPrice(
         PriceData[] calldata priceData
     ) external payable returns (uint256 price) {
+        if (!switchedOn) {
+            revert UpshotOracleNotSwitchedOn();
+        }
+
         if (msg.value < priceFee) {
             revert UpshotOracleInsufficientPayment();
         }
@@ -145,6 +159,9 @@ contract Prices {
         ));
     }
 
+    // ***************************************************************
+    // * ==================== INTERNAL HELPERS ===================== *
+    // ***************************************************************
     /**
      * @dev Update the nonce for the collection and revert if the nonce is invalid
      *
@@ -175,5 +192,64 @@ contract Prices {
         if (!success) {
             revert UpshotOracleEthTransferFailed();
         }
+    }
+
+    // ***************************************************************
+    // * ========================= ADMIN =========================== *
+    // ***************************************************************
+    function updateMinPrices(uint256 minPrices_) external onlyOwner {
+        if (minPrices_ > 0) {
+            minPrices = minPrices_;
+        }
+    }
+
+    function updatePriceValiditySeconds(uint256 priceValiditySeconds_) external onlyOwner {
+        if (priceValiditySeconds_ > 0) {
+            priceValiditySeconds = priceValiditySeconds_;
+        }
+    }
+
+    function addValidSigner(address signer) external onlyOwner {
+        validSigner[signer] = true;
+    }
+
+    function removeValidSigner(address signer) external onlyOwner {
+        validSigner[signer] = false;
+    }
+
+    function addFeed(uint256 feedId, string memory title) external onlyOwner {
+        if (bytes(title).length > 0) {
+            feed[feedId] = title;
+        }
+    }
+
+    function removeFeed(uint256 feedId) external onlyOwner {
+        delete feed[feedId];
+    }
+
+    function updateAggregator(address aggregator_) external onlyOwner {
+        aggregator = IAggregator(aggregator_);
+    }
+
+    function updatePriceFee(uint256 priceFee_) external onlyOwner {
+        priceFee = priceFee_;
+    }
+
+    function updateProtocolFeePortion(uint256 protocolFeePortion_) external onlyOwner {
+        if (protocolFeePortion_ <= 1 ether) {
+            protocolFeePortion = protocolFeePortion_;
+        }
+    }
+
+    function updateProtocolFeeReceiver(address protocolFeeReceiver_) external onlyOwner {
+        protocolFeeReceiver = protocolFeeReceiver_;
+    }
+
+    function turnOff() external onlyOwner {
+        switchedOn = false;
+    }
+
+    function turnOn() external onlyOwner {
+        switchedOn = true;
     }
 }
