@@ -24,7 +24,7 @@ contract Prices is Ownable2Step {
 
     uint256 public priceFee = 0.001 ether;
 
-    uint256 public protocolFeePortion = 0.1 ether;
+    uint256 public protocolFeePortion = 0.2 ether;
 
     address public protocolFeeReceiver;
 
@@ -45,7 +45,7 @@ contract Prices is Ownable2Step {
     // ***************************************************************
     // * ========================= EVENTS ========================== *
     // ***************************************************************
-    event UpshotOracleAdminSetAuthenticator(address authenticator);
+    // TODO
 
     // ***************************************************************
     // * ========================= ERRORS ========================== *
