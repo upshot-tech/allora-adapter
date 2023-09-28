@@ -9,9 +9,10 @@ contract AverageAggregator is IAggregator {
         bytes memory
     ) external pure returns (uint256 value) {
         uint256 sum = 0;
-        for (uint256 i = 0; i < values.length; i++) {
+        uint256 countValues = values.length;
+        for (uint256 i = 0; i < countValues; i++) {
             sum += values[i];
         }
-        return sum / values.length;
+        return sum / countValues;
     }
 }
