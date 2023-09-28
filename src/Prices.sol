@@ -81,7 +81,7 @@ contract Prices is IPrices, Ownable2Step {
         uint256[] memory tokenPrices = new uint256[](priceDataCount);
         address[] memory priceProviders = new address[](priceDataCount);
         uint256 feedId = priceData[0].feedId;
-        uint256 nonce = priceData[0].feedId;
+        uint256 nonce = priceData[0].nonce;
 
         if (bytes(feed[feedId]).length == 0) {
             revert UpshotOracleInvalidFeed();
@@ -124,7 +124,7 @@ contract Prices is IPrices, Ownable2Step {
                 revert UpshotOracleInvalidSigner();
             }
 
-            for (uint256 j = 0; j < i; i++) {
+            for (uint256 j = 0; j < i; j++) {
                 if (signer == priceProviders[j]) {
                     revert UpshotOracleDuplicateSigner();
                 }
