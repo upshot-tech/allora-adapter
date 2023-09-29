@@ -3,4 +3,12 @@ src = "src"
 out = "out"
 libs = ["lib"]
 
+[fmt]
+bracket_spacing = true
+multiline_func_header = "preserve"
+number_underscore = "thousands"
+quote_style = "single"
+line_length = 100
+ignore = ["src/governance/*"]
+
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options

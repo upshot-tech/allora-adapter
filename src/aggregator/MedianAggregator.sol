@@ -20,7 +20,7 @@ contract MedianAggregator is IAggregator {
             // first, find the min and max values
             min = values[0];
             max = values[0];
-            for(uint i = 1; i < count; i++) {
+            for(uint256 i = 1; i < count; i++) {
                 value = values[i];
                 if (value < min) min = value;
                 if (value > max) max = value;
@@ -30,10 +30,10 @@ contract MedianAggregator is IAggregator {
 
             // now, remove the min and max.
             uint[] memory newValues = new uint[](count - 2);
-            uint j;
+            uint256 j;
             bool maxRemoved;
             bool minRemoved;
-            for(uint i = 0; i < count; i++) {
+            for(uint256 i = 0; i < count; i++) {
                 value = values[i];
                 if (value == min && !minRemoved) minRemoved = true;
                 else if (value == max && !maxRemoved) maxRemoved = true;
