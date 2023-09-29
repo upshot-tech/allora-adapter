@@ -29,7 +29,7 @@ contract MedianAggregator is IAggregator {
             if (min == max) return min;
 
             // now, remove the min and max.
-            uint[] memory newValues = new uint[](count - 2);
+            uint256[] memory newValues = new uint256[](count - 2);
             uint256 j;
             bool maxRemoved;
             bool minRemoved;
