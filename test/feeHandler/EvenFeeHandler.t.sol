@@ -49,6 +49,17 @@ contract EvenFeeHandlerTest is Test {
         assertEq(address(4).balance, 0.2 ether);
     }
 
+    function test_evenFeeHandlerCantHandleTinyFees() public {
+        address[] memory feeReceivers = new address[](4);
+        feeReceivers[0] = address(1);
+        feeReceivers[1] = address(2);
+        feeReceivers[2] = address(3);
+        feeReceivers[3] = address(4);
+
+        vm.expectRevert(abi.encodeWithSignature("UpshotOracleEvenFeeHandlerFeeTooLow()"));
+        evenFeeHandler.handleFees{value: 50}(feeReceivers, "");
+    }
+
     // ***************************************************************
     // * ============ UPDATE PROTOCOL FEE PORTION ================== *
     // ***************************************************************
