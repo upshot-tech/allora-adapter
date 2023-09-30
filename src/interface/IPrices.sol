@@ -14,10 +14,26 @@ struct PriceData {
     bytes extraData;
 }
 
+struct Feed { 
+    string title;
+    bool isValid;
+    uint256 nonce;
+}
+
+// ***************************************************************
+// * ======================= INTERFACE ========================= *
+// ***************************************************************
+
 /**
  * @title Prices Interface
  */
 interface IPrices {
+
+    /**
+     * @notice Get an aggregated price for a given feed
+     * 
+     * @param priceData The price data to aggregate
+     */
     function getPrice(
         PriceData[] calldata priceData,
         bytes calldata extraData

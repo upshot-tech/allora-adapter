@@ -4,7 +4,13 @@ pragma solidity ^0.8.13;
 import { IAggregator } from '../interface/IAggregator.sol';
 import { Math } from "../../lib/openzeppelin-contracts/contracts/utils/math/Math.sol";
 
+/**
+ * @title MedianAggregator
+ * @notice Aggregator that returns the median of the values
+ */
 contract MedianAggregator is IAggregator {
+
+    /// @inheritdoc IAggregator
     function aggregate(
         uint256[] memory values, 
         bytes memory

@@ -3,7 +3,13 @@ pragma solidity ^0.8.13;
 
 import { IAggregator } from '../interface/IAggregator.sol';
 
+/**
+ * @title AverageAggregator
+ * @notice Aggregator that returns the average of the values
+ */
 contract AverageAggregator is IAggregator {
+
+    /// @inheritdoc IAggregator
     function aggregate(
         uint256[] memory values, 
         bytes memory
