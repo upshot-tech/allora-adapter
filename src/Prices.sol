@@ -101,6 +101,8 @@ contract Prices is IPrices, Ownable2Step {
                 revert UpshotOracleNonceMismatch();
             }
 
+            // add a statement that the nonce is nonce + 1
+
             if (
                 block.timestamp < data.timestamp ||
                 data.timestamp + priceValiditySeconds < block.timestamp 
@@ -172,7 +174,7 @@ contract Prices is IPrices, Ownable2Step {
      * @param nonce The new nonce
      */
     function _validateNonce(uint256 feedId, uint256 nonce) internal {
-        if (nonce < feedNonce[feedId]) {
+        if (nonce != feedNonce[feedId] + 1) {
             revert UpshotOracleInvalidNonce();
         }
 
