@@ -31,13 +31,13 @@
             <td class="headerValue">lcov.info</td>
             <td></td>
             <td class="headerItem">Lines:</td>
-            <td class="headerCovTableEntry">16</td>
+            <td class="headerCovTableEntry">17</td>
             <td class="headerCovTableEntry">18</td>
-            <td class="headerCovTableEntryMed">88.9 %</td>
+            <td class="headerCovTableEntryHi">94.4 %</td>
           </tr>
           <tr>
             <td class="headerItem">Date:</td>
-            <td class="headerValue">2023-09-30 08:28:19</td>
+            <td class="headerValue">2023-09-30 08:29:54</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntry">4</td>
@@ -109,9 +109,9 @@
 <a name="47"><span class="lineNum">      47 </span>            :         address[] memory feeReceivers, </a>
 <a name="48"><span class="lineNum">      48 </span>            :         bytes memory</a>
 <a name="49"><span class="lineNum">      49 </span>            :     ) external payable {</a>
-<a name="50"><span class="lineNum">      50 </span><span class="lineCov">          2 :         uint256 fee = msg.value;</span></a>
-<a name="51"><span class="lineNum">      51 </span><span class="lineCov">          2 :         if (fee &lt; 1_000) {</span></a>
-<a name="52"><span class="lineNum">      52 </span><span class="lineNoCov">          0 :             revert UpshotOracleEvenFeeHandlerFeeTooLow();</span></a>
+<a name="50"><span class="lineNum">      50 </span><span class="lineCov">          3 :         uint256 fee = msg.value;</span></a>
+<a name="51"><span class="lineNum">      51 </span><span class="lineCov">          3 :         if (fee &lt; 1_000) {</span></a>
+<a name="52"><span class="lineNum">      52 </span><span class="lineCov">          1 :             revert UpshotOracleEvenFeeHandlerFeeTooLow();</span></a>
 <a name="53"><span class="lineNum">      53 </span>            :         }</a>
 <a name="54"><span class="lineNum">      54 </span>            : </a>
 <a name="55"><span class="lineNum">      55 </span><span class="lineCov">          2 :         uint256 protocolFee = Math.mulDiv(fee, protocolFeePortion, 1 ether);</span></a>
