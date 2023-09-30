@@ -32,14 +32,14 @@ contract EvenFeeHandler is IFeeHandler, Ownable2Step {
     error UpshotOracleEvenFeeHandlerEthTransferFailed();
 
     constructor(
-        address _admin,
-        address _protocolFeeReceiver
+        address admin_,
+        address protocolFeeReceiver_
     ) {
-        _transferOwnership(_admin);
+        _transferOwnership(admin_);
 
-        protocolFeeReceiver = _protocolFeeReceiver;
+        protocolFeeReceiver = protocolFeeReceiver_;
 
-        emit UpshotOracleEvenFeeHandlerAdminUpdatedProtocolFeeReceiver(_protocolFeeReceiver);
+        emit UpshotOracleEvenFeeHandlerAdminUpdatedProtocolFeeReceiver(protocolFeeReceiver_);
     }
 
 

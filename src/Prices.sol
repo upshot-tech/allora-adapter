@@ -34,14 +34,17 @@ contract Prices is IPrices, Ownable2Step {
     bool public switchedOn = true;
 
     constructor(
-        address _admin,
-        address _aggregator,
-        address _feeHandler
+        address admin_,
+        address aggregator_,
+        address feeHandler_
     ) {
-        _transferOwnership(_admin);
+        _transferOwnership(admin_);
 
-        aggregator = IAggregator(_aggregator);
-        feeHandler = IFeeHandler(_feeHandler);
+        aggregator = IAggregator(aggregator_);
+        emit UpshotOracleV2PricesAdminUpdatedAggregator(aggregator_);
+
+        feeHandler = IFeeHandler(feeHandler_);
+            emit UpshotOracleV2PricesAdminUpdatedFeeHandler(feeHandler_);
     }
 
     // ***************************************************************
