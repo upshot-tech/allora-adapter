@@ -67,22 +67,27 @@ contract Prices is IPrices, Ownable2Step {
     event UpshotOracleV2PricesAdminUpdatedFeeHandler(address feeHandler);
     event UpshotOracleV2PricesAdminSwitchedOff();
     event UpshotOracleV2PricesAdminSwitchedOn();
-    event UpshotOracleEvenFeeHandlerAdminUpdatedFeePerPrice(uint256 feePerPrice);
+    event UpshotOracleV2AdminUpdatedFeePerPrice(uint256 feePerPrice);
 
     // ***************************************************************
     // * ========================= ERRORS ========================== *
     // ***************************************************************
 
-    error UpshotOracleInvalidPriceTime();
-    error UpshotOracleInvalidSigner();
-    error UpshotOracleDuplicateSigner();
-    error UpshotOracleNotEnoughPrices();
-    error UpshotOracleFeedMismatch();
-    error UpshotOracleInvalidFeed();
-    error UpshotOracleInvalidNonce();
-    error UpshotOracleNonceMismatch();
-    error UpshotOracleInsufficientPayment();
-    error UpshotOracleNotSwitchedOn();
+    error UpshotOracleV2InvalidPriceTime();
+    error UpshotOracleV2InvalidSigner();
+    error UpshotOracleV2DuplicateSigner();
+    error UpshotOracleV2NotEnoughPrices();
+    error UpshotOracleV2FeedMismatch();
+    error UpshotOracleV2InvalidFeed();
+    error UpshotOracleV2InvalidNonce();
+    error UpshotOracleV2NonceMismatch();
+    error UpshotOracleV2InsufficientPayment();
+    error UpshotOracleV2NotSwitchedOn();
+    error UpshotOracleV2InvalidTotalFee();
+    error UpshotOracleV2InvalidFeeHandler();
+    error UpshotOracleV2InvalidAggregator();
+    error UpshotOracleV2PricesInvalidMinPrices();
+    error UpshotOracleV2InvalidPriceValiditySeconds();
 
     // ***************************************************************
     // * ================== USER INTERFACE ========================= *
@@ -94,17 +99,17 @@ contract Prices is IPrices, Ownable2Step {
         bytes calldata
     ) external payable override returns (uint256 price) {
         if (!switchedOn) {
-            revert UpshotOracleNotSwitchedOn();
+            revert UpshotOracleV2NotSwitchedOn();
         }
 
         if (msg.value < feePerPrice) {
-            revert UpshotOracleInsufficientPayment();
+            revert UpshotOracleV2InsufficientPayment();
         }
 
         uint256 priceDataCount = priceData.length;
 
         if (priceDataCount == 0 || priceDataCount < minPrices) {
-            revert UpshotOracleNotEnoughPrices();
+            revert UpshotOracleV2NotEnoughPrices();
         }
 
         uint256[] memory tokenPrices = new uint256[](priceDataCount);
@@ -113,7 +118,7 @@ contract Prices is IPrices, Ownable2Step {
         uint256 nonce = priceData[0].nonce;
 
         if (!feed[feedId].isValid) {
-            revert UpshotOracleInvalidFeed();
+            revert UpshotOracleV2InvalidFeed();
         }
 
         _validateNonce(feedId, nonce);
@@ -123,11 +128,11 @@ contract Prices is IPrices, Ownable2Step {
             data = priceData[i];
 
             if (data.feedId != feedId) {
-                revert UpshotOracleFeedMismatch();
+                revert UpshotOracleV2FeedMismatch();
             }
 
             if (data.nonce != nonce) {
-                revert UpshotOracleNonceMismatch();
+                revert UpshotOracleV2NonceMismatch();
             }
 
             // add a statement that the nonce is nonce + 1
@@ -136,7 +141,7 @@ contract Prices is IPrices, Ownable2Step {
                 block.timestamp < data.timestamp ||
                 data.timestamp + priceValiditySeconds < block.timestamp 
             ) {
-                revert UpshotOracleInvalidPriceTime();
+                revert UpshotOracleV2InvalidPriceTime();
             }
 
             address signer =
@@ -152,12 +157,12 @@ contract Prices is IPrices, Ownable2Step {
                 );
 
             if (!validSigner[signer]) {
-                revert UpshotOracleInvalidSigner();
+                revert UpshotOracleV2InvalidSigner();
             }
 
             for (uint256 j = 0; j < i; j++) {
                 if (signer == priceProviders[j]) {
-                    revert UpshotOracleDuplicateSigner();
+                    revert UpshotOracleV2DuplicateSigner();
                 }
             }
 
@@ -215,7 +220,7 @@ contract Prices is IPrices, Ownable2Step {
      */
     function _validateNonce(uint256 feedId, uint256 nonce) internal {
         if (nonce != feed[feedId].nonce + 1) {
-            revert UpshotOracleInvalidNonce();
+            revert UpshotOracleV2InvalidNonce();
         }
 
         feed[feedId].nonce = nonce;
@@ -232,7 +237,7 @@ contract Prices is IPrices, Ownable2Step {
      */
     function updateMinPrices(uint256 minPrices_) external onlyOwner {
         if (minPrices_ == 0) {
-            revert();
+            revert UpshotOracleV2PricesInvalidMinPrices();
         }
 
         minPrices = minPrices_;
@@ -247,7 +252,7 @@ contract Prices is IPrices, Ownable2Step {
      */
     function updatePriceValiditySeconds(uint256 priceValiditySeconds_) external onlyOwner {
         if (priceValiditySeconds == 0) { 
-            revert();
+            revert UpshotOracleV2InvalidPriceValiditySeconds();
         }
 
         priceValiditySeconds = priceValiditySeconds_;
@@ -313,7 +318,7 @@ contract Prices is IPrices, Ownable2Step {
      */
     function updateAggregator(address aggregator_) external onlyOwner {
         if (aggregator_ == address(0)) {
-            revert();
+            revert UpshotOracleV2InvalidAggregator();
         }
 
         aggregator = IAggregator(aggregator_);
@@ -328,7 +333,7 @@ contract Prices is IPrices, Ownable2Step {
      */
     function updateFeeHandler(address feeHandler_) external onlyOwner {
         if (feeHandler_ == address(0)) {
-            revert();
+            revert UpshotOracleV2InvalidFeeHandler();
         }
 
         feeHandler = IFeeHandler(feeHandler_);
@@ -361,10 +366,10 @@ contract Prices is IPrices, Ownable2Step {
      */
     function updateTotalFee(uint256 feePerPrice_) external onlyOwner {
         if (0 < feePerPrice_ && feePerPrice_ < 1_000) {
-            revert();
+            revert UpshotOracleV2InvalidTotalFee();
         }
         feePerPrice = feePerPrice_;
 
-        emit UpshotOracleEvenFeeHandlerAdminUpdatedFeePerPrice(feePerPrice_);
+        emit UpshotOracleV2AdminUpdatedFeePerPrice(feePerPrice_);
     }
 }

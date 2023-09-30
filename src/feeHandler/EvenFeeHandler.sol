@@ -17,18 +17,18 @@ contract EvenFeeHandler is IFeeHandler, Ownable2Step {
     // * ========================= EVENTS ========================== *
     // ***************************************************************
 
-    event UpshotOracleEvenFeeHandlerFeesHandled(address[] feeReceivers);
-    event UpshotOracleEvenFeeHandlerAdminUpdatedTotalFee(uint256 totalFee);
-    event UpshotOracleEvenFeeHandlerAdminUpdatedProtocolFeePortion(uint256 protocolFeePortion);
-    event UpshotOracleEvenFeeHandlerAdminUpdatedProtocolFeeReceiver(address protocolFeeReceiver);
+    event UpshotOracleV2EvenFeeHandlerFeesHandled(uint256 fee, address[] feeReceivers);
+    event UpshotOracleV2EvenFeeHandlerAdminUpdatedTotalFee(uint256 totalFee);
+    event UpshotOracleV2EvenFeeHandlerAdminUpdatedProtocolFeePortion(uint256 protocolFeePortion);
+    event UpshotOracleV2EvenFeeHandlerAdminUpdatedProtocolFeeReceiver(address protocolFeeReceiver);
 
     // ***************************************************************
     // * ========================= ERRORS ========================== *
     // ***************************************************************
 
-    error UpshotOracleEvenFeeHandlerEthTransferFailed();
-    error UpshotOracleEvenFeeHandlerFeeTooLow();
-    error UpshotOracleEvenFeeHandlerInvalidProtocolFeePortion();
+    error UpshotOracleV2EvenFeeHandlerEthTransferFailed();
+    error UpshotOracleV2EvenFeeHandlerFeeTooLow();
+    error UpshotOracleV2EvenFeeHandlerInvalidProtocolFeePortion();
 
     constructor(
         address admin_,
@@ -38,7 +38,7 @@ contract EvenFeeHandler is IFeeHandler, Ownable2Step {
 
         protocolFeeReceiver = protocolFeeReceiver_;
 
-        emit UpshotOracleEvenFeeHandlerAdminUpdatedProtocolFeeReceiver(protocolFeeReceiver_);
+        emit UpshotOracleV2EvenFeeHandlerAdminUpdatedProtocolFeeReceiver(protocolFeeReceiver_);
     }
 
 
@@ -49,7 +49,7 @@ contract EvenFeeHandler is IFeeHandler, Ownable2Step {
     ) external payable {
         uint256 fee = msg.value;
         if (fee < 1_000) {
-            revert UpshotOracleEvenFeeHandlerFeeTooLow();
+            revert UpshotOracleV2EvenFeeHandlerFeeTooLow();
         }
 
         uint256 protocolFee = Math.mulDiv(fee, protocolFeePortion, 1 ether);
@@ -61,7 +61,7 @@ contract EvenFeeHandler is IFeeHandler, Ownable2Step {
             _safeTransferETH(feeReceivers[i], priceProviderFee);
         }
 
-        emit UpshotOracleEvenFeeHandlerFeesHandled(feeReceivers);
+        emit UpshotOracleV2EvenFeeHandlerFeesHandled(fee, feeReceivers);
     }
 
     // ***************************************************************
@@ -76,7 +76,7 @@ contract EvenFeeHandler is IFeeHandler, Ownable2Step {
     function _safeTransferETH(address to, uint256 value) internal {
         (bool success, ) = to.call{value: value}(new bytes(0));
         if (!success) {
-            revert UpshotOracleEvenFeeHandlerEthTransferFailed();
+            revert UpshotOracleV2EvenFeeHandlerEthTransferFailed();
         }
     }
 
@@ -91,12 +91,12 @@ contract EvenFeeHandler is IFeeHandler, Ownable2Step {
      */
     function updateProtocolFeePortion(uint256 protocolFeePortion_) external onlyOwner {
         if (protocolFeePortion_ > 1 ether) {
-            revert UpshotOracleEvenFeeHandlerInvalidProtocolFeePortion();
+            revert UpshotOracleV2EvenFeeHandlerInvalidProtocolFeePortion();
         }
 
         protocolFeePortion = protocolFeePortion_;
 
-        emit UpshotOracleEvenFeeHandlerAdminUpdatedProtocolFeePortion(protocolFeePortion_);
+        emit UpshotOracleV2EvenFeeHandlerAdminUpdatedProtocolFeePortion(protocolFeePortion_);
     }
 
     /**
@@ -107,7 +107,7 @@ contract EvenFeeHandler is IFeeHandler, Ownable2Step {
     function updateProtocolFeeReceiver(address protocolFeeReceiver_) external onlyOwner {
         protocolFeeReceiver = protocolFeeReceiver_;
 
-        emit UpshotOracleEvenFeeHandlerAdminUpdatedProtocolFeeReceiver(protocolFeeReceiver_);
+        emit UpshotOracleV2EvenFeeHandlerAdminUpdatedProtocolFeeReceiver(protocolFeeReceiver_);
     }
 
 }
