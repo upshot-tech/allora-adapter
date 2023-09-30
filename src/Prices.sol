@@ -15,22 +15,22 @@ contract Prices is IPrices, Ownable2Step {
     /// @dev The minimum number of prices required to get a valid price
     uint256 public minPrices = 1;
 
-    // @dev The number of seconds a price is valid for
+    /// @dev The number of seconds a price is valid for
     uint256 public priceValiditySeconds = 5 minutes;
 
-    // @dev The valid signers
+    /// @dev The valid signers
     mapping(address signer => bool isValid) public validSigner;
 
-    // @dev The nonce for each feed
+    /// @dev The nonce for each feed
     mapping(uint256 feedId => Feed) public feed;
 
-    // @dev The aggregator to use for aggregating prices
+    /// @dev The aggregator to use for aggregating prices
     IAggregator aggregator;
 
-    // @dev The fee handler to use for handling fees
+    /// @dev The fee handler to use for handling fees
     IFeeHandler feeHandler;
 
-    // @dev Whether the oracle contract is switched on and usable
+    /// @dev Whether the oracle contract is switched on and usable
     bool public switchedOn = true;
 
     constructor(
@@ -57,6 +57,7 @@ contract Prices is IPrices, Ownable2Step {
     event UpshotOracleV2PricesAdminAddedFeed(uint256 feedId, string title);
     event UpshotOracleV2PricesAdminRemovedFeed(uint256 feedId);
     event UpshotOracleV2PricesAdminUpdatedAggregator(address aggregator);
+    event UpshotOracleV2PricesAdminUpdatedFeeHandler(address feeHandler);
     event UpshotOracleV2PricesAdminSwitchedOff();
     event UpshotOracleV2PricesAdminSwitchedOn();
 
@@ -215,34 +216,65 @@ contract Prices is IPrices, Ownable2Step {
     // ***************************************************************
     // * ========================= ADMIN =========================== *
     // ***************************************************************
+
+    /**
+     * @notice Admin function to update the minimum number of prices required to get a valid price
+     * 
+     * @param minPrices_ The minimum number of prices required to get a valid price
+     */
     function updateMinPrices(uint256 minPrices_) external onlyOwner {
-        if (minPrices_ > 0) {
-            minPrices = minPrices_;
+        if (minPrices_ == 0) {
+            revert();
         }
+
+        minPrices = minPrices_;
 
         emit UpshotOracleV2PricesAdminUpdatedMinPrices(minPrices_);
     }
 
+    /**
+     * @notice Admin function to update the number of seconds a price is valid for
+     * 
+     * @param priceValiditySeconds_ The number of seconds a price is valid for
+     */
     function updatePriceValiditySeconds(uint256 priceValiditySeconds_) external onlyOwner {
-        if (priceValiditySeconds_ > 0) {
-            priceValiditySeconds = priceValiditySeconds_;
+        if (priceValiditySeconds == 0) { 
+            revert();
         }
+
+        priceValiditySeconds = priceValiditySeconds_;
 
         emit UpshotOracleV2PricesAdminUpdatedPriceValiditySeconds(priceValiditySeconds_);
     }
 
+    /**
+     * @notice Admin function to add a valid signer
+     * 
+     * @param signer The signer to add
+     */
     function addValidSigner(address signer) external onlyOwner {
         validSigner[signer] = true;
 
         emit UpshotOracleV2PricesAdminAddedValidSigner(signer);
     }
 
+    /**
+     * @notice Admin function to remove a valid signer
+     * 
+     * @param signer The signer to remove
+     */
     function removeValidSigner(address signer) external onlyOwner {
         validSigner[signer] = false;
 
         emit UpshotOracleV2PricesAdminRemovedValidSigner(signer);
     }
 
+    /**
+     * @notice Admin function to add a feed
+     * 
+     * @param feedId The feedId of the feed to add
+     * @param title The title of the feed
+     */
     function addFeed(uint256 feedId, string memory title) external onlyOwner {
         if (bytes(title).length > 0) {
             feed[feedId] = Feed({
@@ -255,24 +287,59 @@ contract Prices is IPrices, Ownable2Step {
         emit UpshotOracleV2PricesAdminAddedFeed(feedId, title);
     }
 
+    /**
+     * @notice Admin function to remove a feed
+     * 
+     * @param feedId The feedId of the feed to remove
+     */
     function removeFeed(uint256 feedId) external onlyOwner {
         delete feed[feedId];
         
         emit UpshotOracleV2PricesAdminRemovedFeed(feedId);
     }
 
+    /**
+     * @notice Admin function to update the aggregator to use for aggregating prices
+     * 
+     * @param aggregator_ The aggregator to use for aggregating prices
+     */
     function updateAggregator(address aggregator_) external onlyOwner {
+        if (aggregator_ == address(0)) {
+            revert();
+        }
+
         aggregator = IAggregator(aggregator_);
 
         emit UpshotOracleV2PricesAdminUpdatedAggregator(aggregator_);
     }
 
+    /**
+     * @notice Admin function to update the fee handler to use for handling fees
+     * 
+     * @param feeHandler_ The fee handler to use for handling fees
+     */
+    function updateFeeHandler(address feeHandler_) external onlyOwner {
+        if (feeHandler_ == address(0)) {
+            revert();
+        }
+
+        feeHandler = IFeeHandler(feeHandler_);
+
+        emit UpshotOracleV2PricesAdminUpdatedFeeHandler(feeHandler_);
+    } 
+
+    /**
+     * @notice Admin function to switch off the oracle contract
+     */
     function turnOff() external onlyOwner {
         switchedOn = false;
 
         emit UpshotOracleV2PricesAdminSwitchedOff();
     }
 
+    /**
+     * @notice Admin function to switch on the oracle contract
+     */
     function turnOn() external onlyOwner {
         switchedOn = true;
 

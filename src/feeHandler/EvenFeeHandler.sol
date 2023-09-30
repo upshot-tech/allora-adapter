@@ -10,10 +10,10 @@ contract EvenFeeHandler is IFeeHandler, Ownable2Step {
     /// @inheritdoc IFeeHandler
     uint256 public override totalFee = 0.001 ether;
 
-    // @dev the portion of the total fee that goes to the protocol
+    /// @dev the portion of the total fee that goes to the protocol
     uint256 public protocolFeePortion = 0.2 ether;
 
-    // @dev the address that receives the protocol fee
+    /// @dev the address that receives the protocol fee
     address public protocolFeeReceiver;
 
     // ***************************************************************
