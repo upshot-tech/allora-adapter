@@ -33,6 +33,10 @@ contract Prices is IPrices, Ownable2Step {
     /// @dev Whether the oracle contract is switched on and usable
     bool public switchedOn = true;
 
+    /// @dev The total fee to be paid by the user
+    uint256 public feePerPrice = 0.001 ether;
+
+
     constructor(
         address admin_,
         address aggregator_,
@@ -63,6 +67,7 @@ contract Prices is IPrices, Ownable2Step {
     event UpshotOracleV2PricesAdminUpdatedFeeHandler(address feeHandler);
     event UpshotOracleV2PricesAdminSwitchedOff();
     event UpshotOracleV2PricesAdminSwitchedOn();
+    event UpshotOracleEvenFeeHandlerAdminUpdatedFeePerPrice(uint256 feePerPrice);
 
     // ***************************************************************
     // * ========================= ERRORS ========================== *
@@ -92,7 +97,7 @@ contract Prices is IPrices, Ownable2Step {
             revert UpshotOracleNotSwitchedOn();
         }
 
-        if (msg.value < feeHandler.totalFee()) {
+        if (msg.value < feePerPrice) {
             revert UpshotOracleInsufficientPayment();
         }
 
@@ -347,5 +352,19 @@ contract Prices is IPrices, Ownable2Step {
         switchedOn = true;
 
         emit UpshotOracleV2PricesAdminSwitchedOn();
+    }
+
+    /**
+     * @notice Admin function to update the total fee to be paid per price
+     * 
+     * @param feePerPrice_ The total fee to be paid per price
+     */
+    function updateTotalFee(uint256 feePerPrice_) external onlyOwner {
+        if (0 < feePerPrice_ && feePerPrice_ < 1_000) {
+            revert();
+        }
+        feePerPrice = feePerPrice_;
+
+        emit UpshotOracleEvenFeeHandlerAdminUpdatedFeePerPrice(feePerPrice_);
     }
 }

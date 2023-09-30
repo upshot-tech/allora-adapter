@@ -7,9 +7,6 @@ import { Math } from "../../lib/openzeppelin-contracts/contracts/utils/math/Math
 
 contract EvenFeeHandler is IFeeHandler, Ownable2Step {
 
-    /// @inheritdoc IFeeHandler
-    uint256 public override totalFee = 0.001 ether;
-
     /// @dev the portion of the total fee that goes to the protocol
     uint256 public protocolFeePortion = 0.2 ether;
 
@@ -30,6 +27,7 @@ contract EvenFeeHandler is IFeeHandler, Ownable2Step {
     // ***************************************************************
 
     error UpshotOracleEvenFeeHandlerEthTransferFailed();
+    error UpshotOracleEvenFeeHandlerFeeTooLow();
 
     constructor(
         address admin_,
@@ -48,8 +46,13 @@ contract EvenFeeHandler is IFeeHandler, Ownable2Step {
         address[] memory feeReceivers, 
         bytes memory
     ) external payable {
-        uint256 protocolFee = Math.mulDiv(totalFee, protocolFeePortion, 1 ether);
-        uint256 priceProviderFee = (totalFee - protocolFee) / feeReceivers.length;
+        uint256 fee = msg.value;
+        if (fee < 1_000) {
+            revert UpshotOracleEvenFeeHandlerFeeTooLow();
+        }
+
+        uint256 protocolFee = Math.mulDiv(fee, protocolFeePortion, 1 ether);
+        uint256 priceProviderFee = (fee - protocolFee) / feeReceivers.length;
 
         _safeTransferETH(protocolFeeReceiver, protocolFee);
 
@@ -79,16 +82,6 @@ contract EvenFeeHandler is IFeeHandler, Ownable2Step {
     // ***************************************************************
     // * ========================= ADMIN =========================== *
     // ***************************************************************
-    /**
-     * @notice Admin function to update the total fee to be paid
-     * 
-     * @param totalFee_ The total fee to be paid
-     */
-    function updateTotalFee(uint256 totalFee_) external onlyOwner {
-        totalFee = totalFee_;
-
-        emit UpshotOracleEvenFeeHandlerAdminUpdatedTotalFee(totalFee_);
-    }
 
     /**
      * @notice Admin function to update the portion of the total fee that goes to the protocol

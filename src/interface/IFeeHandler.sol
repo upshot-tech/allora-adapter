@@ -9,9 +9,4 @@ interface IFeeHandler {
      * @param extraData Extra data to be used by the fee handler
      */
     function handleFees(address[] memory feeReceivers, bytes memory extraData) external payable;
-
-    /**
-     * @notice The total fee to be paid
-     */
-    function totalFee() external view returns (uint256);
 }
