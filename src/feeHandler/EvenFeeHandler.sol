@@ -28,6 +28,7 @@ contract EvenFeeHandler is IFeeHandler, Ownable2Step {
 
     error UpshotOracleEvenFeeHandlerEthTransferFailed();
     error UpshotOracleEvenFeeHandlerFeeTooLow();
+    error UpshotOracleEvenFeeHandlerInvalidProtocolFeePortion();
 
     constructor(
         address admin_,
@@ -89,9 +90,11 @@ contract EvenFeeHandler is IFeeHandler, Ownable2Step {
      * @param protocolFeePortion_ The portion of the total fee that goes to the protocol
      */
     function updateProtocolFeePortion(uint256 protocolFeePortion_) external onlyOwner {
-        if (protocolFeePortion_ <= 1 ether) {
-            protocolFeePortion = protocolFeePortion_;
+        if (protocolFeePortion_ > 1 ether) {
+            revert UpshotOracleEvenFeeHandlerInvalidProtocolFeePortion();
         }
+
+        protocolFeePortion = protocolFeePortion_;
 
         emit UpshotOracleEvenFeeHandlerAdminUpdatedProtocolFeePortion(protocolFeePortion_);
     }
