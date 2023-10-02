@@ -7,6 +7,7 @@ import {Prices} from "../src/Prices.sol";
 import {PriceData} from "../src/interface/IPrices.sol";
 import {EvenFeeHandler} from "../src/feeHandler/EvenFeeHandler.sol";
 import {AverageAggregator} from "../src/aggregator/AverageAggregator.sol";
+import {MedianAggregator} from "../src/aggregator/MedianAggregator.sol";
 import {IAggregator} from "../src/interface/IAggregator.sol";
 import {IFeeHandler} from "../src/interface/IFeeHandler.sol";
 
@@ -98,6 +99,372 @@ contract EvenFeeHandlerTest is Test {
         prices.getPrice{value: 1 ether}(priceData, '');
     }
 
+    function test_cantCallGetPriceWithoutValidFeedId() public {
+        vm.startPrank(admin);
+        prices.addValidSigner(signer0);
+        vm.stopPrank();
+
+        PriceData[] memory priceData = new PriceData[](1);
+
+        priceData[0] = _getPriceData(
+            PriceDataWithoutSignature({
+                feedId: 1,
+                nonce: 2,
+                timestamp: uint96(block.timestamp - 1 minutes),
+                price: 1 ether,
+                extraData: ''
+            }),
+            signer0pk
+        );
+
+        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2InvalidFeed()"));
+        prices.getPrice{value: 1 ether}(priceData, '');
+    }
+
+    function test_cantCallGetPriceWithoutValidNonce() public {
+        vm.startPrank(admin);
+        prices.addFeed('Initial feed');
+        prices.addValidSigner(signer0);
+        vm.stopPrank();
+
+        PriceData[] memory priceData = new PriceData[](1);
+
+        priceData[0] = _getPriceData(
+            PriceDataWithoutSignature({
+                feedId: 1,
+                nonce: 3,
+                timestamp: uint96(block.timestamp - 1 minutes),
+                price: 1 ether,
+                extraData: ''
+            }),
+            signer0pk
+        );
+
+        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2InvalidNonce()"));
+        prices.getPrice{value: 1 ether}(priceData, '');
+    }
+
+    function test_cantCallGetPriceWithMismatchedFeeds() public {
+        vm.startPrank(admin);
+        prices.addFeed('Initial feed');
+        prices.addValidSigner(signer0);
+        vm.stopPrank();
+
+        PriceData[] memory priceData = new PriceData[](2);
+
+        priceData[0] = _getPriceData(
+            PriceDataWithoutSignature({
+                feedId: 1,
+                nonce: 2,
+                timestamp: uint96(block.timestamp - 1 minutes),
+                price: 1 ether,
+                extraData: ''
+            }),
+            signer0pk
+        );
+
+        priceData[1] = _getPriceData(
+            PriceDataWithoutSignature({
+                feedId: 2,
+                nonce: 2,
+                timestamp: uint96(block.timestamp - 1 minutes),
+                price: 1 ether,
+                extraData: ''
+            }),
+            signer0pk
+        );
+
+        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2FeedMismatch()"));
+
+        prices.getPrice{value: 1 ether}(priceData, '');
+    }
+
+    function test_cantCallGetPriceWithMismatchedNonces() public {
+        vm.startPrank(admin);
+        prices.addFeed('Initial feed');
+        prices.addValidSigner(signer0);
+        vm.stopPrank();
+
+        PriceData[] memory priceData = new PriceData[](2);
+
+        priceData[0] = _getPriceData(
+            PriceDataWithoutSignature({
+                feedId: 1,
+                nonce: 2,
+                timestamp: uint96(block.timestamp - 1 minutes),
+                price: 1 ether,
+                extraData: ''
+            }),
+            signer0pk
+        );
+
+        priceData[1] = _getPriceData(
+            PriceDataWithoutSignature({
+                feedId: 1,
+                nonce: 3,
+                timestamp: uint96(block.timestamp - 1 minutes),
+                price: 1 ether,
+                extraData: ''
+            }),
+            signer0pk
+        );
+
+        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2NonceMismatch()"));
+        prices.getPrice{value: 1 ether}(priceData, '');
+    }
+
+    function test_cantCallGetPriceWithInvalidTime() public {
+        vm.startPrank(admin);
+        prices.addFeed('Initial feed');
+        prices.addValidSigner(signer0);
+        vm.stopPrank();
+
+        PriceData[] memory priceData = new PriceData[](1);
+
+        priceData[0] = _getPriceData(
+            PriceDataWithoutSignature({
+                feedId: 1,
+                nonce: 2,
+                timestamp: uint96(block.timestamp + 1 minutes),
+                price: 1 ether,
+                extraData: ''
+            }),
+            signer0pk
+        );
+
+        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2InvalidPriceTime()"));
+        prices.getPrice{value: 1 ether}(priceData, '');
+    }
+
+    function test_cantCallGetPriceWithInvalidSigner() public {
+        vm.startPrank(admin);
+        prices.addFeed('Initial feed');
+        vm.stopPrank();
+
+        PriceData[] memory priceData = new PriceData[](1);
+
+        priceData[0] = _getPriceData(
+            PriceDataWithoutSignature({
+                feedId: 1,
+                nonce: 2,
+                timestamp: uint96(block.timestamp - 1 minutes),
+                price: 1 ether,
+                extraData: ''
+            }),
+            signer0pk
+        );
+
+        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2InvalidSigner()"));
+        prices.getPrice{value: 1 ether}(priceData, '');
+    }
+
+    function test_cantCallGetPriceWithDuplicateSigner() public {
+        vm.startPrank(admin);
+        prices.addFeed('Initial feed');
+        prices.addValidSigner(signer0);
+        vm.stopPrank();
+
+        PriceData[] memory priceData = new PriceData[](2);
+
+        priceData[0] = _getPriceData(
+            PriceDataWithoutSignature({
+                feedId: 1,
+                nonce: 2,
+                timestamp: uint96(block.timestamp - 1 minutes),
+                price: 1 ether,
+                extraData: ''
+            }),
+            signer0pk
+        );
+
+        priceData[1] = _getPriceData(
+            PriceDataWithoutSignature({
+                feedId: 1,
+                nonce: 2,
+                timestamp: uint96(block.timestamp - 1 minutes),
+                price: 1 ether,
+                extraData: ''
+            }),
+            signer0pk
+        );
+
+        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2DuplicateSigner()"));
+        prices.getPrice{value: 1 ether}(priceData, '');
+    }
+
+    function test_priceAverageAggregationWorksCorrectly() public {
+        vm.startPrank(admin);
+        prices.addFeed('Initial feed');
+        prices.addValidSigner(signer0);
+        prices.addValidSigner(signer1);
+        vm.stopPrank();
+
+        PriceData[] memory priceData = new PriceData[](2);
+
+        priceData[0] = _getPriceData(
+            PriceDataWithoutSignature({
+                feedId: 1,
+                nonce: 2,
+                timestamp: uint96(block.timestamp - 1 minutes),
+                price: 1 ether,
+                extraData: ''
+            }),
+            signer0pk
+        );
+
+        priceData[1] = _getPriceData(
+            PriceDataWithoutSignature({
+                feedId: 1,
+                nonce: 2,
+                timestamp: uint96(block.timestamp - 1 minutes),
+                price: 3 ether,
+                extraData: ''
+            }),
+            signer1pk
+        );
+
+        uint256 price = prices.getPrice{value: 1 ether}(priceData, '');
+        assertEq(price, 2 ether);
+    }
+
+    function test_priceMedianAggregationWorksCorrectly() public {
+        MedianAggregator medianAggregator = new MedianAggregator();
+
+        vm.startPrank(admin);
+        prices.addFeed('Initial feed');
+        prices.addValidSigner(signer0);
+        prices.addValidSigner(signer1);
+        prices.updateAggregator(address(medianAggregator));
+        vm.stopPrank();
+
+        PriceData[] memory priceData = new PriceData[](2);
+
+        priceData[0] = _getPriceData(
+            PriceDataWithoutSignature({
+                feedId: 1,
+                nonce: 2,
+                timestamp: uint96(block.timestamp - 1 minutes),
+                price: 1 ether,
+                extraData: ''
+            }),
+            signer0pk
+        );
+
+        priceData[1] = _getPriceData(
+            PriceDataWithoutSignature({
+                feedId: 1,
+                nonce: 2,
+                timestamp: uint96(block.timestamp - 1 minutes),
+                price: 3 ether,
+                extraData: ''
+            }),
+            signer1pk
+        );
+
+        uint256 price = prices.getPrice{value: 1 ether}(priceData, '');
+        assertEq(price, 2 ether);
+    }
+
+    function test_priceMedianAggregationWorksCorrectly2() public {
+        MedianAggregator medianAggregator = new MedianAggregator();
+
+        vm.startPrank(admin);
+        prices.addFeed('Initial feed');
+        prices.addValidSigner(signer0);
+        prices.addValidSigner(signer1);
+        prices.addValidSigner(signer2);
+        prices.updateAggregator(address(medianAggregator));
+        vm.stopPrank();
+
+        PriceData[] memory priceData = new PriceData[](3);
+
+        priceData[0] = _getPriceData(
+            PriceDataWithoutSignature({
+                feedId: 1,
+                nonce: 2,
+                timestamp: uint96(block.timestamp - 1 minutes),
+                price: 1 ether,
+                extraData: ''
+            }),
+            signer0pk
+        );
+
+        priceData[1] = _getPriceData(
+            PriceDataWithoutSignature({
+                feedId: 1,
+                nonce: 2,
+                timestamp: uint96(block.timestamp - 1 minutes),
+                price: 2 ether,
+                extraData: ''
+            }),
+            signer1pk
+        );
+
+        priceData[2] = _getPriceData(
+            PriceDataWithoutSignature({
+                feedId: 1,
+                nonce: 2,
+                timestamp: uint96(block.timestamp - 1 minutes),
+                price: 5 ether,
+                extraData: ''
+            }),
+            signer2pk
+        );
+
+
+        uint256 price = prices.getPrice{value: 1 ether}(priceData, '');
+        assertEq(price, 2 ether);
+    }
+
+    function test_priceFeesSplitCorrectly() public {
+        vm.startPrank(admin);
+        prices.addFeed('Initial feed');
+        prices.addValidSigner(signer0);
+        prices.addValidSigner(signer1);
+        vm.stopPrank();
+
+        PriceData[] memory priceData = new PriceData[](2);
+
+        priceData[0] = _getPriceData(
+            PriceDataWithoutSignature({
+                feedId: 1,
+                nonce: 2,
+                timestamp: uint96(block.timestamp - 1 minutes),
+                price: 1 ether,
+                extraData: ''
+            }),
+            signer0pk
+        );
+
+        priceData[1] = _getPriceData(
+            PriceDataWithoutSignature({
+                feedId: 1,
+                nonce: 2,
+                timestamp: uint96(block.timestamp - 1 minutes),
+                price: 3 ether,
+                extraData: ''
+            }),
+            signer1pk
+        );
+
+        uint256 protocolFeeBal0 = protocolFeeReceiver.balance;
+        uint256 signer0Bal0 = signer0.balance;
+        uint256 signer1Bal0 = signer1.balance;
+
+        prices.getPrice{value: 1 ether}(priceData, '');
+
+        uint256 protocolFee = protocolFeeReceiver.balance - protocolFeeBal0;
+        uint256 signer0Fee = signer0.balance - signer0Bal0;
+        uint256 signer1Fee = signer1.balance - signer1Bal0;
+
+        assertEq(protocolFee, 0.2 ether);
+        assertEq(signer0Fee, 0.4 ether);
+        assertEq(signer1Fee, 0.4 ether);
+    }
+
+    // ***************************************************************
+    // * ================= INTERNAL HELPERS ======================== *
+    // ***************************************************************
     function _getPriceData(
         PriceDataWithoutSignature memory priceDataIn,
         uint256 signerPk
