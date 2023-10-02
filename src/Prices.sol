@@ -24,6 +24,9 @@ contract Prices is IPrices, Ownable2Step {
     /// @dev The nonce for each feed
     mapping(uint256 feedId => Feed) public feed;
 
+    /// @dev The next feedId to use
+    uint256 public nextFeedId = 1;
+
     /// @dev The aggregator to use for aggregating prices
     IAggregator aggregator;
 
@@ -88,6 +91,7 @@ contract Prices is IPrices, Ownable2Step {
     error UpshotOracleV2InvalidAggregator();
     error UpshotOracleV2PricesInvalidMinPrices();
     error UpshotOracleV2InvalidPriceValiditySeconds();
+    error UpshotOracleV2InvalidFeedTitle();
 
     // ***************************************************************
     // * ================== USER INTERFACE ========================= *
@@ -135,11 +139,9 @@ contract Prices is IPrices, Ownable2Step {
                 revert UpshotOracleV2NonceMismatch();
             }
 
-            // add a statement that the nonce is nonce + 1
-
             if (
                 block.timestamp < data.timestamp ||
-                data.timestamp + priceValiditySeconds < block.timestamp 
+                data.timestamp + priceValiditySeconds < block.timestamp
             ) {
                 revert UpshotOracleV2InvalidPriceTime();
             }
@@ -285,19 +287,22 @@ contract Prices is IPrices, Ownable2Step {
     /**
      * @notice Admin function to add a feed
      * 
-     * @param feedId The feedId of the feed to add
      * @param title The title of the feed
      */
-    function addFeed(uint256 feedId, string memory title) external onlyOwner {
-        if (bytes(title).length > 0) {
-            feed[feedId] = Feed({
-                title: title,
-                isValid: true,
-                nonce: 1
-            });
+    function addFeed(string memory title) external onlyOwner {
+        if (bytes(title).length == 0) {
+            revert UpshotOracleV2InvalidFeedTitle();
         }
 
-        emit UpshotOracleV2PricesAdminAddedFeed(feedId, title);
+        feed[nextFeedId] = Feed({
+            title: title,
+            isValid: true,
+            nonce: 1
+        });
+
+        emit UpshotOracleV2PricesAdminAddedFeed(nextFeedId, title);
+
+        unchecked { ++nextFeedId; }
     }
 
     /**
