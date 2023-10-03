@@ -3,9 +3,9 @@ pragma solidity ^0.8.13;
 
 import "../lib/forge-std/src/Test.sol";
 import { ECDSA } from "../lib/openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
-import {Prices, PricesConstructorArgs} from "../src/Prices.sol";
+import {Prices} from "../src/Prices.sol";
 import {PriceData} from "../src/interface/IPrices.sol";
-import {EvenFeeHandler, EvenFeeHandlerConstructorArgs} from "../src/feeHandler/EvenFeeHandler.sol";
+import {EvenFeeHandler} from "../src/feeHandler/EvenFeeHandler.sol";
 import {AverageAggregator} from "../src/aggregator/AverageAggregator.sol";
 import {MedianAggregator} from "../src/aggregator/MedianAggregator.sol";
 import {IAggregator} from "../src/interface/IAggregator.sol";
@@ -42,19 +42,8 @@ contract PricesTest is Test {
         vm.warp(1 hours);
 
         aggregator = new AverageAggregator();
-        feeHandler = new EvenFeeHandler(
-            EvenFeeHandlerConstructorArgs({
-                admin: admin, 
-                protocolFeeReceiver: protocolFeeReceiver
-            })
-        );
-        prices = new Prices(
-            PricesConstructorArgs({
-                admin: admin,
-                aggregator: address(aggregator),
-                feeHandler: address(feeHandler)
-            })
-        );
+        feeHandler = new EvenFeeHandler(admin, protocolFeeReceiver);
+        prices = new Prices(admin, address(aggregator), address(feeHandler));
 
         signer0 = vm.addr(signer0pk);
         signer1 = vm.addr(signer1pk);
