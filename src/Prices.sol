@@ -39,7 +39,6 @@ contract Prices is IPrices, Ownable2Step {
     /// @dev The total fee to be paid by the user
     uint256 public totalFee = 0.001 ether;
 
-
     constructor(
         address admin_,
         address aggregator_,
@@ -51,7 +50,7 @@ contract Prices is IPrices, Ownable2Step {
         emit UpshotOracleV2PricesAdminUpdatedAggregator(aggregator_);
 
         feeHandler = IFeeHandler(feeHandler_);
-            emit UpshotOracleV2PricesAdminUpdatedFeeHandler(feeHandler_);
+        emit UpshotOracleV2PricesAdminUpdatedFeeHandler(feeHandler_);
     }
 
     // ***************************************************************
