@@ -5,6 +5,12 @@ import { IFeeHandler } from '../interface/IFeeHandler.sol';
 import { Ownable2Step } from "../../lib/openzeppelin-contracts/contracts/access/Ownable2Step.sol";
 import { Math } from "../../lib/openzeppelin-contracts/contracts/utils/math/Math.sol";
 
+struct EvenFeeHandlerConstructorArgs {
+    address admin;
+    address protocolFeeReceiver;
+}
+
+
 contract EvenFeeHandler is IFeeHandler, Ownable2Step {
 
     /// @dev the portion of the total fee that goes to the protocol
@@ -31,14 +37,13 @@ contract EvenFeeHandler is IFeeHandler, Ownable2Step {
     error UpshotOracleV2EvenFeeHandlerInvalidProtocolFeePortion();
 
     constructor(
-        address admin_,
-        address protocolFeeReceiver_
+        EvenFeeHandlerConstructorArgs memory args
     ) {
-        _transferOwnership(admin_);
+        _transferOwnership(args.admin);
 
-        protocolFeeReceiver = protocolFeeReceiver_;
+        protocolFeeReceiver = args.protocolFeeReceiver;
 
-        emit UpshotOracleV2EvenFeeHandlerAdminUpdatedProtocolFeeReceiver(protocolFeeReceiver_);
+        emit UpshotOracleV2EvenFeeHandlerAdminUpdatedProtocolFeeReceiver(args.protocolFeeReceiver);
     }
 
 

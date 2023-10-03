@@ -48,7 +48,10 @@ class Deployer <contractInfo extends contractInfoMap>{
     this.chainId = parseInt(Deployer.getEnvVariable('chainId'))
 
     this.wallet = new Wallet(this.privateKey, new JsonRpcProvider(this.rpcUrl))
-    this.contractInfoMap = contractInfoMap
+    this.contractInfoMap = 
+      Object.fromEntries(
+        Object.entries(contractInfoMap).map(
+          ([contractName, contractInfo]) => [contractName, {...contractInfo, factory: contractInfo.factory.connect(this.wallet)}])) as contractInfo
 
     if (fs.existsSync(this.deploymentRecordPath)) {
       this.deploymentRecord = JSON.parse(fs.readFileSync(this.deploymentRecordPath, 'utf8')) as deploymentRecord
@@ -109,48 +112,19 @@ class Deployer <contractInfo extends contractInfoMap>{
         await verify(contractAddress)
       }
 
-      return this.contractInfoMap[contractName].factory.attach(contractAddress).connect(this.wallet) as returnType
+      return this.contractInfoMap[contractName].factory.attach(contractAddress) as returnType
     }
-    const constructorArgs = 
-      args.length === 0
-        ? ''
-        : '--constructor-args ' + args.map(arg => typeof arg === 'string' ? `"${arg}"` : arg).join(' ')
 
-    const libraries = this.contractInfoMap[contractName].libraries
-
-    const libraryArgs = 
-      libraries !== undefined && libraries.length > 0
-        ? '--libraries ' + libraries.map(lib => {
-            if (this.deploymentRecord.hasOwnProperty(lib)) {
-              return `${this.contractInfoMap[lib].path}:${lib}:${this.deploymentRecord[lib]}`
-            } else {
-              throw new Error(`Library ${lib} not yet deployed for contract ${contractId}`)
-            }
-          }).join(' ')
-        : ''
-
-    const command = [
-      `forge create`,
-      `--rpc-url ${this.rpcUrl}`,
-      constructorArgs,
-      libraryArgs,
-      `--private-key ${this.privateKey}`,
-      `${contractId}`,
-    ]
-
-    console.info(`⏳ deploying ${String(contractName)}...`)
-
-    const deployCommandOutput = execSync(command.join(' ')).toString()
-
-    const contractAddressIndex = deployCommandOutput.indexOf('0x', deployCommandOutput.indexOf('Deployed to: '))
-    contractAddress = deployCommandOutput.substring(contractAddressIndex, contractAddressIndex + 42)
+    const contractInstance = await this.contractInfoMap[contractName].factory.deploy(...args)
+    
+    contractAddress = await contractInstance.getAddress()
 
     this.setDeployedContractAddress(String(contractName), contractAddress)
     console.info(`✅ DEPLOYED ${String(contractName)} to: ${contractAddress}`)
 
     await verify(contractAddress)
 
-    return this.contractInfoMap[contractName].factory.attach(contractAddress).connect(this.wallet) as returnType
+    return this.contractInfoMap[contractName].factory.attach(contractAddress) as returnType
   }
 
   private isContractVerified = async(contractAddress: string): Promise<boolean> => {
