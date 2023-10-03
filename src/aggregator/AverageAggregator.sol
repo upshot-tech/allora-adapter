@@ -9,16 +9,35 @@ import { IAggregator } from '../interface/IAggregator.sol';
  */
 contract AverageAggregator is IAggregator {
 
+    // ***************************************************************
+    // * ========================= ERRORS ========================== *
+    // ***************************************************************
+
+    error UpshotOracleV2AverageAggregatorNoValuesToAggregate();
+
+    // ***************************************************************
+    // * ===================== USER INTERFACE ====================== *
+    // ***************************************************************
+
     /// @inheritdoc IAggregator
     function aggregate(
         uint256[] memory values, 
         bytes memory
     ) external pure returns (uint256 value) {
-        uint256 sum = 0;
         uint256 countValues = values.length;
-        for (uint256 i = 0; i < countValues; i++) {
-            sum += values[i];
+        if (countValues == 0) {
+            revert UpshotOracleV2AverageAggregatorNoValuesToAggregate();
         }
+
+        uint256 sum = 0;
+        for (uint256 i = 0; i < countValues;) {
+            sum += values[i];
+
+            unchecked {
+                ++i;
+            }
+        }
+
         return sum / countValues;
     }
 }

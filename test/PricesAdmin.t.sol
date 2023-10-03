@@ -165,6 +165,17 @@ contract PricesAdmin is Test {
         assertEq(prices.getFeed(1).isValid, true);
     }
 
+    function test_addingFeedGivesProperId() public {
+        vm.startPrank(admin);
+        uint256 firstFeedId = prices.addFeed('new feed');
+        uint256 secondFeedId = prices.addFeed('new feed2');
+
+        assertEq(firstFeedId, 1);
+        assertEq(secondFeedId, 2);
+        assertEq(prices.getFeed(1).isValid, true);
+        assertEq(prices.getFeed(2).isValid, true);
+    }
+
     // ***************************************************************
     // * ===================== REMOVE FEED ========================= *
     // ***************************************************************

@@ -161,9 +161,13 @@ contract Prices is IPrices, Ownable2Step {
                 revert UpshotOracleV2InvalidSigner();
             }
 
-            for (uint256 j = 0; j < i; j++) {
+            for (uint256 j = 0; j < i;) {
                 if (signer == priceProviders[j]) {
                     revert UpshotOracleV2DuplicateSigner();
+                }
+
+                unchecked {
+                    ++j;
                 }
             }
 
@@ -300,7 +304,7 @@ contract Prices is IPrices, Ownable2Step {
      * 
      * @param title The title of the feed
      */
-    function addFeed(string memory title) external onlyOwner {
+    function addFeed(string memory title) external onlyOwner returns (uint256 feedId) {
         if (bytes(title).length == 0) {
             revert UpshotOracleV2InvalidFeedTitle();
         }
@@ -312,6 +316,8 @@ contract Prices is IPrices, Ownable2Step {
         });
 
         emit UpshotOracleV2PricesAdminAddedFeed(nextFeedId, title);
+
+        feedId = nextFeedId;
 
         unchecked { ++nextFeedId; }
     }

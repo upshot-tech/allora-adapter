@@ -48,6 +48,11 @@ contract EvenFeeHandler is IFeeHandler, Ownable2Step {
         bytes memory
     ) external payable {
         uint256 fee = msg.value;
+
+        if (fee == 0) {
+          return;
+        }
+
         if (fee < 1_000) {
             revert UpshotOracleV2EvenFeeHandlerFeeTooLow();
         }
@@ -57,8 +62,12 @@ contract EvenFeeHandler is IFeeHandler, Ownable2Step {
 
         _safeTransferETH(protocolFeeReceiver, protocolFee);
 
-        for (uint i = 0; i < feeReceivers.length; i++) {
+        for (uint i = 0; i < feeReceivers.length;) {
             _safeTransferETH(feeReceivers[i], priceProviderFee);
+
+            unchecked {
+                ++i;
+            }
         }
 
         emit UpshotOracleV2EvenFeeHandlerFeesHandled(fee, feeReceivers);
