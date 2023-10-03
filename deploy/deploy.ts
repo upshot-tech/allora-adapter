@@ -4,27 +4,29 @@ import Deployer from './Deployer'
 import { EvenFeeHandler__factory } from '../types/factories/EvenFeeHandler__factory'
 import { MedianAggregator__factory } from '../types/factories/MedianAggregator__factory'
 import { Prices__factory } from '../types/factories/Prices__factory'
+import { ContractFactory } from 'ethers'
 
 const contractInfoMap = {
   'MedianAggregator': {
     path: 'src/aggregator/MedianAggregator.sol',
-    connect: MedianAggregator__factory.connect
+    factory: new MedianAggregator__factory()
   },
   'EvenFeeHandler': {
     path: 'src/feeHandler/EvenFeeHandler.sol',
-    connect: EvenFeeHandler__factory.connect
+    factory: new EvenFeeHandler__factory()
   },
   'Prices': {
     path: 'src/Prices.sol',
-    connect: Prices__factory.connect
+    factory: new Prices__factory()
   },
 }
 
-const adminAddress = '0x0000000000000000000000000000000000000100'
 const protolFeeReceiver = '0x0000000000000000000000000000000000000101'
 
 const deploy = async () => {
   const deployer = new Deployer(contractInfoMap)
+
+  const adminAddress = deployer.getDeployerAddress()
 
   const MedianAggregator = await deployer.deploy('MedianAggregator', [])
   const EvenFeeHandler = await deployer.deploy('EvenFeeHandler', [adminAddress, protolFeeReceiver])

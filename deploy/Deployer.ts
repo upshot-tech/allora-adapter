@@ -1,18 +1,30 @@
 // SPDX-License-Identifier: BUSL-1.1
 
 import fs from 'fs'
-import { ContractTransaction, Wallet, ContractRunner, JsonRpcProvider } from 'ethers'
-import { execSync } from 'child_process'
+import { ContractTransaction, Wallet, ContractFactory, JsonRpcProvider } from 'ethers'
+import { execSync, exec } from 'child_process'
 import * as dotenv from 'dotenv';
+import axios from 'axios'
 
 type deploymentRecord = {[contractId in string]: string}
+
+type PromiseType<T> = T extends Promise<infer U> ? U : T;
 
 type contractInfoMap = { 
   [contractName: string]: { 
     path: string 
-    connect: (address: string, signerOrProvider: ContractRunner) => any
+    factory: ContractFactory
     libraries?: string[]
   }
+}
+
+const chainIdToNetworkName: {[chainId in number]: string} = {
+  1: 'mainnet',
+  3: 'ropsten',
+  4: 'rinkeby',
+  5: 'goerli',
+  42: 'kovan',
+  11155111: 'sepolia'
 }
 
 class Deployer <contractInfo extends contractInfoMap>{
@@ -21,7 +33,8 @@ class Deployer <contractInfo extends contractInfoMap>{
   privateKey: string
   wallet: Wallet
   contractInfoMap: contractInfo
-  etherscanApiKey?: string
+  etherscanApiKey: string
+  chainId: number
 
   deploymentRecord: deploymentRecord = {}
 
@@ -31,7 +44,8 @@ class Deployer <contractInfo extends contractInfoMap>{
     this.deploymentRecordPath = `${__dirname}/deployments/${Deployer.getEnvVariable('deploymentName')}.json`
     this.rpcUrl = Deployer.getEnvVariable('rpcUrl')
     this.privateKey = Deployer.getEnvVariable('privateKey')
-    this.etherscanApiKey = Deployer.getOptionalEnvVariable('etherscanApiKey')
+    this.etherscanApiKey = Deployer.getEnvVariable('etherscanApiKey')
+    this.chainId = parseInt(Deployer.getEnvVariable('chainId'))
 
     this.wallet = new Wallet(this.privateKey, new JsonRpcProvider(this.rpcUrl))
     this.contractInfoMap = contractInfoMap
@@ -65,27 +79,38 @@ class Deployer <contractInfo extends contractInfoMap>{
     this.initializeData()
   }
 
-  /* 
-    Executes the forge create cli command, an example of which is listed below.
-
-    forge create --rpc-url <your_rpc_url> \
-      --constructor-args "ForgeUSD" "FUSD" 18 1000000000000000000000 \
-      --private-key <your_private_key> src/MyToken.sol:MyToken \
-      --etherscan-api-key <your_etherscan_api_key> \
-      --verify
-  */
-  public deploy = async<contractName extends keyof contractInfo>(
+  public deploy = async<
+    contractName extends keyof contractInfo, 
+    argsType extends Parameters<contractInfo[contractName]["factory"]["deploy"]>,
+    returnType extends PromiseType<ReturnType<contractInfo[contractName]["factory"]["deploy"]>>
+  >(
     contractName: contractName,
-    args: (string | number)[], // TODO infer this from the SpecificContractFactory 
-  ): Promise<ReturnType<contractInfo[contractName]["connect"]>> => {
+    args: argsType,
+  ): Promise<returnType> => {
 
     const contractId = `${this.contractInfoMap[contractName].path}:${String(contractName)}`
     const existingContractAddress = this.getDeployedContractAddress(String(contractName))
-    if (existingContractAddress !== null) {
-      console.info(`☑️  ${String(contractName)} already deployed at ${existingContractAddress}`)
-      return this.contractInfoMap[contractName].connect(existingContractAddress, this.wallet) 
+
+    const verify = async (contractAddress: string) => {
+      console.info(`⏳ verifying ${String(contractName)}...`)
+      const encodedArgs = this.contractInfoMap[contractName].factory.interface.encodeDeploy(args)
+      await this.verifyContractUntilSuccess(contractAddress, contractId, this.etherscanApiKey, encodedArgs)
+      console.info(`✅ VERIFIED ${contractId.split(':')[1]}`)
     }
 
+    let contractAddress = ''
+    if (existingContractAddress !== null) {
+      console.info(`✅ ${String(contractName)} already deployed at ${existingContractAddress}`)
+      contractAddress = existingContractAddress
+
+      if (await this.isContractVerified(contractAddress)) {
+        console.info(`✅ ${String(contractName)} already verified`)
+      } else {
+        await verify(contractAddress)
+      }
+
+      return this.contractInfoMap[contractName].factory.attach(contractAddress).connect(this.wallet) as returnType
+    }
     const constructorArgs = 
       args.length === 0
         ? ''
@@ -104,11 +129,6 @@ class Deployer <contractInfo extends contractInfoMap>{
           }).join(' ')
         : ''
 
-    const etherscanArgs = 
-      this.etherscanApiKey === undefined 
-        ? ''
-        : `--etherscan-api-key ${this.etherscanApiKey} --verify`
-
     const command = [
       `forge create`,
       `--rpc-url ${this.rpcUrl}`,
@@ -116,7 +136,6 @@ class Deployer <contractInfo extends contractInfoMap>{
       libraryArgs,
       `--private-key ${this.privateKey}`,
       `${contractId}`,
-      etherscanArgs
     ]
 
     console.info(`⏳ deploying ${String(contractName)}...`)
@@ -124,11 +143,73 @@ class Deployer <contractInfo extends contractInfoMap>{
     const deployCommandOutput = execSync(command.join(' ')).toString()
 
     const contractAddressIndex = deployCommandOutput.indexOf('0x', deployCommandOutput.indexOf('Deployed to: '))
-    const contractAddress = deployCommandOutput.substring(contractAddressIndex, contractAddressIndex + 42)
+    contractAddress = deployCommandOutput.substring(contractAddressIndex, contractAddressIndex + 42)
+
     this.setDeployedContractAddress(String(contractName), contractAddress)
     console.info(`✅ DEPLOYED ${String(contractName)} to: ${contractAddress}`)
 
-    return this.contractInfoMap[contractName].connect(contractAddress, this.wallet) 
+    await verify(contractAddress)
+
+    return this.contractInfoMap[contractName].factory.attach(contractAddress).connect(this.wallet) as returnType
+  }
+
+  private isContractVerified = async(contractAddress: string): Promise<boolean> => {
+    try {
+      const apiUrl = 
+        this.chainId === 1
+          ? 'https://api.etherscan.io/api'
+          : `https://api-${chainIdToNetworkName[this.chainId]}.etherscan.io/api`
+
+      const response = await axios.get(
+        `${apiUrl}?module=contract&action=getabi&address=${contractAddress}&apikey=${this.etherscanApiKey}`
+      )
+      
+      // If true, contract ABI is available, which means the contract is verified
+      return response.data.status === '1' && response.data.message === 'OK'
+    } catch (error) {
+      console.error('Error checking contract verification:', error)
+      return false
+    }
+  }
+
+  private verifyContractUntilSuccess = async(
+    address: string,
+    contractId: string,
+    apiKey: string,
+    args: any
+  ) => {
+    return new Promise((resolve, _) => {
+      const command = [
+        `forge verify-contract ${address} ${contractId}`,
+        `--chain ${this.chainId}`,
+        `--etherscan-api-key ${apiKey}`,
+        `--constructor-args ${args}`,
+      ]
+
+      const attemptVerification = () => {
+        exec(command.join(' '), (error, stdout, stderr) => {
+          if (error) {
+            console.error(`Retrying after verification error: ${error}`)
+            setTimeout(attemptVerification, 1000) // Try again after 1 second
+            return
+          }
+
+          // Check if the output indicates success
+          if (stdout.includes("OK") || stdout.includes("is already verified")) {
+            resolve('OK')
+            return
+          } 
+
+          // stdout contains the output of the command
+          if (stderr) {
+            console.error(`stderr: ${stderr}`)
+          }
+
+          setTimeout(attemptVerification, 1000) // Try again after 1 second
+        })
+      }
+      attemptVerification();
+    });
   }
 
   public call = async (
@@ -145,6 +226,8 @@ class Deployer <contractInfo extends contractInfoMap>{
       return result
     }
   }
+
+  public getDeployerAddress = () => this.wallet.address
 
   // ================ Static Helper =================
   static getOptionalEnvVariable = (name: string): string | undefined => process.env[name]
