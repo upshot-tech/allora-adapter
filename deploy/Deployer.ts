@@ -1,5 +1,4 @@
-// Copyright (c) 2020-2022. All Rights Reserved
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: BUSL-1.1
 
 import fs from 'fs'
 import { ContractTransaction, Wallet, ContractRunner, JsonRpcProvider } from 'ethers'

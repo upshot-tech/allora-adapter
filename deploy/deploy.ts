@@ -1,4 +1,4 @@
-import ethers from 'ethers'
+// SPDX-License-Identifier: BUSL-1.1
 import Deployer from './Deployer'
 
 import { EvenFeeHandler__factory } from '../types/factories/EvenFeeHandler__factory'
