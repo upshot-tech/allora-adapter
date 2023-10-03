@@ -19,14 +19,15 @@ struct PriceDataWithoutSignature {
     bytes extraData;
 }
 
-contract EvenFeeHandlerTest is Test {
-    EvenFeeHandler public evenFeeHandler;
+contract PricesTest is Test {
 
-    address admin = address(100);
-    address protocolFeeReceiver = address(101);
+    EvenFeeHandler public evenFeeHandler;
     IAggregator aggregator;
     IFeeHandler feeHandler;
     Prices prices;
+
+    address admin = address(100);
+    address protocolFeeReceiver = address(101);
 
     uint256 signer0pk = 0x1000;
     uint256 signer1pk = 0x1001;

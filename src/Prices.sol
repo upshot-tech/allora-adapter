@@ -21,23 +21,23 @@ contract Prices is IPrices, Ownable2Step {
     /// @dev The valid signers
     mapping(address signer => bool isValid) public validSigner;
 
-    /// @dev The nonce for each feed
-    mapping(uint256 feedId => Feed) public feed;
+    /// @dev The data for each feed. Call getFeed function for access to structured data
+    mapping(uint256 feedId => Feed) internal feed;
 
     /// @dev The next feedId to use
     uint256 public nextFeedId = 1;
 
     /// @dev The aggregator to use for aggregating prices
-    IAggregator aggregator;
+    IAggregator public aggregator;
 
     /// @dev The fee handler to use for handling fees
-    IFeeHandler feeHandler;
+    IFeeHandler public feeHandler;
 
     /// @dev Whether the oracle contract is switched on and usable
     bool public switchedOn = true;
 
     /// @dev The total fee to be paid by the user
-    uint256 public feePerPrice = 0.001 ether;
+    uint256 public totalFee = 0.001 ether;
 
 
     constructor(
@@ -70,7 +70,7 @@ contract Prices is IPrices, Ownable2Step {
     event UpshotOracleV2PricesAdminUpdatedFeeHandler(address feeHandler);
     event UpshotOracleV2PricesAdminSwitchedOff();
     event UpshotOracleV2PricesAdminSwitchedOn();
-    event UpshotOracleV2AdminUpdatedFeePerPrice(uint256 feePerPrice);
+    event UpshotOracleV2AdminUpdatedFeePerPrice(uint256 totalFee);
 
     // ***************************************************************
     // * ========================= ERRORS ========================== *
@@ -106,7 +106,7 @@ contract Prices is IPrices, Ownable2Step {
             revert UpshotOracleV2NotSwitchedOn();
         }
 
-        if (msg.value < feePerPrice) {
+        if (msg.value < totalFee) {
             revert UpshotOracleV2InsufficientPayment();
         }
 
@@ -212,6 +212,18 @@ contract Prices is IPrices, Ownable2Step {
     }
 
     // ***************************************************************
+    // * ===================== VIEW FUNCTIONS ====================== *
+    // ***************************************************************
+    /**
+     * @notice Get the feed data for a given feedId
+     * 
+     * @return The feed data
+     */
+    function getFeed(uint256 feedId) external view returns (Feed memory) {
+        return feed[feedId];
+    }
+
+    // ***************************************************************
     // * ==================== INTERNAL HELPERS ===================== *
     // ***************************************************************
     /**
@@ -253,7 +265,7 @@ contract Prices is IPrices, Ownable2Step {
      * @param priceValiditySeconds_ The number of seconds a price is valid for
      */
     function updatePriceValiditySeconds(uint256 priceValiditySeconds_) external onlyOwner {
-        if (priceValiditySeconds == 0) { 
+        if (priceValiditySeconds_ == 0) { 
             revert UpshotOracleV2InvalidPriceValiditySeconds();
         }
 
@@ -367,14 +379,14 @@ contract Prices is IPrices, Ownable2Step {
     /**
      * @notice Admin function to update the total fee to be paid per price
      * 
-     * @param feePerPrice_ The total fee to be paid per price
+     * @param totalFee_ The total fee to be paid per price
      */
-    function updateTotalFee(uint256 feePerPrice_) external onlyOwner {
-        if (0 < feePerPrice_ && feePerPrice_ < 1_000) {
+    function updateTotalFee(uint256 totalFee_) external onlyOwner {
+        if (0 < totalFee_ && totalFee_ < 1_000) {
             revert UpshotOracleV2InvalidTotalFee();
         }
-        feePerPrice = feePerPrice_;
+        totalFee = totalFee_;
 
-        emit UpshotOracleV2AdminUpdatedFeePerPrice(feePerPrice_);
+        emit UpshotOracleV2AdminUpdatedFeePerPrice(totalFee_);
     }
 }
