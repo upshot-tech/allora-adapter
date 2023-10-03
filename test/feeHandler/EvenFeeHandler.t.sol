@@ -2,7 +2,7 @@
 pragma solidity ^0.8.13;
 
 import "../../lib/forge-std/src/Test.sol";
-import {EvenFeeHandler} from "../../src/feeHandler/EvenFeeHandler.sol";
+import {EvenFeeHandler, EvenFeeHandlerConstructorArgs} from "../../src/feeHandler/EvenFeeHandler.sol";
 
 contract EvenFeeHandlerTest is Test {
     EvenFeeHandler public evenFeeHandler;
@@ -13,7 +13,12 @@ contract EvenFeeHandlerTest is Test {
     address imposter = address(200);
 
     function setUp() public {
-        evenFeeHandler = new EvenFeeHandler(admin, protocolFeeReceiver);
+        evenFeeHandler = new EvenFeeHandler(
+            EvenFeeHandlerConstructorArgs({
+                admin: admin,
+                protocolFeeReceiver: protocolFeeReceiver
+            })  
+        );
     }
 
     // ***************************************************************

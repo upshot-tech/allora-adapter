@@ -10,6 +10,12 @@ import { Math } from "../lib/openzeppelin-contracts/contracts/utils/math/Math.so
 import { Ownable2Step } from "../lib/openzeppelin-contracts/contracts/access/Ownable2Step.sol";
 
 
+struct PricesConstructorArgs {
+    address admin;
+    address aggregator;
+    address feeHandler;
+}
+
 contract Prices is IPrices, Ownable2Step {
 
     /// @dev The minimum number of prices required to get a valid price
@@ -39,19 +45,16 @@ contract Prices is IPrices, Ownable2Step {
     /// @dev The total fee to be paid by the user
     uint256 public totalFee = 0.001 ether;
 
-
     constructor(
-        address admin_,
-        address aggregator_,
-        address feeHandler_
+        PricesConstructorArgs memory args
     ) {
-        _transferOwnership(admin_);
+        _transferOwnership(args.admin);
 
-        aggregator = IAggregator(aggregator_);
-        emit UpshotOracleV2PricesAdminUpdatedAggregator(aggregator_);
+        aggregator = IAggregator(args.aggregator);
+        emit UpshotOracleV2PricesAdminUpdatedAggregator(args.aggregator);
 
-        feeHandler = IFeeHandler(feeHandler_);
-            emit UpshotOracleV2PricesAdminUpdatedFeeHandler(feeHandler_);
+        feeHandler = IFeeHandler(args.feeHandler);
+        emit UpshotOracleV2PricesAdminUpdatedFeeHandler(args.feeHandler);
     }
 
     // ***************************************************************
