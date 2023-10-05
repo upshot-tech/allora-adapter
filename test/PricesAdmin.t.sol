@@ -31,8 +31,12 @@ contract PricesAdmin is Test {
 
     address imposter = address(200);
     address newSigner = address(201);
-    address dummyAggregator = address(202);
-    address dummyFeeHandler = address(202);
+    IAggregator dummyAggregator = IAggregator(address(202));
+    IFeeHandler dummyFeeHandler = IFeeHandler(address(202));
+
+    uint256 signer0pk = 0x1000;
+    address signer0;
+    address[] oneValidSigner;
 
     function setUp() public {
         vm.warp(1 hours);
@@ -43,10 +47,15 @@ contract PricesAdmin is Test {
             protocolFeeReceiver: protocolFeeReceiver
         }));
         prices = new Prices(PricesConstructorArgs({
-            admin: admin, 
-            aggregator: address(aggregator), 
-            feeHandler: address(feeHandler)
+            admin: admin
         }));
+
+        oneValidSigner = new address[](1);
+        oneValidSigner[0] = signer0;
+
+        vm.startPrank(admin);
+        prices.addFeed('Initial feed', aggregator, feeHandler, oneValidSigner);
+        vm.stopPrank();
     }
 
     // ***************************************************************
@@ -57,23 +66,23 @@ contract PricesAdmin is Test {
         vm.startPrank(imposter);
 
         vm.expectRevert('Ownable: caller is not the owner');
-        prices.updateMinPrices(3);
+        prices.updateMinPrices(1, 3);
     }
 
     function test_ownerCantUpdateMinPricesToZero() public {
         vm.startPrank(admin);
 
         vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2PricesInvalidMinPrices()"));
-        prices.updateMinPrices(0);
+        prices.updateMinPrices(1, 0);
     }
 
     function test_ownerCanUpdateMinPrices() public {
         vm.startPrank(admin);
 
-        assertEq(prices.minPrices(), 1);
+        assertEq(prices.getFeed(1).minPrices, 1);
 
-        prices.updateMinPrices(2);
-        assertEq(prices.minPrices(), 2);
+        prices.updateMinPrices(1, 2);
+        assertEq(prices.getFeed(1).minPrices, 2);
     }
 
     // ***************************************************************
@@ -84,23 +93,23 @@ contract PricesAdmin is Test {
         vm.startPrank(imposter);
 
         vm.expectRevert('Ownable: caller is not the owner');
-        prices.updatePriceValiditySeconds(10 minutes);
+        prices.updatePriceValiditySeconds(1, 10 minutes);
     }
 
     function test_ownerCantUpdatePriceValiditySecondsToZero() public {
         vm.startPrank(admin);
 
         vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2InvalidPriceValiditySeconds()"));
-        prices.updatePriceValiditySeconds(0);
+        prices.updatePriceValiditySeconds(1, 0);
     }
 
     function test_ownerCanUpdatePriceValiditySeconds() public {
         vm.startPrank(admin);
 
-        assertEq(prices.priceValiditySeconds(), 5 minutes);
+        assertEq(prices.getFeed(1).priceValiditySeconds, 5 minutes);
 
-        prices.updatePriceValiditySeconds(10 minutes);
-        assertEq(prices.priceValiditySeconds(), 10 minutes);
+        prices.updatePriceValiditySeconds(1, 10 minutes);
+        assertEq(prices.getFeed(1).priceValiditySeconds, 10 minutes);
     }
 
     // ***************************************************************
@@ -111,16 +120,16 @@ contract PricesAdmin is Test {
         vm.startPrank(imposter);
 
         vm.expectRevert('Ownable: caller is not the owner');
-        prices.addValidSigner(imposter);
+        prices.addValidSigner(1, imposter);
     }
 
     function test_ownerCanAddValidSigner() public {
         vm.startPrank(admin);
 
-        assertEq(prices.validSigner(newSigner), false);
+        assertEq(_contains(newSigner, prices.getFeed(1).validPriceProviders), false);
 
-        prices.addValidSigner(newSigner);
-        assertEq(prices.validSigner(newSigner), true);
+        prices.addValidSigner(1, newSigner);
+        assertEq(_contains(newSigner, prices.getFeed(1).validPriceProviders), true);
     }
 
     // ***************************************************************
@@ -131,17 +140,17 @@ contract PricesAdmin is Test {
         vm.startPrank(imposter);
 
         vm.expectRevert('Ownable: caller is not the owner');
-        prices.removeValidSigner(imposter);
+        prices.removeValidSigner(1, imposter);
     }
 
     function test_ownerCanRemoveValidSigner() public {
         vm.startPrank(admin);
-        prices.addValidSigner(newSigner);
+        prices.addValidSigner(1, newSigner);
 
-        assertEq(prices.validSigner(newSigner), true);
+        assertEq(_contains(newSigner, prices.getFeed(1).validPriceProviders), true);
 
-        prices.removeValidSigner(newSigner);
-        assertEq(prices.validSigner(newSigner), false);
+        prices.removeValidSigner(1, newSigner);
+        assertEq(_contains(newSigner, prices.getFeed(1).validPriceProviders), false);
     }
 
     // ***************************************************************
@@ -152,55 +161,54 @@ contract PricesAdmin is Test {
         vm.startPrank(imposter);
 
         vm.expectRevert('Ownable: caller is not the owner');
-        prices.addFeed('new feed');
+        prices.addFeed('second feed', aggregator, feeHandler, oneValidSigner);
     }
 
     function test_ownerCantAddFeedWithEmptyTitle() public {
         vm.startPrank(admin);
 
         vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2InvalidFeedTitle()"));
-        prices.addFeed('');
+        prices.addFeed('', aggregator, feeHandler, oneValidSigner);
     }
 
     function test_ownerCanAddFeed() public {
         vm.startPrank(admin);
 
-        assertEq(prices.getFeed(1).isValid, false);
+        assertEq(prices.getFeed(2).isValid, false);
 
-        prices.addFeed('new feed');
+        prices.addFeed('second feed', aggregator, feeHandler, oneValidSigner);
 
-        assertEq(prices.getFeed(1).isValid, true);
+        assertEq(prices.getFeed(2).isValid, true);
     }
 
     function test_addingFeedGivesProperId() public {
         vm.startPrank(admin);
-        uint256 firstFeedId = prices.addFeed('new feed');
-        uint256 secondFeedId = prices.addFeed('new feed2');
+        uint256 secondFeedId = prices.addFeed('second feed', aggregator, feeHandler, oneValidSigner);
+        uint256 thirdFeedId = prices.addFeed('third feed', aggregator, feeHandler, oneValidSigner);
 
-        assertEq(firstFeedId, 1);
         assertEq(secondFeedId, 2);
-        assertEq(prices.getFeed(1).isValid, true);
+        assertEq(thirdFeedId, 3);
         assertEq(prices.getFeed(2).isValid, true);
+        assertEq(prices.getFeed(3).isValid, true);
     }
 
     // ***************************************************************
     // * ===================== REMOVE FEED ========================= *
     // ***************************************************************
 
-    function test_imposterCantRemoveFeed() public {
+    function test_imposterCantTurnOffFeed() public {
         vm.startPrank(imposter);
 
         vm.expectRevert('Ownable: caller is not the owner');
-        prices.removeFeed(1);
+        prices.turnOffFeed(1);
     }
 
-    function test_ownerCanRemoveFeed() public {
+    function test_ownerCanTurnOffFeed() public {
         vm.startPrank(admin);
-        prices.addFeed('new feed');
 
         assertEq(prices.getFeed(1).isValid, true);
 
-        prices.removeFeed(1);
+        prices.turnOffFeed(1);
 
         assertEq(prices.getFeed(1).isValid, false);
     }
@@ -213,14 +221,14 @@ contract PricesAdmin is Test {
         vm.startPrank(imposter);
 
         vm.expectRevert('Ownable: caller is not the owner');
-        prices.updateAggregator(dummyAggregator);
+        prices.updateAggregator(1, dummyAggregator);
     }
 
     function test_ownerCantUpdateAggregatorToZeroAddress() public {
         vm.startPrank(admin);
 
         vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2InvalidAggregator()"));
-        prices.updateAggregator(address(0));
+        prices.updateAggregator(1, IAggregator(address(0)));
     }
 
     function test_ownerCanUpdateAggregator() public {
@@ -228,11 +236,11 @@ contract PricesAdmin is Test {
 
         MedianAggregator medianAggregator = new MedianAggregator();
 
-        assertEq(address(prices.aggregator()), address(aggregator));
+        assertEq(address(prices.getFeed(1).aggregator), address(aggregator));
 
-        prices.updateAggregator(address(medianAggregator));
+        prices.updateAggregator(1, medianAggregator);
 
-        assertEq(address(prices.aggregator()), address(medianAggregator));
+        assertEq(address(prices.getFeed(1).aggregator), address(medianAggregator));
     }
 
     // ***************************************************************
@@ -243,14 +251,14 @@ contract PricesAdmin is Test {
         vm.startPrank(imposter);
 
         vm.expectRevert('Ownable: caller is not the owner');
-        prices.updateFeeHandler(dummyFeeHandler);
+        prices.updateFeeHandler(1, dummyFeeHandler);
     }
 
     function test_ownerCantUpdateFeeHandlerToZeroAddress() public {
         vm.startPrank(admin);
 
         vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2InvalidFeeHandler()"));
-        prices.updateFeeHandler(address(0));
+        prices.updateFeeHandler(1, IFeeHandler(address(0)));
     }
 
     function test_ownerCanUpdateFeeHandler() public {
@@ -263,11 +271,11 @@ contract PricesAdmin is Test {
 
         assertTrue(address(feeHandler) != address(newFeeHandler));
 
-        assertEq(address(prices.feeHandler()), address(feeHandler));
+        assertEq(address(prices.getFeed(1).feeHandler), address(feeHandler));
 
-        prices.updateFeeHandler(address(newFeeHandler));
+        prices.updateFeeHandler(1, newFeeHandler);
 
-        assertEq(address(prices.feeHandler()), address(newFeeHandler));
+        assertEq(address(prices.getFeed(1).feeHandler), address(newFeeHandler));
     }
 
     // ***************************************************************
@@ -321,34 +329,42 @@ contract PricesAdmin is Test {
         vm.startPrank(imposter);
 
         vm.expectRevert('Ownable: caller is not the owner');
-        prices.updateTotalFee(1 ether);
+        prices.updateTotalFee(1, 1 ether);
     }
 
     function test_ownerCantUpdateTotalFeeToLessThan1000() public {
         vm.startPrank(admin);
 
         vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2InvalidTotalFee()"));
-        prices.updateTotalFee(999);
+        prices.updateTotalFee(1, 999);
     }
 
     function test_ownerCanUpdateTotalFeeToZero() public {
         vm.startPrank(admin);
 
-        assertEq(prices.totalFee(), 0.001 ether);
+        assertEq(prices.getFeed(1).totalFee, 0.001 ether);
 
-        prices.updateTotalFee(0);
+        prices.updateTotalFee(1, 0);
 
-        assertEq(prices.totalFee(), 0);
+        assertEq(prices.getFeed(1).totalFee, 0);
     }
 
     function test_ownerCanUpdateTotalFee() public {
         vm.startPrank(admin);
 
-        assertEq(prices.totalFee(), 0.001 ether);
+        assertEq(prices.getFeed(1).totalFee, 0.001 ether);
 
-        prices.updateTotalFee(1 ether);
+        prices.updateTotalFee(1, 1 ether);
 
-        assertEq(prices.totalFee(), 1 ether);
+        assertEq(prices.getFeed(1).totalFee, 1 ether);
     }
 
+    function _contains(address needle, address[] memory haystack ) internal pure returns (bool) {
+        for (uint i = 0; i < haystack.length; i++) {
+            if (haystack[i] == needle) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

@@ -37,6 +37,11 @@ contract PricesTest is Test {
     address signer1;
     address signer2;
 
+    address[] oneValidSigner;
+    address[] twoValidSigners;
+    address[] threeValidSigners;
+    address[] emptyValidSigners;
+
 
     function setUp() public {
         vm.warp(1 hours);
@@ -47,14 +52,29 @@ contract PricesTest is Test {
             protocolFeeReceiver: protocolFeeReceiver
         }));
         prices = new Prices(PricesConstructorArgs({
-            admin: admin, 
-            aggregator: address(aggregator), 
-            feeHandler: address(feeHandler)
+            admin: admin 
         }));
 
         signer0 = vm.addr(signer0pk);
         signer1 = vm.addr(signer1pk);
         signer2 = vm.addr(signer2pk);
+
+        console.log("here 1");
+        oneValidSigner = new address[](1);
+        oneValidSigner[0] = signer0;
+
+        console.log("here 2");
+        twoValidSigners = new address[](2);
+        twoValidSigners[0] = signer0;
+        twoValidSigners[1] = signer1;
+
+        console.log("here 3");
+        threeValidSigners = new address[](3);
+        threeValidSigners[0] = signer0;
+        threeValidSigners[1] = signer1;
+        threeValidSigners[2] = signer2;
+
+        console.log("here 4");
     }
 
     // ***************************************************************
@@ -87,8 +107,7 @@ contract PricesTest is Test {
 
     function test_canCallGetPriceWithValidSignature() public {
         vm.startPrank(admin);
-        prices.addFeed('Initial feed');
-        prices.addValidSigner(signer0);
+        prices.addFeed('Initial feed', aggregator, feeHandler, oneValidSigner);
         vm.stopPrank();
 
         PriceData[] memory priceData = new PriceData[](1);
@@ -108,9 +127,11 @@ contract PricesTest is Test {
     }
 
     function test_cantCallGetPriceWithoutValidFeedId() public {
+        /*
         vm.startPrank(admin);
         prices.addValidSigner(signer0);
         vm.stopPrank();
+        */
 
         PriceData[] memory priceData = new PriceData[](1);
 
@@ -131,8 +152,7 @@ contract PricesTest is Test {
 
     function test_cantCallGetPriceWithoutValidNonce() public {
         vm.startPrank(admin);
-        prices.addFeed('Initial feed');
-        prices.addValidSigner(signer0);
+        prices.addFeed('Initial feed', aggregator, feeHandler, oneValidSigner);
         vm.stopPrank();
 
         PriceData[] memory priceData = new PriceData[](1);
@@ -154,8 +174,7 @@ contract PricesTest is Test {
 
     function test_cantCallGetPriceWithMismatchedFeeds() public {
         vm.startPrank(admin);
-        prices.addFeed('Initial feed');
-        prices.addValidSigner(signer0);
+        prices.addFeed('Initial feed', aggregator, feeHandler, oneValidSigner);
         vm.stopPrank();
 
         PriceData[] memory priceData = new PriceData[](2);
@@ -189,8 +208,7 @@ contract PricesTest is Test {
 
     function test_cantCallGetPriceWithMismatchedNonces() public {
         vm.startPrank(admin);
-        prices.addFeed('Initial feed');
-        prices.addValidSigner(signer0);
+        prices.addFeed('Initial feed', aggregator, feeHandler, oneValidSigner);
         vm.stopPrank();
 
         PriceData[] memory priceData = new PriceData[](2);
@@ -223,8 +241,7 @@ contract PricesTest is Test {
 
     function test_cantCallGetPriceWithInvalidTime() public {
         vm.startPrank(admin);
-        prices.addFeed('Initial feed');
-        prices.addValidSigner(signer0);
+        prices.addFeed('Initial feed', aggregator, feeHandler, oneValidSigner);
         vm.stopPrank();
 
         PriceData[] memory priceData = new PriceData[](1);
@@ -246,7 +263,7 @@ contract PricesTest is Test {
 
     function test_cantCallGetPriceWithInvalidSigner() public {
         vm.startPrank(admin);
-        prices.addFeed('Initial feed');
+        prices.addFeed('Initial feed', aggregator, feeHandler, emptyValidSigners);
         vm.stopPrank();
 
         PriceData[] memory priceData = new PriceData[](1);
@@ -268,8 +285,7 @@ contract PricesTest is Test {
 
     function test_cantCallGetPriceWithDuplicateSigner() public {
         vm.startPrank(admin);
-        prices.addFeed('Initial feed');
-        prices.addValidSigner(signer0);
+        prices.addFeed('Initial feed', aggregator, feeHandler, oneValidSigner);
         vm.stopPrank();
 
         PriceData[] memory priceData = new PriceData[](2);
@@ -302,9 +318,7 @@ contract PricesTest is Test {
 
     function test_priceAverageAggregationWorksCorrectly() public {
         vm.startPrank(admin);
-        prices.addFeed('Initial feed');
-        prices.addValidSigner(signer0);
-        prices.addValidSigner(signer1);
+        prices.addFeed('Initial feed', aggregator, feeHandler, twoValidSigners);
         vm.stopPrank();
 
         PriceData[] memory priceData = new PriceData[](2);
@@ -339,10 +353,7 @@ contract PricesTest is Test {
         MedianAggregator medianAggregator = new MedianAggregator();
 
         vm.startPrank(admin);
-        prices.addFeed('Initial feed');
-        prices.addValidSigner(signer0);
-        prices.addValidSigner(signer1);
-        prices.updateAggregator(address(medianAggregator));
+        prices.addFeed('Initial feed', medianAggregator, feeHandler, twoValidSigners);
         vm.stopPrank();
 
         PriceData[] memory priceData = new PriceData[](2);
@@ -377,11 +388,7 @@ contract PricesTest is Test {
         MedianAggregator medianAggregator = new MedianAggregator();
 
         vm.startPrank(admin);
-        prices.addFeed('Initial feed');
-        prices.addValidSigner(signer0);
-        prices.addValidSigner(signer1);
-        prices.addValidSigner(signer2);
-        prices.updateAggregator(address(medianAggregator));
+        prices.addFeed('Initial feed', medianAggregator, feeHandler, threeValidSigners);
         vm.stopPrank();
 
         PriceData[] memory priceData = new PriceData[](3);
@@ -426,9 +433,7 @@ contract PricesTest is Test {
 
     function test_priceFeesSplitCorrectly() public {
         vm.startPrank(admin);
-        prices.addFeed('Initial feed');
-        prices.addValidSigner(signer0);
-        prices.addValidSigner(signer1);
+        prices.addFeed('Initial feed', aggregator, feeHandler, twoValidSigners);
         vm.stopPrank();
 
         PriceData[] memory priceData = new PriceData[](2);

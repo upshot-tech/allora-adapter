@@ -1,30 +1,20 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.13;
 
-import { IPrices, Feed } from './interface/IPrices.sol';
+import { IPrices, Feed, FeedView } from './interface/IPrices.sol';
 import { IAggregator } from './interface/IAggregator.sol';
 import { IFeeHandler } from './interface/IFeeHandler.sol';
 import { PriceData } from './interface/IPrices.sol';
 import { ECDSA } from "../lib/openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
 import { Math } from "../lib/openzeppelin-contracts/contracts/utils/math/Math.sol";
 import { Ownable2Step } from "../lib/openzeppelin-contracts/contracts/access/Ownable2Step.sol";
+import { EnumerableSet } from "../lib/openzeppelin-contracts/contracts/utils/structs/EnumerableSet.sol";
 
 struct PricesConstructorArgs {
     address admin;
-    address aggregator;
-    address feeHandler;
 }
 
 contract Prices is IPrices, Ownable2Step {
-
-    /// @dev The minimum number of prices required to get a valid price
-    uint256 public minPrices = 1;
-
-    /// @dev The number of seconds a price is valid for
-    uint256 public priceValiditySeconds = 5 minutes;
-
-    /// @dev The valid signers
-    mapping(address signer => bool isValid) public validSigner;
 
     /// @dev The data for each feed. Call getFeed function for access to structured data
     mapping(uint256 feedId => Feed) internal feed;
@@ -32,28 +22,13 @@ contract Prices is IPrices, Ownable2Step {
     /// @dev The next feedId to use
     uint256 public nextFeedId = 1;
 
-    /// @dev The aggregator to use for aggregating prices
-    IAggregator public aggregator;
-
-    /// @dev The fee handler to use for handling fees
-    IFeeHandler public feeHandler;
-
     /// @dev Whether the oracle contract is switched on and usable
     bool public switchedOn = true;
-
-    /// @dev The total fee to be paid by the user
-    uint256 public totalFee = 0.001 ether;
 
     constructor(
         PricesConstructorArgs memory args
     ) {
         _transferOwnership(args.admin);
-
-        aggregator = IAggregator(args.aggregator);
-        emit UpshotOracleV2PricesAdminUpdatedAggregator(args.aggregator);
-
-        feeHandler = IFeeHandler(args.feeHandler);
-        emit UpshotOracleV2PricesAdminUpdatedFeeHandler(args.feeHandler);
     }
 
     // ***************************************************************
@@ -62,14 +37,21 @@ contract Prices is IPrices, Ownable2Step {
 
     event UpshotOracleV2PricesGotPrice(uint256 feedId, uint256 price, address[] priceProviders, uint256 nonce);
     event UpshotOracleV2PricesFeedAdded(uint256 feedId, string title);
-    event UpshotOracleV2PricesAdminUpdatedMinPrices(uint256 minPrices);
-    event UpshotOracleV2PricesAdminUpdatedPriceValiditySeconds(uint256 priceValiditySeconds);
-    event UpshotOracleV2PricesAdminAddedValidSigner(address signer);
+    event UpshotOracleV2PricesAdminUpdatedMinPrices(uint256 feedId, uint256 minPrices);
+    event UpshotOracleV2PricesAdminUpdatedPriceValiditySeconds(uint256 feedId, uint256 priceValiditySeconds);
+    event UpshotOracleV2PricesAdminAddedValidSigner(uint256 feedId, address signer);
     event UpshotOracleV2PricesAdminRemovedValidSigner(address signer);
-    event UpshotOracleV2PricesAdminAddedFeed(uint256 feedId, string title);
-    event UpshotOracleV2PricesAdminRemovedFeed(uint256 feedId);
-    event UpshotOracleV2PricesAdminUpdatedAggregator(address aggregator);
-    event UpshotOracleV2PricesAdminUpdatedFeeHandler(address feeHandler);
+    event UpshotOracleV2PricesAdminAddedFeed(
+        uint256 feedId, 
+        string title, 
+        IAggregator aggregator, 
+        IFeeHandler feeHandler, 
+        address[] validPriceProviders
+    );
+    event UpshotOracleV2PricesAdminFeedTurnedOff(uint256 feedId);
+    event UpshotOracleV2PricesAdminFeedTurnedOn(uint256 feedId);
+    event UpshotOracleV2PricesAdminUpdatedAggregator(uint256 feedId, IAggregator aggregator);
+    event UpshotOracleV2PricesAdminUpdatedFeeHandler(uint256 feedId, IFeeHandler feeHandler);
     event UpshotOracleV2PricesAdminSwitchedOff();
     event UpshotOracleV2PricesAdminSwitchedOn();
     event UpshotOracleV2AdminUpdatedFeePerPrice(uint256 totalFee);
@@ -108,19 +90,20 @@ contract Prices is IPrices, Ownable2Step {
             revert UpshotOracleV2NotSwitchedOn();
         }
 
-        if (msg.value < totalFee) {
+        uint256 feedId = priceData[0].feedId;
+
+        if (msg.value < feed[feedId].totalFee) {
             revert UpshotOracleV2InsufficientPayment();
         }
 
         uint256 priceDataCount = priceData.length;
 
-        if (priceDataCount == 0 || priceDataCount < minPrices) {
+        if (priceDataCount == 0 || priceDataCount < feed[feedId].minPrices) {
             revert UpshotOracleV2NotEnoughPrices();
         }
 
         uint256[] memory tokenPrices = new uint256[](priceDataCount);
         address[] memory priceProviders = new address[](priceDataCount);
-        uint256 feedId = priceData[0].feedId;
         uint256 nonce = priceData[0].nonce;
 
         if (!feed[feedId].isValid) {
@@ -143,7 +126,7 @@ contract Prices is IPrices, Ownable2Step {
 
             if (
                 block.timestamp < data.timestamp ||
-                data.timestamp + priceValiditySeconds < block.timestamp
+                data.timestamp + feed[feedId].priceValiditySeconds < block.timestamp
             ) {
                 revert UpshotOracleV2InvalidPriceTime();
             }
@@ -160,7 +143,7 @@ contract Prices is IPrices, Ownable2Step {
                     data.signature
                 );
 
-            if (!validSigner[signer]) {
+            if (!EnumerableSet.contains(feed[feedId].validPriceProviders, signer)) {
                 revert UpshotOracleV2InvalidSigner();
             }
 
@@ -183,9 +166,9 @@ contract Prices is IPrices, Ownable2Step {
             }
         }
 
-        price = aggregator.aggregate(tokenPrices, "");
+        price = feed[feedId].aggregator.aggregate(tokenPrices, "");
 
-        feeHandler.handleFees{value: msg.value}(priceProviders, "");
+        feed[feedId].feeHandler.handleFees{value: msg.value}(priceProviders, "");
 
         emit UpshotOracleV2PricesGotPrice(feedId, price, priceProviders, nonce);
     }
@@ -225,8 +208,18 @@ contract Prices is IPrices, Ownable2Step {
      * 
      * @return The feed data
      */
-    function getFeed(uint256 feedId) external view returns (Feed memory) {
-        return feed[feedId];
+    function getFeed(uint256 feedId) external view returns (FeedView memory) {
+        return FeedView({
+            title: feed[feedId].title,
+            nonce: feed[feedId].nonce,
+            totalFee: feed[feedId].totalFee,
+            minPrices: feed[feedId].minPrices,
+            priceValiditySeconds: feed[feedId].priceValiditySeconds,
+            aggregator: feed[feedId].aggregator,
+            isValid: feed[feedId].isValid,
+            feeHandler: feed[feedId].feeHandler,
+            validPriceProviders: EnumerableSet.values(feed[feedId].validPriceProviders)
+        });
     }
 
     // ***************************************************************
@@ -253,87 +246,121 @@ contract Prices is IPrices, Ownable2Step {
     /**
      * @notice Admin function to update the minimum number of prices required to get a valid price
      * 
-     * @param minPrices_ The minimum number of prices required to get a valid price
+     * @param feedId The feedId to update the minimum number of prices for
+     * @param minPrices The minimum number of prices required to get a valid price
      */
-    function updateMinPrices(uint256 minPrices_) external onlyOwner {
-        if (minPrices_ == 0) {
+    function updateMinPrices(uint256 feedId, uint256 minPrices) external onlyOwner {
+        if (minPrices == 0) {
             revert UpshotOracleV2PricesInvalidMinPrices();
         }
 
-        minPrices = minPrices_;
+        feed[feedId].minPrices = minPrices;
 
-        emit UpshotOracleV2PricesAdminUpdatedMinPrices(minPrices_);
+        emit UpshotOracleV2PricesAdminUpdatedMinPrices(feedId, minPrices);
     }
 
     /**
      * @notice Admin function to update the number of seconds a price is valid for
      * 
-     * @param priceValiditySeconds_ The number of seconds a price is valid for
+     * @param feedId The feedId to update the number of seconds a price is valid for
+     * @param priceValiditySeconds The number of seconds a price is valid for
      */
-    function updatePriceValiditySeconds(uint256 priceValiditySeconds_) external onlyOwner {
-        if (priceValiditySeconds_ == 0) { 
+    function updatePriceValiditySeconds(uint256 feedId, uint256 priceValiditySeconds) external onlyOwner {
+        if (priceValiditySeconds == 0) { 
             revert UpshotOracleV2InvalidPriceValiditySeconds();
         }
 
-        priceValiditySeconds = priceValiditySeconds_;
+        feed[feedId].priceValiditySeconds = priceValiditySeconds;
 
-        emit UpshotOracleV2PricesAdminUpdatedPriceValiditySeconds(priceValiditySeconds_);
+        emit UpshotOracleV2PricesAdminUpdatedPriceValiditySeconds(feedId, priceValiditySeconds);
     }
 
     /**
      * @notice Admin function to add a valid signer
      * 
+     * @param feedId The feedId to add the valid signer for
      * @param signer The signer to add
      */
-    function addValidSigner(address signer) external onlyOwner {
-        validSigner[signer] = true;
+    function addValidSigner(uint256 feedId, address signer) external onlyOwner {
+        EnumerableSet.add(feed[feedId].validPriceProviders, signer);
 
-        emit UpshotOracleV2PricesAdminAddedValidSigner(signer);
+        emit UpshotOracleV2PricesAdminAddedValidSigner(feedId, signer);
     }
 
     /**
      * @notice Admin function to remove a valid signer
      * 
+     * @param feedId The feedId to remove the signer from
      * @param signer The signer to remove
      */
-    function removeValidSigner(address signer) external onlyOwner {
-        validSigner[signer] = false;
+    function removeValidSigner(uint256 feedId, address signer) external onlyOwner {
+        EnumerableSet.remove(feed[feedId].validPriceProviders, signer);
 
         emit UpshotOracleV2PricesAdminRemovedValidSigner(signer);
     }
 
     /**
-     * @notice Admin function to add a feed
+     * @notice Admin function to add a new feed
      * 
      * @param title The title of the feed
+     * @param aggregator The aggregator to use for aggregating prices
+     * @param feeHandler The fee handler to use for handling fees
+     * @param validPriceProviders The valid price providers for the feed
      */
-    function addFeed(string memory title) external onlyOwner returns (uint256 feedId) {
+    function addFeed(
+        string memory title,
+        IAggregator aggregator,
+        IFeeHandler feeHandler,
+        address[] memory validPriceProviders
+    ) external onlyOwner returns (uint256 newFeedId) {
         if (bytes(title).length == 0) {
             revert UpshotOracleV2InvalidFeedTitle();
         }
+        newFeedId = nextFeedId++;
 
-        feed[nextFeedId] = Feed({
-            title: title,
-            isValid: true,
-            nonce: 1
-        });
+        feed[newFeedId].title = title;
+        feed[newFeedId].nonce = 1;
+        feed[newFeedId].aggregator = aggregator;
+        feed[newFeedId].isValid = true;
+        feed[newFeedId].feeHandler = feeHandler;
 
-        emit UpshotOracleV2PricesAdminAddedFeed(nextFeedId, title);
+        for (uint256 i = 0; i < validPriceProviders.length;) {
+            EnumerableSet.add(feed[newFeedId].validPriceProviders, validPriceProviders[i]);
 
-        feedId = nextFeedId;
+            unchecked {
+                ++i;
+            }
+        }
 
-        unchecked { ++nextFeedId; }
+        emit UpshotOracleV2PricesAdminAddedFeed(
+            newFeedId, 
+            title, 
+            aggregator, 
+            feeHandler, 
+            validPriceProviders
+        );
     }
 
     /**
-     * @notice Admin function to remove a feed
+     * @notice Admin function to turn off a feed
      * 
-     * @param feedId The feedId of the feed to remove
+     * @param feedId The feedId of the feed to turn off
      */
-    function removeFeed(uint256 feedId) external onlyOwner {
-        delete feed[feedId];
+    function turnOffFeed(uint256 feedId) external onlyOwner {
+        feed[feedId].isValid = false;
         
-        emit UpshotOracleV2PricesAdminRemovedFeed(feedId);
+        emit UpshotOracleV2PricesAdminFeedTurnedOff(feedId);
+    }
+
+    /**
+     * @notice Admin function to turn on a feed
+     * 
+     * @param feedId The feedId of the feed to turn on
+     */
+    function turnOnFeed(uint256 feedId) external onlyOwner {
+        feed[feedId].isValid = true;
+        
+        emit UpshotOracleV2PricesAdminFeedTurnedOn(feedId);
     }
 
     /**
@@ -341,14 +368,14 @@ contract Prices is IPrices, Ownable2Step {
      * 
      * @param aggregator_ The aggregator to use for aggregating prices
      */
-    function updateAggregator(address aggregator_) external onlyOwner {
-        if (aggregator_ == address(0)) {
+    function updateAggregator(uint256 feedId, IAggregator aggregator_) external onlyOwner {
+        if (address(aggregator_) == address(0)) {
             revert UpshotOracleV2InvalidAggregator();
         }
 
-        aggregator = IAggregator(aggregator_);
+        feed[feedId].aggregator = aggregator_;
 
-        emit UpshotOracleV2PricesAdminUpdatedAggregator(aggregator_);
+        emit UpshotOracleV2PricesAdminUpdatedAggregator(feedId, aggregator_);
     }
 
     /**
@@ -356,14 +383,14 @@ contract Prices is IPrices, Ownable2Step {
      * 
      * @param feeHandler_ The fee handler to use for handling fees
      */
-    function updateFeeHandler(address feeHandler_) external onlyOwner {
-        if (feeHandler_ == address(0)) {
+    function updateFeeHandler(uint256 feedId, IFeeHandler feeHandler_) external onlyOwner {
+        if (address(feeHandler_) == address(0)) {
             revert UpshotOracleV2InvalidFeeHandler();
         }
 
-        feeHandler = IFeeHandler(feeHandler_);
+        feed[feedId].feeHandler = feeHandler_;
 
-        emit UpshotOracleV2PricesAdminUpdatedFeeHandler(feeHandler_);
+        emit UpshotOracleV2PricesAdminUpdatedFeeHandler(feedId, feeHandler_);
     } 
 
     /**
@@ -387,14 +414,15 @@ contract Prices is IPrices, Ownable2Step {
     /**
      * @notice Admin function to update the total fee to be paid per price
      * 
-     * @param totalFee_ The total fee to be paid per price
+     * @param feedId The feedId to update the total fee for
+     * @param totalFee The total fee to be paid per price
      */
-    function updateTotalFee(uint256 totalFee_) external onlyOwner {
-        if (0 < totalFee_ && totalFee_ < 1_000) {
+    function updateTotalFee(uint256 feedId, uint256 totalFee) external onlyOwner {
+        if (0 < totalFee && totalFee < 1_000) {
             revert UpshotOracleV2InvalidTotalFee();
         }
-        totalFee = totalFee_;
+        feed[feedId].totalFee = totalFee;
 
-        emit UpshotOracleV2AdminUpdatedFeePerPrice(totalFee_);
+        emit UpshotOracleV2AdminUpdatedFeePerPrice(totalFee);
     }
 }
