@@ -14,7 +14,7 @@ pragma solidity ^0.8.0;
 struct PriceData { 
     bytes signature;
     uint256 feedId;
-    uint256 nonce;
+    uint128 nonce;
     uint96 timestamp;
     uint256 price; 
     bytes extraData;
@@ -23,13 +23,13 @@ struct PriceData {
 /// @dev The struct for a feed, using a set for valid price providers 
 struct Feed { 
     string title;
-    uint256 nonce;
-    uint256 totalFee;
-    uint256 minPrices;
-    uint256 priceValiditySeconds;
+    uint128 nonce;
+    uint128 totalFee;
     IAggregator aggregator;
     bool isValid;
     IFeeHandler feeHandler;
+    uint48 minPrices;
+    uint48 priceValiditySeconds;
     EnumerableSet.AddressSet validPriceProviders;
 }
 
@@ -37,13 +37,13 @@ struct Feed {
 /// @dev The struct for viewing a feed, which can be loaded into memory and returned
 struct FeedView { 
     string title;
-    uint256 nonce;
-    uint256 totalFee;
-    uint256 minPrices;
-    uint256 priceValiditySeconds;
+    uint128 nonce;
+    uint128 totalFee;
     IAggregator aggregator;
     bool isValid;
     IFeeHandler feeHandler;
+    uint48 minPrices;
+    uint48 priceValiditySeconds;
     address[] validPriceProviders;
 }
 

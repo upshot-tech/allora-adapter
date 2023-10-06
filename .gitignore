@@ -4,6 +4,9 @@ out/
 types/
 node_modules/
 
+# Gas snapshot
+.gas-snapshot
+
 # Ignores development broadcast logs
 !/broadcast
 /broadcast/*/31337/

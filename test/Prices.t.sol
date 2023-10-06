@@ -13,7 +13,7 @@ import {IFeeHandler} from "../src/interface/IFeeHandler.sol";
 
 struct PriceDataWithoutSignature {
     uint256 feedId;
-    uint256 nonce;
+    uint128 nonce;
     uint96 timestamp;
     uint256 price; 
     bytes extraData;

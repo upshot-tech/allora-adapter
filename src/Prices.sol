@@ -35,9 +35,9 @@ contract Prices is IPrices, Ownable2Step {
     // * ========================= EVENTS ========================== *
     // ***************************************************************
 
-    event UpshotOracleV2PricesGotPrice(uint256 feedId, uint256 price, address[] priceProviders, uint256 nonce);
-    event UpshotOracleV2PricesAdminUpdatedMinPrices(uint256 feedId, uint256 minPrices);
-    event UpshotOracleV2PricesAdminUpdatedPriceValiditySeconds(uint256 feedId, uint256 priceValiditySeconds);
+    event UpshotOracleV2PricesGotPrice(uint256 feedId, uint256 price, address[] priceProviders, uint128 nonce);
+    event UpshotOracleV2PricesAdminUpdatedMinPrices(uint256 feedId, uint48 minPrices);
+    event UpshotOracleV2PricesAdminUpdatedPriceValiditySeconds(uint256 feedId, uint48 priceValiditySeconds);
     event UpshotOracleV2PricesAdminAddedValidSigner(uint256 feedId, address signer);
     event UpshotOracleV2PricesAdminRemovedValidSigner(address signer);
     event UpshotOracleV2PricesAdminAddedFeed(FeedView feedView);
@@ -47,7 +47,7 @@ contract Prices is IPrices, Ownable2Step {
     event UpshotOracleV2PricesAdminUpdatedFeeHandler(uint256 feedId, IFeeHandler feeHandler);
     event UpshotOracleV2PricesAdminSwitchedOff();
     event UpshotOracleV2PricesAdminSwitchedOn();
-    event UpshotOracleV2AdminUpdatedFeePerPrice(uint256 totalFee);
+    event UpshotOracleV2AdminUpdatedFeePerPrice(uint128 totalFee);
 
     // ***************************************************************
     // * ========================= ERRORS ========================== *
@@ -107,7 +107,7 @@ contract Prices is IPrices, Ownable2Step {
         uint256[] memory prices = new uint256[](priceDataCount);
         address[] memory priceProviders = new address[](priceDataCount);
 
-        uint256 nonce = priceData[0].nonce;
+        uint128 nonce = priceData[0].nonce;
         _validateNonce(feedId, nonce);
 
         PriceData memory data;
@@ -229,7 +229,7 @@ contract Prices is IPrices, Ownable2Step {
      * @param feedId The feedId to update the nonce for
      * @param nonce The new nonce
      */
-    function _validateNonce(uint256 feedId, uint256 nonce) internal {
+    function _validateNonce(uint256 feedId, uint128 nonce) internal {
         if (nonce != feed[feedId].nonce + 1) {
             revert UpshotOracleV2InvalidNonce();
         }
@@ -247,7 +247,7 @@ contract Prices is IPrices, Ownable2Step {
      * @param feedId The feedId to update the minimum number of prices for
      * @param minPrices The minimum number of prices required to get a valid price
      */
-    function updateMinPrices(uint256 feedId, uint256 minPrices) external onlyOwner {
+    function updateMinPrices(uint256 feedId, uint48 minPrices) external onlyOwner {
         if (minPrices == 0) {
             revert UpshotOracleV2PricesInvalidMinPrices();
         }
@@ -263,7 +263,7 @@ contract Prices is IPrices, Ownable2Step {
      * @param feedId The feedId to update the number of seconds a price is valid for
      * @param priceValiditySeconds The number of seconds a price is valid for
      */
-    function updatePriceValiditySeconds(uint256 feedId, uint256 priceValiditySeconds) external onlyOwner {
+    function updatePriceValiditySeconds(uint256 feedId, uint48 priceValiditySeconds) external onlyOwner {
         if (priceValiditySeconds == 0) { 
             revert UpshotOracleV2InvalidPriceValiditySeconds();
         }
@@ -405,7 +405,7 @@ contract Prices is IPrices, Ownable2Step {
      * @param feedId The feedId to update the total fee for
      * @param totalFee The total fee to be paid per price
      */
-    function updateTotalFee(uint256 feedId, uint256 totalFee) external onlyOwner {
+    function updateTotalFee(uint256 feedId, uint128 totalFee) external onlyOwner {
         if (0 < totalFee && totalFee < 1_000) {
             revert UpshotOracleV2InvalidTotalFee();
         }
