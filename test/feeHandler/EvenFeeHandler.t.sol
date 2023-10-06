@@ -29,10 +29,11 @@ contract EvenFeeHandlerTest is Test {
         uint256 totalFee = 0.001 ether;
         evenFeeHandler.handleFees{value: totalFee}(feeReceivers, "");
 
-        assertEq(protocolFeeReceiver.balance, 0.0002 ether);
+        assertEq(evenFeeHandler.feesAccrued(protocolFeeReceiver), 0.0002 ether);
 
-        assertEq(address(1).balance, 0.0004 ether);
-        assertEq(address(2).balance, 0.0004 ether);
+        assertEq(evenFeeHandler.feesAccrued(address(1)), 0.0004 ether);
+        assertEq(evenFeeHandler.feesAccrued(address(2)), 0.0004 ether);
+        assertEq(evenFeeHandler.feesAccrued(address(3)), 0 ether);
     }
 
     function test_evenFeeHandlerHandleFees2() public {
@@ -44,12 +45,48 @@ contract EvenFeeHandlerTest is Test {
 
         evenFeeHandler.handleFees{value: 1 ether}(feeReceivers, "");
 
-        assertEq(protocolFeeReceiver.balance, 0.2 ether);
+        assertEq(evenFeeHandler.feesAccrued(protocolFeeReceiver), 0.2 ether);
 
-        assertEq(address(1).balance, 0.2 ether);
-        assertEq(address(2).balance, 0.2 ether);
-        assertEq(address(3).balance, 0.2 ether);
-        assertEq(address(4).balance, 0.2 ether);
+        assertEq(evenFeeHandler.feesAccrued(address(1)), 0.2 ether);
+        assertEq(evenFeeHandler.feesAccrued(address(2)), 0.2 ether);
+        assertEq(evenFeeHandler.feesAccrued(address(3)), 0.2 ether);
+        assertEq(evenFeeHandler.feesAccrued(address(4)), 0.2 ether);
+        assertEq(evenFeeHandler.feesAccrued(address(5)), 0 ether);
+    }
+
+    function test_evenFeeHandlerClaimFees() public {
+        address[] memory feeReceivers = new address[](2);
+        feeReceivers[0] = address(1);
+        feeReceivers[1] = address(2);
+        uint256 totalFee = 1 ether;
+        evenFeeHandler.handleFees{value: totalFee}(feeReceivers, "");
+
+        uint256 protocolFeeReceiverBal0 = protocolFeeReceiver.balance;
+        uint256 feeReceiver1Bal0 = address(1).balance;
+        uint256 feeReceiver2Bal0 = address(2).balance;
+        uint256 feeReceiver3Bal0 = address(3).balance;
+
+        vm.startPrank(protocolFeeReceiver);
+        evenFeeHandler.claimFees();
+        vm.stopPrank();
+
+        vm.startPrank(address(1));
+        evenFeeHandler.claimFees();
+        vm.stopPrank();
+
+        vm.startPrank(address(2));
+        evenFeeHandler.claimFees();
+        vm.stopPrank();
+
+        vm.startPrank(address(3));
+        evenFeeHandler.claimFees();
+        vm.stopPrank();
+
+
+        assertEq(protocolFeeReceiver.balance - protocolFeeReceiverBal0, 0.2 ether);
+        assertEq(address(1).balance - feeReceiver1Bal0, 0.4 ether);
+        assertEq(address(2).balance - feeReceiver2Bal0, 0.4 ether);
+        assertEq(address(3).balance - feeReceiver3Bal0, 0 ether);
     }
 
     function test_evenFeeHandlerCantHandleTinyFees() public {

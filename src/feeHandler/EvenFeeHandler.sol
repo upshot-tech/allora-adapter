@@ -19,6 +19,9 @@ contract EvenFeeHandler is IFeeHandler, Ownable2Step {
     /// @dev the address that receives the protocol fee
     address public protocolFeeReceiver;
 
+    /// @dev the address that receives the protocol fee
+    mapping(address feeReciever => uint256 feesAccrued) public feesAccrued;
+
     // ***************************************************************
     // * ========================= EVENTS ========================== *
     // ***************************************************************
@@ -27,6 +30,7 @@ contract EvenFeeHandler is IFeeHandler, Ownable2Step {
     event UpshotOracleV2EvenFeeHandlerAdminUpdatedTotalFee(uint256 totalFee);
     event UpshotOracleV2EvenFeeHandlerAdminUpdatedProtocolFeePortion(uint256 protocolFeePortion);
     event UpshotOracleV2EvenFeeHandlerAdminUpdatedProtocolFeeReceiver(address protocolFeeReceiver);
+    event UpshotOracleV2EvenFeeHandlerFeesClaimed(address claimer, uint256 fees);
 
     // ***************************************************************
     // * ========================= ERRORS ========================== *
@@ -46,7 +50,6 @@ contract EvenFeeHandler is IFeeHandler, Ownable2Step {
         emit UpshotOracleV2EvenFeeHandlerAdminUpdatedProtocolFeeReceiver(args.protocolFeeReceiver);
     }
 
-
     /// @inheritdoc IFeeHandler
     function handleFees(
         address[] memory feeReceivers, 
@@ -65,10 +68,10 @@ contract EvenFeeHandler is IFeeHandler, Ownable2Step {
         uint256 protocolFee = Math.mulDiv(fee, protocolFeePortion, 1 ether);
         uint256 priceProviderFee = (fee - protocolFee) / feeReceivers.length;
 
-        _safeTransferETH(protocolFeeReceiver, protocolFee);
+        feesAccrued[protocolFeeReceiver] += protocolFee;
 
         for (uint i = 0; i < feeReceivers.length;) {
-            _safeTransferETH(feeReceivers[i], priceProviderFee);
+            feesAccrued[feeReceivers[i]] += priceProviderFee;
 
             unchecked {
                 ++i;
@@ -78,6 +81,19 @@ contract EvenFeeHandler is IFeeHandler, Ownable2Step {
         emit UpshotOracleV2EvenFeeHandlerFeesHandled(fee, feeReceivers);
     }
 
+    /**
+     * @notice Claim fees accrued by the sender
+     */
+    function claimFees() external {
+        uint256 feesOwed = feesAccrued[msg.sender];
+        feesAccrued[msg.sender] = 0;
+
+        _safeTransferETH(msg.sender, feesOwed);
+
+        emit UpshotOracleV2EvenFeeHandlerFeesClaimed(msg.sender, feesOwed);
+    }
+
+    
     // ***************************************************************
     // * ==================== INTERNAL HELPERS ===================== *
     // ***************************************************************

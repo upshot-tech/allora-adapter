@@ -14,9 +14,8 @@ import { IFeeHandler } from "../src/interface/IFeeHandler.sol";
 
 contract PricesTest is Test {
 
-    EvenFeeHandler public evenFeeHandler;
     IAggregator aggregator;
-    IFeeHandler feeHandler;
+    EvenFeeHandler evenFeeHandler;
     Prices prices;
 
     address admin = address(100);
@@ -40,7 +39,7 @@ contract PricesTest is Test {
         vm.warp(1 hours);
 
         aggregator = new AverageAggregator();
-        feeHandler = new EvenFeeHandler(EvenFeeHandlerConstructorArgs({
+        evenFeeHandler = new EvenFeeHandler(EvenFeeHandlerConstructorArgs({
             admin: admin,
             protocolFeeReceiver: protocolFeeReceiver
         }));
@@ -492,19 +491,13 @@ contract PricesTest is Test {
             signer1pk
         );
 
-        uint256 protocolFeeBal0 = protocolFeeReceiver.balance;
-        uint256 signer0Bal0 = signer0.balance;
-        uint256 signer1Bal0 = signer1.balance;
-
         prices.getPrice{value: 1 ether}(priceData, '');
 
-        uint256 protocolFee = protocolFeeReceiver.balance - protocolFeeBal0;
-        uint256 signer0Fee = signer0.balance - signer0Bal0;
-        uint256 signer1Fee = signer1.balance - signer1Bal0;
+        assertEq(evenFeeHandler.feesAccrued(protocolFeeReceiver), 0.2 ether);
 
-        assertEq(protocolFee, 0.2 ether);
-        assertEq(signer0Fee, 0.4 ether);
-        assertEq(signer1Fee, 0.4 ether);
+        assertEq(evenFeeHandler.feesAccrued(signer0), 0.4 ether);
+        assertEq(evenFeeHandler.feesAccrued(signer1), 0.4 ether);
+
     }
 
     // ***************************************************************
@@ -537,7 +530,7 @@ contract PricesTest is Test {
             priceValiditySeconds: 5 minutes,
             aggregator: aggregator,
             isValid: true,
-            feeHandler: feeHandler,
+            feeHandler: evenFeeHandler,
             validPriceProviders: oneValidSigner
         });
     }
