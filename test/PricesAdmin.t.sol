@@ -4,7 +4,7 @@ pragma solidity ^0.8.13;
 import "../lib/forge-std/src/Test.sol";
 import { ECDSA } from "../lib/openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
 import {Prices, PricesConstructorArgs} from "../src/Prices.sol";
-import {PriceData, Feed} from "../src/interface/IPrices.sol";
+import {PriceData, Feed, FeedView} from "../src/interface/IPrices.sol";
 import {EvenFeeHandler, EvenFeeHandlerConstructorArgs} from "../src/feeHandler/EvenFeeHandler.sol";
 import {AverageAggregator} from "../src/aggregator/AverageAggregator.sol";
 import {MedianAggregator} from "../src/aggregator/MedianAggregator.sol";
@@ -54,7 +54,7 @@ contract PricesAdmin is Test {
         oneValidSigner[0] = signer0;
 
         vm.startPrank(admin);
-        prices.addFeed('Initial feed', aggregator, feeHandler, oneValidSigner);
+        prices.addFeed(_getBasicFeedView());
         vm.stopPrank();
     }
 
@@ -161,14 +161,16 @@ contract PricesAdmin is Test {
         vm.startPrank(imposter);
 
         vm.expectRevert('Ownable: caller is not the owner');
-        prices.addFeed('second feed', aggregator, feeHandler, oneValidSigner);
+        prices.addFeed(_getBasicFeedView());
     }
 
     function test_ownerCantAddFeedWithEmptyTitle() public {
         vm.startPrank(admin);
 
+        FeedView memory feedView = _getBasicFeedView();
+        feedView.title = '';
         vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2InvalidFeedTitle()"));
-        prices.addFeed('', aggregator, feeHandler, oneValidSigner);
+        prices.addFeed(feedView);
     }
 
     function test_ownerCanAddFeed() public {
@@ -176,15 +178,15 @@ contract PricesAdmin is Test {
 
         assertEq(prices.getFeed(2).isValid, false);
 
-        prices.addFeed('second feed', aggregator, feeHandler, oneValidSigner);
+        prices.addFeed(_getBasicFeedView());
 
         assertEq(prices.getFeed(2).isValid, true);
     }
 
     function test_addingFeedGivesProperId() public {
         vm.startPrank(admin);
-        uint256 secondFeedId = prices.addFeed('second feed', aggregator, feeHandler, oneValidSigner);
-        uint256 thirdFeedId = prices.addFeed('third feed', aggregator, feeHandler, oneValidSigner);
+        uint256 secondFeedId = prices.addFeed(_getBasicFeedView());
+        uint256 thirdFeedId = prices.addFeed(_getBasicFeedView());
 
         assertEq(secondFeedId, 2);
         assertEq(thirdFeedId, 3);
@@ -366,5 +368,23 @@ contract PricesAdmin is Test {
             }
         }
         return false;
+    }
+
+    // ***************************************************************
+    // * ================= INTERNAL HELPERS ======================== *
+    // ***************************************************************
+
+    function _getBasicFeedView() internal view returns (FeedView memory feedView) {
+        return FeedView({
+            title: 'Initial feed',
+            nonce: 1,
+            totalFee: 0.001 ether,
+            minPrices: 1,
+            priceValiditySeconds: 5 minutes,
+            aggregator: aggregator,
+            isValid: true,
+            feeHandler: feeHandler,
+            validPriceProviders: oneValidSigner
+        });
     }
 }

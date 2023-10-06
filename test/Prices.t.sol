@@ -4,7 +4,7 @@ pragma solidity ^0.8.13;
 import "../lib/forge-std/src/Test.sol";
 import { ECDSA } from "../lib/openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
 import {Prices, PricesConstructorArgs} from "../src/Prices.sol";
-import {PriceData} from "../src/interface/IPrices.sol";
+import {PriceData, FeedView} from "../src/interface/IPrices.sol";
 import {EvenFeeHandler, EvenFeeHandlerConstructorArgs} from "../src/feeHandler/EvenFeeHandler.sol";
 import {AverageAggregator} from "../src/aggregator/AverageAggregator.sol";
 import {MedianAggregator} from "../src/aggregator/MedianAggregator.sol";
@@ -59,22 +59,17 @@ contract PricesTest is Test {
         signer1 = vm.addr(signer1pk);
         signer2 = vm.addr(signer2pk);
 
-        console.log("here 1");
         oneValidSigner = new address[](1);
         oneValidSigner[0] = signer0;
 
-        console.log("here 2");
         twoValidSigners = new address[](2);
         twoValidSigners[0] = signer0;
         twoValidSigners[1] = signer1;
 
-        console.log("here 3");
         threeValidSigners = new address[](3);
         threeValidSigners[0] = signer0;
         threeValidSigners[1] = signer1;
         threeValidSigners[2] = signer2;
-
-        console.log("here 4");
     }
 
     // ***************************************************************
@@ -92,14 +87,53 @@ contract PricesTest is Test {
     }
 
     function test_cantCallGetPriceWithoutFee() public {
-        PriceData[] memory priceData = new PriceData[](0);
+        vm.startPrank(admin);
+        prices.addFeed(_getBasicFeedView());
+        vm.stopPrank();
+
+        PriceData[] memory priceData = new PriceData[](1);
+
+        priceData[0] = _getPriceData(
+            PriceDataWithoutSignature({
+                feedId: 1,
+                nonce: 2,
+                timestamp: uint96(block.timestamp - 1 minutes),
+                price: 1 ether,
+                extraData: ''
+            }),
+            signer0pk
+        );
 
         vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2InsufficientPayment()"));
         prices.getPrice(priceData, '');
     }
 
-    function test_cantCallGetPriceWithoutThresholdCountPriceFeeds() public {
+    function test_cantCallGetPriceWithNoPrices() public {
         PriceData[] memory priceData = new PriceData[](0);
+
+        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2NoPricesProvided()"));
+        prices.getPrice{value: 1 ether}(priceData, '');
+    }
+
+    function test_cantCallGetPriceWithLessThanThresholdPrices() public {
+        vm.startPrank(admin);
+        FeedView memory feedView = _getBasicFeedView();
+        feedView.minPrices = 2;
+        prices.addFeed(feedView);
+        vm.stopPrank();
+
+        PriceData[] memory priceData = new PriceData[](1);
+
+        priceData[0] = _getPriceData(
+            PriceDataWithoutSignature({
+                feedId: 1,
+                nonce: 2,
+                timestamp: uint96(block.timestamp - 1 minutes),
+                price: 1 ether,
+                extraData: ''
+            }),
+            signer0pk
+        );
 
         vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2NotEnoughPrices()"));
         prices.getPrice{value: 1 ether}(priceData, '');
@@ -107,7 +141,7 @@ contract PricesTest is Test {
 
     function test_canCallGetPriceWithValidSignature() public {
         vm.startPrank(admin);
-        prices.addFeed('Initial feed', aggregator, feeHandler, oneValidSigner);
+        prices.addFeed(_getBasicFeedView());
         vm.stopPrank();
 
         PriceData[] memory priceData = new PriceData[](1);
@@ -152,7 +186,7 @@ contract PricesTest is Test {
 
     function test_cantCallGetPriceWithoutValidNonce() public {
         vm.startPrank(admin);
-        prices.addFeed('Initial feed', aggregator, feeHandler, oneValidSigner);
+        prices.addFeed(_getBasicFeedView());
         vm.stopPrank();
 
         PriceData[] memory priceData = new PriceData[](1);
@@ -174,7 +208,7 @@ contract PricesTest is Test {
 
     function test_cantCallGetPriceWithMismatchedFeeds() public {
         vm.startPrank(admin);
-        prices.addFeed('Initial feed', aggregator, feeHandler, oneValidSigner);
+        prices.addFeed(_getBasicFeedView());
         vm.stopPrank();
 
         PriceData[] memory priceData = new PriceData[](2);
@@ -208,7 +242,7 @@ contract PricesTest is Test {
 
     function test_cantCallGetPriceWithMismatchedNonces() public {
         vm.startPrank(admin);
-        prices.addFeed('Initial feed', aggregator, feeHandler, oneValidSigner);
+        prices.addFeed(_getBasicFeedView());
         vm.stopPrank();
 
         PriceData[] memory priceData = new PriceData[](2);
@@ -241,7 +275,7 @@ contract PricesTest is Test {
 
     function test_cantCallGetPriceWithInvalidTime() public {
         vm.startPrank(admin);
-        prices.addFeed('Initial feed', aggregator, feeHandler, oneValidSigner);
+        prices.addFeed(_getBasicFeedView());
         vm.stopPrank();
 
         PriceData[] memory priceData = new PriceData[](1);
@@ -263,7 +297,7 @@ contract PricesTest is Test {
 
     function test_cantCallGetPriceWithInvalidSigner() public {
         vm.startPrank(admin);
-        prices.addFeed('Initial feed', aggregator, feeHandler, emptyValidSigners);
+        prices.addFeed(_getBasicFeedViewNoSigners());
         vm.stopPrank();
 
         PriceData[] memory priceData = new PriceData[](1);
@@ -285,7 +319,7 @@ contract PricesTest is Test {
 
     function test_cantCallGetPriceWithDuplicateSigner() public {
         vm.startPrank(admin);
-        prices.addFeed('Initial feed', aggregator, feeHandler, oneValidSigner);
+        prices.addFeed(_getBasicFeedView());
         vm.stopPrank();
 
         PriceData[] memory priceData = new PriceData[](2);
@@ -318,7 +352,7 @@ contract PricesTest is Test {
 
     function test_priceAverageAggregationWorksCorrectly() public {
         vm.startPrank(admin);
-        prices.addFeed('Initial feed', aggregator, feeHandler, twoValidSigners);
+        prices.addFeed(_getBasicFeedViewTwoSigners());
         vm.stopPrank();
 
         PriceData[] memory priceData = new PriceData[](2);
@@ -353,7 +387,9 @@ contract PricesTest is Test {
         MedianAggregator medianAggregator = new MedianAggregator();
 
         vm.startPrank(admin);
-        prices.addFeed('Initial feed', medianAggregator, feeHandler, twoValidSigners);
+        FeedView memory feedView = _getBasicFeedViewTwoSigners();
+        feedView.aggregator = medianAggregator;
+        prices.addFeed(feedView);
         vm.stopPrank();
 
         PriceData[] memory priceData = new PriceData[](2);
@@ -388,7 +424,10 @@ contract PricesTest is Test {
         MedianAggregator medianAggregator = new MedianAggregator();
 
         vm.startPrank(admin);
-        prices.addFeed('Initial feed', medianAggregator, feeHandler, threeValidSigners);
+
+        FeedView memory feedView = _getBasicFeedViewThreeSigners();
+        feedView.aggregator = medianAggregator;
+        prices.addFeed(feedView);
         vm.stopPrank();
 
         PriceData[] memory priceData = new PriceData[](3);
@@ -433,7 +472,7 @@ contract PricesTest is Test {
 
     function test_priceFeesSplitCorrectly() public {
         vm.startPrank(admin);
-        prices.addFeed('Initial feed', aggregator, feeHandler, twoValidSigners);
+        prices.addFeed(_getBasicFeedViewTwoSigners());
         vm.stopPrank();
 
         PriceData[] memory priceData = new PriceData[](2);
@@ -504,5 +543,34 @@ contract PricesTest is Test {
             price: priceDataIn.price,
             extraData: priceDataIn.extraData
         });
+    }
+
+    function _getBasicFeedView() internal view returns (FeedView memory feedView) {
+        return FeedView({
+            title: 'Initial feed',
+            nonce: 1,
+            totalFee: 0.001 ether,
+            minPrices: 1,
+            priceValiditySeconds: 5 minutes,
+            aggregator: aggregator,
+            isValid: true,
+            feeHandler: feeHandler,
+            validPriceProviders: oneValidSigner
+        });
+    }
+
+    function _getBasicFeedViewNoSigners() internal view returns (FeedView memory feedView) {
+        feedView = _getBasicFeedView();
+        feedView.validPriceProviders = emptyValidSigners;
+    }
+
+    function _getBasicFeedViewTwoSigners() internal view returns (FeedView memory feedView) {
+        feedView = _getBasicFeedView();
+        feedView.validPriceProviders = twoValidSigners;
+    }
+
+    function _getBasicFeedViewThreeSigners() internal view returns (FeedView memory feedView) {
+        feedView = _getBasicFeedView();
+        feedView.validPriceProviders = threeValidSigners;
     }
 }

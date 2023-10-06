@@ -41,13 +41,7 @@ contract Prices is IPrices, Ownable2Step {
     event UpshotOracleV2PricesAdminUpdatedPriceValiditySeconds(uint256 feedId, uint256 priceValiditySeconds);
     event UpshotOracleV2PricesAdminAddedValidSigner(uint256 feedId, address signer);
     event UpshotOracleV2PricesAdminRemovedValidSigner(address signer);
-    event UpshotOracleV2PricesAdminAddedFeed(
-        uint256 feedId, 
-        string title, 
-        IAggregator aggregator, 
-        IFeeHandler feeHandler, 
-        address[] validPriceProviders
-    );
+    event UpshotOracleV2PricesAdminAddedFeed(FeedView feedView);
     event UpshotOracleV2PricesAdminFeedTurnedOff(uint256 feedId);
     event UpshotOracleV2PricesAdminFeedTurnedOn(uint256 feedId);
     event UpshotOracleV2PricesAdminUpdatedAggregator(uint256 feedId, IAggregator aggregator);
@@ -76,6 +70,7 @@ contract Prices is IPrices, Ownable2Step {
     error UpshotOracleV2PricesInvalidMinPrices();
     error UpshotOracleV2InvalidPriceValiditySeconds();
     error UpshotOracleV2InvalidFeedTitle();
+    error UpshotOracleV2NoPricesProvided();
 
     // ***************************************************************
     // * ================== USER INTERFACE ========================= *
@@ -90,25 +85,29 @@ contract Prices is IPrices, Ownable2Step {
             revert UpshotOracleV2NotSwitchedOn();
         }
 
+        uint256 priceDataCount = priceData.length;
+
+        if (priceDataCount == 0) {
+            revert UpshotOracleV2NoPricesProvided();
+        }
+
         uint256 feedId = priceData[0].feedId;
+
+        if (!feed[feedId].isValid) {
+            revert UpshotOracleV2InvalidFeed();
+        }
 
         if (msg.value < feed[feedId].totalFee) {
             revert UpshotOracleV2InsufficientPayment();
         }
 
-        uint256 priceDataCount = priceData.length;
-
-        if (priceDataCount == 0 || priceDataCount < feed[feedId].minPrices) {
+        if (priceDataCount < feed[feedId].minPrices) {
             revert UpshotOracleV2NotEnoughPrices();
         }
 
         uint256[] memory tokenPrices = new uint256[](priceDataCount);
         address[] memory priceProviders = new address[](priceDataCount);
         uint256 nonce = priceData[0].nonce;
-
-        if (!feed[feedId].isValid) {
-            revert UpshotOracleV2InvalidFeed();
-        }
 
         _validateNonce(feedId, nonce);
 
@@ -302,43 +301,33 @@ contract Prices is IPrices, Ownable2Step {
     /**
      * @notice Admin function to add a new feed
      * 
-     * @param title The title of the feed
-     * @param aggregator The aggregator to use for aggregating prices
-     * @param feeHandler The fee handler to use for handling fees
-     * @param validPriceProviders The valid price providers for the feed
      */
     function addFeed(
-        string memory title,
-        IAggregator aggregator,
-        IFeeHandler feeHandler,
-        address[] memory validPriceProviders
+        FeedView calldata feedView
     ) external onlyOwner returns (uint256 newFeedId) {
-        if (bytes(title).length == 0) {
+        if (bytes(feedView.title).length == 0) {
             revert UpshotOracleV2InvalidFeedTitle();
         }
         newFeedId = nextFeedId++;
 
-        feed[newFeedId].title = title;
+        feed[newFeedId].title = feedView.title;
         feed[newFeedId].nonce = 1;
-        feed[newFeedId].aggregator = aggregator;
+        feed[newFeedId].totalFee = feedView.totalFee;
+        feed[newFeedId].minPrices = feedView.minPrices;
+        feed[newFeedId].priceValiditySeconds = feedView.priceValiditySeconds;
+        feed[newFeedId].aggregator = feedView.aggregator;
         feed[newFeedId].isValid = true;
-        feed[newFeedId].feeHandler = feeHandler;
+        feed[newFeedId].feeHandler = feedView.feeHandler;
 
-        for (uint256 i = 0; i < validPriceProviders.length;) {
-            EnumerableSet.add(feed[newFeedId].validPriceProviders, validPriceProviders[i]);
+        for (uint256 i = 0; i < feedView.validPriceProviders.length;) {
+            EnumerableSet.add(feed[newFeedId].validPriceProviders, feedView.validPriceProviders[i]);
 
             unchecked {
                 ++i;
             }
         }
 
-        emit UpshotOracleV2PricesAdminAddedFeed(
-            newFeedId, 
-            title, 
-            aggregator, 
-            feeHandler, 
-            validPriceProviders
-        );
+        emit UpshotOracleV2PricesAdminAddedFeed(feedView);
     }
 
     /**
