@@ -36,7 +36,6 @@ contract Prices is IPrices, Ownable2Step {
     // ***************************************************************
 
     event UpshotOracleV2PricesGotPrice(uint256 feedId, uint256 price, address[] priceProviders, uint256 nonce);
-    event UpshotOracleV2PricesFeedAdded(uint256 feedId, string title);
     event UpshotOracleV2PricesAdminUpdatedMinPrices(uint256 feedId, uint256 minPrices);
     event UpshotOracleV2PricesAdminUpdatedPriceValiditySeconds(uint256 feedId, uint256 priceValiditySeconds);
     event UpshotOracleV2PricesAdminAddedValidSigner(uint256 feedId, address signer);
@@ -57,6 +56,7 @@ contract Prices is IPrices, Ownable2Step {
     error UpshotOracleV2InvalidPriceTime();
     error UpshotOracleV2InvalidSigner();
     error UpshotOracleV2DuplicateSigner();
+    error UpshotOracleV2NoPricesProvided();
     error UpshotOracleV2NotEnoughPrices();
     error UpshotOracleV2FeedMismatch();
     error UpshotOracleV2InvalidFeed();
@@ -70,7 +70,6 @@ contract Prices is IPrices, Ownable2Step {
     error UpshotOracleV2PricesInvalidMinPrices();
     error UpshotOracleV2InvalidPriceValiditySeconds();
     error UpshotOracleV2InvalidFeedTitle();
-    error UpshotOracleV2NoPricesProvided();
 
     // ***************************************************************
     // * ================== USER INTERFACE ========================= *
@@ -105,10 +104,10 @@ contract Prices is IPrices, Ownable2Step {
             revert UpshotOracleV2NotEnoughPrices();
         }
 
-        uint256[] memory tokenPrices = new uint256[](priceDataCount);
+        uint256[] memory prices = new uint256[](priceDataCount);
         address[] memory priceProviders = new address[](priceDataCount);
-        uint256 nonce = priceData[0].nonce;
 
+        uint256 nonce = priceData[0].nonce;
         _validateNonce(feedId, nonce);
 
         PriceData memory data;
@@ -151,23 +150,23 @@ contract Prices is IPrices, Ownable2Step {
                     revert UpshotOracleV2DuplicateSigner();
                 }
 
-                unchecked {
-                    ++j;
+                unchecked { 
+                    ++j; 
                 }
             }
 
             priceProviders[i] = signer;
 
-            tokenPrices[i] = data.price;
+            prices[i] = data.price;
 
             unchecked {
                 ++i;
             }
         }
 
-        price = feed[feedId].aggregator.aggregate(tokenPrices, "");
+        price = feed[feedId].aggregator.aggregate(prices, '');
 
-        feed[feedId].feeHandler.handleFees{value: msg.value}(priceProviders, "");
+        feed[feedId].feeHandler.handleFees{value: msg.value}(priceProviders, '');
 
         emit UpshotOracleV2PricesGotPrice(feedId, price, priceProviders, nonce);
     }
@@ -205,10 +204,10 @@ contract Prices is IPrices, Ownable2Step {
     /**
      * @notice Get the feed data for a given feedId
      * 
-     * @return The feed data
+     * @return  feedView The feed data
      */
-    function getFeed(uint256 feedId) external view returns (FeedView memory) {
-        return FeedView({
+    function getFeed(uint256 feedId) external view returns (FeedView memory feedView) {
+        feedView = FeedView({
             title: feed[feedId].title,
             nonce: feed[feedId].nonce,
             totalFee: feed[feedId].totalFee,
@@ -355,31 +354,31 @@ contract Prices is IPrices, Ownable2Step {
     /**
      * @notice Admin function to update the aggregator to use for aggregating prices
      * 
-     * @param aggregator_ The aggregator to use for aggregating prices
+     * @param aggregator The aggregator to use for aggregating prices
      */
-    function updateAggregator(uint256 feedId, IAggregator aggregator_) external onlyOwner {
-        if (address(aggregator_) == address(0)) {
+    function updateAggregator(uint256 feedId, IAggregator aggregator) external onlyOwner {
+        if (address(aggregator) == address(0)) {
             revert UpshotOracleV2InvalidAggregator();
         }
 
-        feed[feedId].aggregator = aggregator_;
+        feed[feedId].aggregator = aggregator;
 
-        emit UpshotOracleV2PricesAdminUpdatedAggregator(feedId, aggregator_);
+        emit UpshotOracleV2PricesAdminUpdatedAggregator(feedId, aggregator);
     }
 
     /**
      * @notice Admin function to update the fee handler to use for handling fees
      * 
-     * @param feeHandler_ The fee handler to use for handling fees
+     * @param feeHandler The fee handler to use for handling fees
      */
-    function updateFeeHandler(uint256 feedId, IFeeHandler feeHandler_) external onlyOwner {
-        if (address(feeHandler_) == address(0)) {
+    function updateFeeHandler(uint256 feedId, IFeeHandler feeHandler) external onlyOwner {
+        if (address(feeHandler) == address(0)) {
             revert UpshotOracleV2InvalidFeeHandler();
         }
 
-        feed[feedId].feeHandler = feeHandler_;
+        feed[feedId].feeHandler = feeHandler;
 
-        emit UpshotOracleV2PricesAdminUpdatedFeeHandler(feedId, feeHandler_);
+        emit UpshotOracleV2PricesAdminUpdatedFeeHandler(feedId, feeHandler);
     } 
 
     /**
