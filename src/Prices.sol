@@ -104,13 +104,13 @@ contract Prices is IPrices, Ownable2Step {
             revert UpshotOracleV2NotEnoughPrices();
         }
 
-        uint256[] memory prices = new uint256[](priceDataCount);
-        address[] memory priceProviders = new address[](priceDataCount);
-
         uint128 nonce = signedPriceData[0].priceData.nonce;
         _validateNonce(feedId, nonce);
 
+        uint256[] memory prices = new uint256[](priceDataCount);
+        address[] memory priceProviders = new address[](priceDataCount);
         PriceData calldata priceData;
+
         for(uint256 i = 0; i < priceDataCount;) {
             priceData = signedPriceData[i].priceData;
 
