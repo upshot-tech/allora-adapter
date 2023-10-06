@@ -17,12 +17,14 @@ struct PriceDataWithoutSignature {
 
 contract PushPrice is Script {
     function run() public virtual {
+        /*
         uint256 privateKey = vm.envUint('DEPLOYER_PRIVATE_KEY');
         address deployerAddr = vm.addr(privateKey);
 
         Prices prices = Prices(0xc01750713d34505171c3d66046D3b04C6fFb9cEC);
 
         vm.startBroadcast(privateKey);
+        /// @dev commenting out because this doesn't adhere to the new model where each feed has unique attributes
 
         // Add deployer as valid price authority
         prices.addValidSigner(deployerAddr);
@@ -61,5 +63,6 @@ contract PushPrice is Script {
 
         console.log('Oracle price %s', price);
         vm.stopBroadcast();
+        */
     }
 }

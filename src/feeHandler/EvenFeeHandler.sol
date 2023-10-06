@@ -55,7 +55,7 @@ contract EvenFeeHandler is IFeeHandler, Ownable2Step {
         uint256 fee = msg.value;
 
         if (fee == 0) {
-          return;
+            return;
         }
 
         if (fee < 1_000) {

@@ -115,6 +115,7 @@ class Deployer <contractInfo extends contractInfoMap>{
       return this.contractInfoMap[contractName].factory.attach(contractAddress) as returnType
     }
 
+    console.info(`⏳ deploying ${String(contractName)}...`)
     const contractInstance = await this.contractInfoMap[contractName].factory.deploy(...args)
     
     contractAddress = await contractInstance.getAddress()

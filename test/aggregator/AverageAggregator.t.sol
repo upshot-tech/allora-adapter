@@ -27,4 +27,11 @@ contract AverageAggregatorTest is Test {
 
         assertEq(averageAggregator.aggregate(values, ""), (uint256(a) + uint256(b) + uint256(c)) / 3);
     }
+
+    function test_averageAggregatorNoValues() public {
+        uint256[] memory values = new uint256[](0);
+
+        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2AverageAggregatorNoValuesToAggregate()"));
+        averageAggregator.aggregate(values, "");
+    }
 }
