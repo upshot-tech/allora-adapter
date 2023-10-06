@@ -19,6 +19,7 @@
   },
   "scripts": {
     "types": "rm -rf types && yarn typechain --target ethers-v6 --out-dir types ./out/**/*.json",
-    "deploy": "ts-node deploy/deploy.ts"
+    "deploy": "ts-node deploy/deploy.ts",
+    "coverage": "./script/coverage.sh"
   }
 }

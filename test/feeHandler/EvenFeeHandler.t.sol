@@ -63,6 +63,23 @@ contract EvenFeeHandlerTest is Test {
         evenFeeHandler.handleFees{value: 50}(feeReceivers, "");
     }
 
+    function test_evenFeeHandlerCanHandleZeroFees() public {
+        address[] memory feeReceivers = new address[](4);
+        feeReceivers[0] = address(1);
+        feeReceivers[1] = address(2);
+        feeReceivers[2] = address(3);
+        feeReceivers[3] = address(4);
+
+        evenFeeHandler.handleFees{value: 0}(feeReceivers, "");
+
+        assertEq(address(1).balance, 0 ether);
+        assertEq(address(2).balance, 0 ether);
+        assertEq(address(3).balance, 0 ether);
+        assertEq(address(4).balance, 0 ether);
+        assertEq(protocolFeeReceiver.balance, 0 ether);
+    }
+
+
     // ***************************************************************
     // * ============ UPDATE PROTOCOL FEE PORTION ================== *
     // ***************************************************************

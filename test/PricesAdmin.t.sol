@@ -195,7 +195,7 @@ contract PricesAdmin is Test {
     }
 
     // ***************************************************************
-    // * ===================== REMOVE FEED ========================= *
+    // * =================== TURN OFF FEED ========================= *
     // ***************************************************************
 
     function test_imposterCantTurnOffFeed() public {
@@ -213,6 +213,28 @@ contract PricesAdmin is Test {
         prices.turnOffFeed(1);
 
         assertEq(prices.getFeed(1).isValid, false);
+    }
+
+    // ***************************************************************
+    // * =================== TURN OFF FEED ========================= *
+    // ***************************************************************
+
+    function test_imposterCantTurnOnFeed() public {
+        vm.startPrank(imposter);
+
+        vm.expectRevert('Ownable: caller is not the owner');
+        prices.turnOnFeed(1);
+    }
+
+    function test_ownerCanTurnOnFeed() public {
+        vm.startPrank(admin);
+        prices.turnOffFeed(1);
+
+        assertEq(prices.getFeed(1).isValid, false);
+
+        prices.turnOnFeed(1);
+
+        assertEq(prices.getFeed(1).isValid, true);
     }
 
     // ***************************************************************

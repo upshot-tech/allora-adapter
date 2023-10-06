@@ -31,18 +31,18 @@
             <td class="headerValue">lcov.info</td>
             <td></td>
             <td class="headerItem">Lines:</td>
-            <td class="headerCovTableEntry">90</td>
             <td class="headerCovTableEntry">92</td>
-            <td class="headerCovTableEntryHi">97.8 %</td>
+            <td class="headerCovTableEntry">92</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
           </tr>
           <tr>
             <td class="headerItem">Date:</td>
-            <td class="headerValue">2023-10-05 17:47:23</td>
+            <td class="headerValue">2023-10-05 17:56:43</td>
             <td></td>
             <td class="headerItem">Functions:</td>
-            <td class="headerCovTableEntry">15</td>
             <td class="headerCovTableEntry">16</td>
-            <td class="headerCovTableEntryHi">93.8 %</td>
+            <td class="headerCovTableEntry">16</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
           </tr>
           <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
         </table>
@@ -270,7 +270,7 @@
 <a name="208"><span class="lineNum">     208 </span>            :      * @return The feed data</a>
 <a name="209"><span class="lineNum">     209 </span>            :      */</a>
 <a name="210"><span class="lineNum">     210 </span>            :     function getFeed(uint256 feedId) external view returns (FeedView memory) {</a>
-<a name="211"><span class="lineNum">     211 </span><span class="lineCov">         22 :         return FeedView({</span></a>
+<a name="211"><span class="lineNum">     211 </span><span class="lineCov">         24 :         return FeedView({</span></a>
 <a name="212"><span class="lineNum">     212 </span>            :             title: feed[feedId].title,</a>
 <a name="213"><span class="lineNum">     213 </span>            :             nonce: feed[feedId].nonce,</a>
 <a name="214"><span class="lineNum">     214 </span>            :             totalFee: feed[feedId].totalFee,</a>
@@ -398,9 +398,9 @@
 <a name="336"><span class="lineNum">     336 </span>            :      * @param feedId The feedId of the feed to turn off</a>
 <a name="337"><span class="lineNum">     337 </span>            :      */</a>
 <a name="338"><span class="lineNum">     338 </span>            :     function turnOffFeed(uint256 feedId) external onlyOwner {</a>
-<a name="339"><span class="lineNum">     339 </span><span class="lineCov">          1 :         feed[feedId].isValid = false;</span></a>
+<a name="339"><span class="lineNum">     339 </span><span class="lineCov">          2 :         feed[feedId].isValid = false;</span></a>
 <a name="340"><span class="lineNum">     340 </span>            :         </a>
-<a name="341"><span class="lineNum">     341 </span><span class="lineCov">          1 :         emit UpshotOracleV2PricesAdminFeedTurnedOff(feedId);</span></a>
+<a name="341"><span class="lineNum">     341 </span><span class="lineCov">          2 :         emit UpshotOracleV2PricesAdminFeedTurnedOff(feedId);</span></a>
 <a name="342"><span class="lineNum">     342 </span>            :     }</a>
 <a name="343"><span class="lineNum">     343 </span>            : </a>
 <a name="344"><span class="lineNum">     344 </span>            :     /**</a>
@@ -409,9 +409,9 @@
 <a name="347"><span class="lineNum">     347 </span>            :      * @param feedId The feedId of the feed to turn on</a>
 <a name="348"><span class="lineNum">     348 </span>            :      */</a>
 <a name="349"><span class="lineNum">     349 </span>            :     function turnOnFeed(uint256 feedId) external onlyOwner {</a>
-<a name="350"><span class="lineNum">     350 </span><span class="lineNoCov">          0 :         feed[feedId].isValid = true;</span></a>
+<a name="350"><span class="lineNum">     350 </span><span class="lineCov">          1 :         feed[feedId].isValid = true;</span></a>
 <a name="351"><span class="lineNum">     351 </span>            :         </a>
-<a name="352"><span class="lineNum">     352 </span><span class="lineNoCov">          0 :         emit UpshotOracleV2PricesAdminFeedTurnedOn(feedId);</span></a>
+<a name="352"><span class="lineNum">     352 </span><span class="lineCov">          1 :         emit UpshotOracleV2PricesAdminFeedTurnedOn(feedId);</span></a>
 <a name="353"><span class="lineNum">     353 </span>            :     }</a>
 <a name="354"><span class="lineNum">     354 </span>            : </a>
 <a name="355"><span class="lineNum">     355 </span>            :     /**</a>

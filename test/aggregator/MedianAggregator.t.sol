@@ -98,4 +98,11 @@ contract MedianAggregatorTest is Test {
         assertEq(medianAggregator.aggregate(values, ""), 9);
     }
 
+    function test_medianAggregatorNoValues() public {
+        uint256[] memory values = new uint256[](0);
+
+        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2MedianAggregatorNoValuesToAggregate()"));
+        medianAggregator.aggregate(values, "");
+    }
+
 }
