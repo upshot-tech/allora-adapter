@@ -4,7 +4,7 @@ pragma solidity ^0.8.13;
 import { IPrices, Feed, FeedView } from './interface/IPrices.sol';
 import { IAggregator } from './interface/IAggregator.sol';
 import { IFeeHandler } from './interface/IFeeHandler.sol';
-import { PriceData } from './interface/IPrices.sol';
+import { SignedPriceData, PriceData } from './interface/IPrices.sol';
 import { ECDSA } from "../lib/openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
 import { Math } from "../lib/openzeppelin-contracts/contracts/utils/math/Math.sol";
 import { Ownable2Step } from "../lib/openzeppelin-contracts/contracts/access/Ownable2Step.sol";
@@ -77,20 +77,20 @@ contract Prices is IPrices, Ownable2Step {
 
     ///@inheritdoc IPrices
     function getPrice(
-        PriceData[] calldata priceData,
+        SignedPriceData[] calldata signedPriceData,
         bytes calldata
     ) external payable override returns (uint256 price) {
         if (!switchedOn) {
             revert UpshotOracleV2NotSwitchedOn();
         }
 
-        uint256 priceDataCount = priceData.length;
+        uint256 priceDataCount = signedPriceData.length;
 
         if (priceDataCount == 0) {
             revert UpshotOracleV2NoPricesProvided();
         }
 
-        uint256 feedId = priceData[0].feedId;
+        uint256 feedId = signedPriceData[0].priceData.feedId;
 
         if (!feed[feedId].isValid) {
             revert UpshotOracleV2InvalidFeed();
@@ -107,46 +107,40 @@ contract Prices is IPrices, Ownable2Step {
         uint256[] memory prices = new uint256[](priceDataCount);
         address[] memory priceProviders = new address[](priceDataCount);
 
-        uint128 nonce = priceData[0].nonce;
+        uint128 nonce = signedPriceData[0].priceData.nonce;
         _validateNonce(feedId, nonce);
 
-        PriceData memory data;
+        PriceData calldata priceData;
         for(uint256 i = 0; i < priceDataCount;) {
-            data = priceData[i];
+            priceData = signedPriceData[i].priceData;
 
-            if (data.feedId != feedId) {
+            if (priceData.feedId != feedId) {
                 revert UpshotOracleV2FeedMismatch();
             }
 
-            if (data.nonce != nonce) {
+            if (priceData.nonce != nonce) {
                 revert UpshotOracleV2NonceMismatch();
             }
 
             if (
-                block.timestamp < data.timestamp ||
-                data.timestamp + feed[feedId].priceValiditySeconds < block.timestamp
+                block.timestamp < priceData.timestamp ||
+                priceData.timestamp + feed[feedId].priceValiditySeconds < block.timestamp
             ) {
                 revert UpshotOracleV2InvalidPriceTime();
             }
 
-            address signer =
+            address priceSigner =
                 ECDSA.recover(
-                    ECDSA.toEthSignedMessageHash(getPriceMessage(
-                        data.feedId,
-                        data.nonce,
-                        data.timestamp, 
-                        data.price, 
-                        data.extraData
-                    )),
-                    data.signature
+                    ECDSA.toEthSignedMessageHash(getPriceMessage(priceData)),
+                    signedPriceData[i].signature
                 );
 
-            if (!EnumerableSet.contains(feed[feedId].validPriceProviders, signer)) {
+            if (!EnumerableSet.contains(feed[feedId].validPriceProviders, priceSigner)) {
                 revert UpshotOracleV2InvalidSigner();
             }
 
             for (uint256 j = 0; j < i;) {
-                if (signer == priceProviders[j]) {
+                if (priceSigner == priceProviders[j]) {
                     revert UpshotOracleV2DuplicateSigner();
                 }
 
@@ -155,9 +149,9 @@ contract Prices is IPrices, Ownable2Step {
                 }
             }
 
-            priceProviders[i] = signer;
+            priceProviders[i] = priceSigner;
 
-            prices[i] = data.price;
+            prices[i] = priceData.price;
 
             unchecked {
                 ++i;
@@ -175,26 +169,18 @@ contract Prices is IPrices, Ownable2Step {
      * @notice The message that must be signed by the signer to provide a valid price 
      *   recognized by getPrice
      * 
-     * @param feedId The feedId to get the price for
-     * @param nonce The nonce for the feed
-     * @param timestamp The timestamp for the price
-     * @param price The price
-     * @param extraData Any extra data to be used by the price provider
+     * @param priceData The priceData
      */
     function getPriceMessage(
-        uint256 feedId,
-        uint256 nonce,
-        uint96 timestamp,
-        uint256 price,
-        bytes memory extraData
+        PriceData calldata priceData
     ) public view returns (bytes32) {
         return keccak256(abi.encodePacked(
             block.chainid, 
-            feedId,
-            nonce,
-            timestamp,
-            price, 
-            extraData
+            priceData.feedId,
+            priceData.nonce,
+            priceData.timestamp,
+            priceData.price, 
+            priceData.extraData
         ));
     }
 

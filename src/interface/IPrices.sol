@@ -11,13 +11,17 @@ pragma solidity ^0.8.0;
 // * ========================= STRUCTS ========================= *
 // ***************************************************************
 
-struct PriceData { 
-    bytes signature;
-    uint256 feedId;
+struct PriceData {
+    uint64 feedId;
+    uint64 timestamp;
     uint128 nonce;
-    uint96 timestamp;
     uint256 price; 
     bytes extraData;
+}
+
+struct SignedPriceData { 
+    bytes signature;
+    PriceData priceData;
 }
 
 /// @dev The struct for a feed, using a set for valid price providers 
@@ -59,10 +63,10 @@ interface IPrices {
     /**
      * @notice Get an aggregated price for a given feed
      * 
-     * @param priceData The price data to aggregate
+     * @param signdPriceData The price data to aggregate
      */
     function getPrice(
-        PriceData[] calldata priceData,
+        SignedPriceData[] calldata signdPriceData,
         bytes calldata extraData
     ) external payable returns (uint256 price);
 }

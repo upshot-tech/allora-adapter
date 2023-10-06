@@ -3,21 +3,14 @@ pragma solidity ^0.8.13;
 
 import "../lib/forge-std/src/Test.sol";
 import { ECDSA } from "../lib/openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
-import {Prices, PricesConstructorArgs} from "../src/Prices.sol";
-import {PriceData, FeedView} from "../src/interface/IPrices.sol";
-import {EvenFeeHandler, EvenFeeHandlerConstructorArgs} from "../src/feeHandler/EvenFeeHandler.sol";
-import {AverageAggregator} from "../src/aggregator/AverageAggregator.sol";
-import {MedianAggregator} from "../src/aggregator/MedianAggregator.sol";
-import {IAggregator} from "../src/interface/IAggregator.sol";
-import {IFeeHandler} from "../src/interface/IFeeHandler.sol";
+import { Prices, PricesConstructorArgs } from "../src/Prices.sol";
+import { SignedPriceData, PriceData, FeedView } from "../src/interface/IPrices.sol";
+import { EvenFeeHandler, EvenFeeHandlerConstructorArgs } from "../src/feeHandler/EvenFeeHandler.sol";
+import { AverageAggregator } from "../src/aggregator/AverageAggregator.sol";
+import { MedianAggregator } from "../src/aggregator/MedianAggregator.sol";
+import { IAggregator } from "../src/interface/IAggregator.sol";
+import { IFeeHandler } from "../src/interface/IFeeHandler.sol";
 
-struct PriceDataWithoutSignature {
-    uint256 feedId;
-    uint128 nonce;
-    uint96 timestamp;
-    uint256 price; 
-    bytes extraData;
-}
 
 contract PricesTest is Test {
 
@@ -80,7 +73,7 @@ contract PricesTest is Test {
         vm.deal(admin, 2^128);
         prices.turnOff();
         
-        PriceData[] memory priceData = new PriceData[](0);
+        SignedPriceData[] memory priceData = new SignedPriceData[](0);
 
         vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2NotSwitchedOn()"));
         prices.getPrice(priceData, '');
@@ -91,13 +84,13 @@ contract PricesTest is Test {
         prices.addFeed(_getBasicFeedView());
         vm.stopPrank();
 
-        PriceData[] memory priceData = new PriceData[](1);
+        SignedPriceData[] memory priceData = new SignedPriceData[](1);
 
-        priceData[0] = _getPriceData(
-            PriceDataWithoutSignature({
+        priceData[0] = _signPriceData(
+            PriceData({
                 feedId: 1,
+                timestamp: uint64(block.timestamp - 1 minutes),
                 nonce: 2,
-                timestamp: uint96(block.timestamp - 1 minutes),
                 price: 1 ether,
                 extraData: ''
             }),
@@ -109,7 +102,7 @@ contract PricesTest is Test {
     }
 
     function test_cantCallGetPriceWithNoPrices() public {
-        PriceData[] memory priceData = new PriceData[](0);
+        SignedPriceData[] memory priceData = new SignedPriceData[](0);
 
         vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2NoPricesProvided()"));
         prices.getPrice{value: 1 ether}(priceData, '');
@@ -122,13 +115,13 @@ contract PricesTest is Test {
         prices.addFeed(feedView);
         vm.stopPrank();
 
-        PriceData[] memory priceData = new PriceData[](1);
+        SignedPriceData[] memory priceData = new SignedPriceData[](1);
 
-        priceData[0] = _getPriceData(
-            PriceDataWithoutSignature({
+        priceData[0] = _signPriceData(
+            PriceData({
                 feedId: 1,
+                timestamp: uint64(block.timestamp - 1 minutes),
                 nonce: 2,
-                timestamp: uint96(block.timestamp - 1 minutes),
                 price: 1 ether,
                 extraData: ''
             }),
@@ -144,13 +137,13 @@ contract PricesTest is Test {
         prices.addFeed(_getBasicFeedView());
         vm.stopPrank();
 
-        PriceData[] memory priceData = new PriceData[](1);
+        SignedPriceData[] memory priceData = new SignedPriceData[](1);
 
-        priceData[0] = _getPriceData(
-            PriceDataWithoutSignature({
+        priceData[0] = _signPriceData(
+            PriceData({
                 feedId: 1,
+                timestamp: uint64(block.timestamp - 1 minutes),
                 nonce: 2,
-                timestamp: uint96(block.timestamp - 1 minutes),
                 price: 1 ether,
                 extraData: ''
             }),
@@ -167,13 +160,13 @@ contract PricesTest is Test {
         vm.stopPrank();
         */
 
-        PriceData[] memory priceData = new PriceData[](1);
+        SignedPriceData[] memory priceData = new SignedPriceData[](1);
 
-        priceData[0] = _getPriceData(
-            PriceDataWithoutSignature({
+        priceData[0] = _signPriceData(
+            PriceData({
                 feedId: 1,
+                timestamp: uint64(block.timestamp - 1 minutes),
                 nonce: 2,
-                timestamp: uint96(block.timestamp - 1 minutes),
                 price: 1 ether,
                 extraData: ''
             }),
@@ -189,13 +182,13 @@ contract PricesTest is Test {
         prices.addFeed(_getBasicFeedView());
         vm.stopPrank();
 
-        PriceData[] memory priceData = new PriceData[](1);
+        SignedPriceData[] memory priceData = new SignedPriceData[](1);
 
-        priceData[0] = _getPriceData(
-            PriceDataWithoutSignature({
+        priceData[0] = _signPriceData(
+            PriceData({
                 feedId: 1,
+                timestamp: uint64(block.timestamp - 1 minutes),
                 nonce: 3,
-                timestamp: uint96(block.timestamp - 1 minutes),
                 price: 1 ether,
                 extraData: ''
             }),
@@ -211,24 +204,24 @@ contract PricesTest is Test {
         prices.addFeed(_getBasicFeedView());
         vm.stopPrank();
 
-        PriceData[] memory priceData = new PriceData[](2);
+        SignedPriceData[] memory priceData = new SignedPriceData[](2);
 
-        priceData[0] = _getPriceData(
-            PriceDataWithoutSignature({
+        priceData[0] = _signPriceData(
+            PriceData({
                 feedId: 1,
+                timestamp: uint64(block.timestamp - 1 minutes),
                 nonce: 2,
-                timestamp: uint96(block.timestamp - 1 minutes),
                 price: 1 ether,
                 extraData: ''
             }),
             signer0pk
         );
 
-        priceData[1] = _getPriceData(
-            PriceDataWithoutSignature({
+        priceData[1] = _signPriceData(
+            PriceData({
                 feedId: 2,
+                timestamp: uint64(block.timestamp - 1 minutes),
                 nonce: 2,
-                timestamp: uint96(block.timestamp - 1 minutes),
                 price: 1 ether,
                 extraData: ''
             }),
@@ -245,24 +238,24 @@ contract PricesTest is Test {
         prices.addFeed(_getBasicFeedView());
         vm.stopPrank();
 
-        PriceData[] memory priceData = new PriceData[](2);
+        SignedPriceData[] memory priceData = new SignedPriceData[](2);
 
-        priceData[0] = _getPriceData(
-            PriceDataWithoutSignature({
+        priceData[0] = _signPriceData(
+            PriceData({
                 feedId: 1,
+                timestamp: uint64(block.timestamp - 1 minutes),
                 nonce: 2,
-                timestamp: uint96(block.timestamp - 1 minutes),
                 price: 1 ether,
                 extraData: ''
             }),
             signer0pk
         );
 
-        priceData[1] = _getPriceData(
-            PriceDataWithoutSignature({
+        priceData[1] = _signPriceData(
+            PriceData({
                 feedId: 1,
+                timestamp: uint64(block.timestamp - 1 minutes),
                 nonce: 3,
-                timestamp: uint96(block.timestamp - 1 minutes),
                 price: 1 ether,
                 extraData: ''
             }),
@@ -278,13 +271,13 @@ contract PricesTest is Test {
         prices.addFeed(_getBasicFeedView());
         vm.stopPrank();
 
-        PriceData[] memory priceData = new PriceData[](1);
+        SignedPriceData[] memory priceData = new SignedPriceData[](1);
 
-        priceData[0] = _getPriceData(
-            PriceDataWithoutSignature({
+        priceData[0] = _signPriceData(
+            PriceData({
                 feedId: 1,
+                timestamp: uint64(block.timestamp + 1 minutes),
                 nonce: 2,
-                timestamp: uint96(block.timestamp + 1 minutes),
                 price: 1 ether,
                 extraData: ''
             }),
@@ -300,13 +293,13 @@ contract PricesTest is Test {
         prices.addFeed(_getBasicFeedViewNoSigners());
         vm.stopPrank();
 
-        PriceData[] memory priceData = new PriceData[](1);
+        SignedPriceData[] memory priceData = new SignedPriceData[](1);
 
-        priceData[0] = _getPriceData(
-            PriceDataWithoutSignature({
+        priceData[0] = _signPriceData(
+            PriceData({
                 feedId: 1,
+                timestamp: uint64(block.timestamp - 1 minutes),
                 nonce: 2,
-                timestamp: uint96(block.timestamp - 1 minutes),
                 price: 1 ether,
                 extraData: ''
             }),
@@ -322,24 +315,24 @@ contract PricesTest is Test {
         prices.addFeed(_getBasicFeedView());
         vm.stopPrank();
 
-        PriceData[] memory priceData = new PriceData[](2);
+        SignedPriceData[] memory priceData = new SignedPriceData[](2);
 
-        priceData[0] = _getPriceData(
-            PriceDataWithoutSignature({
+        priceData[0] = _signPriceData(
+            PriceData({
                 feedId: 1,
+                timestamp: uint64(block.timestamp - 1 minutes),
                 nonce: 2,
-                timestamp: uint96(block.timestamp - 1 minutes),
                 price: 1 ether,
                 extraData: ''
             }),
             signer0pk
         );
 
-        priceData[1] = _getPriceData(
-            PriceDataWithoutSignature({
+        priceData[1] = _signPriceData(
+            PriceData({
                 feedId: 1,
+                timestamp: uint64(block.timestamp - 1 minutes),
                 nonce: 2,
-                timestamp: uint96(block.timestamp - 1 minutes),
                 price: 1 ether,
                 extraData: ''
             }),
@@ -355,24 +348,24 @@ contract PricesTest is Test {
         prices.addFeed(_getBasicFeedViewTwoSigners());
         vm.stopPrank();
 
-        PriceData[] memory priceData = new PriceData[](2);
+        SignedPriceData[] memory priceData = new SignedPriceData[](2);
 
-        priceData[0] = _getPriceData(
-            PriceDataWithoutSignature({
+        priceData[0] = _signPriceData(
+            PriceData({
                 feedId: 1,
+                timestamp: uint64(block.timestamp - 1 minutes),
                 nonce: 2,
-                timestamp: uint96(block.timestamp - 1 minutes),
                 price: 1 ether,
                 extraData: ''
             }),
             signer0pk
         );
 
-        priceData[1] = _getPriceData(
-            PriceDataWithoutSignature({
+        priceData[1] = _signPriceData(
+            PriceData({
                 feedId: 1,
+                timestamp: uint64(block.timestamp - 1 minutes),
                 nonce: 2,
-                timestamp: uint96(block.timestamp - 1 minutes),
                 price: 3 ether,
                 extraData: ''
             }),
@@ -392,24 +385,24 @@ contract PricesTest is Test {
         prices.addFeed(feedView);
         vm.stopPrank();
 
-        PriceData[] memory priceData = new PriceData[](2);
+        SignedPriceData[] memory priceData = new SignedPriceData[](2);
 
-        priceData[0] = _getPriceData(
-            PriceDataWithoutSignature({
+        priceData[0] = _signPriceData(
+            PriceData({
                 feedId: 1,
+                timestamp: uint64(block.timestamp - 1 minutes),
                 nonce: 2,
-                timestamp: uint96(block.timestamp - 1 minutes),
                 price: 1 ether,
                 extraData: ''
             }),
             signer0pk
         );
 
-        priceData[1] = _getPriceData(
-            PriceDataWithoutSignature({
+        priceData[1] = _signPriceData(
+            PriceData({
                 feedId: 1,
+                timestamp: uint64(block.timestamp - 1 minutes),
                 nonce: 2,
-                timestamp: uint96(block.timestamp - 1 minutes),
                 price: 3 ether,
                 extraData: ''
             }),
@@ -430,35 +423,35 @@ contract PricesTest is Test {
         prices.addFeed(feedView);
         vm.stopPrank();
 
-        PriceData[] memory priceData = new PriceData[](3);
+        SignedPriceData[] memory priceData = new SignedPriceData[](3);
 
-        priceData[0] = _getPriceData(
-            PriceDataWithoutSignature({
+        priceData[0] = _signPriceData(
+            PriceData({
                 feedId: 1,
+                timestamp: uint64(block.timestamp - 1 minutes),
                 nonce: 2,
-                timestamp: uint96(block.timestamp - 1 minutes),
                 price: 1 ether,
                 extraData: ''
             }),
             signer0pk
         );
 
-        priceData[1] = _getPriceData(
-            PriceDataWithoutSignature({
+        priceData[1] = _signPriceData(
+            PriceData({
                 feedId: 1,
+                timestamp: uint64(block.timestamp - 1 minutes),
                 nonce: 2,
-                timestamp: uint96(block.timestamp - 1 minutes),
                 price: 2 ether,
                 extraData: ''
             }),
             signer1pk
         );
 
-        priceData[2] = _getPriceData(
-            PriceDataWithoutSignature({
+        priceData[2] = _signPriceData(
+            PriceData({
                 feedId: 1,
+                timestamp: uint64(block.timestamp - 1 minutes),
                 nonce: 2,
-                timestamp: uint96(block.timestamp - 1 minutes),
                 price: 5 ether,
                 extraData: ''
             }),
@@ -475,24 +468,24 @@ contract PricesTest is Test {
         prices.addFeed(_getBasicFeedViewTwoSigners());
         vm.stopPrank();
 
-        PriceData[] memory priceData = new PriceData[](2);
+        SignedPriceData[] memory priceData = new SignedPriceData[](2);
 
-        priceData[0] = _getPriceData(
-            PriceDataWithoutSignature({
+        priceData[0] = _signPriceData(
+            PriceData({
                 feedId: 1,
+                timestamp: uint64(block.timestamp - 1 minutes),
                 nonce: 2,
-                timestamp: uint96(block.timestamp - 1 minutes),
                 price: 1 ether,
                 extraData: ''
             }),
             signer0pk
         );
 
-        priceData[1] = _getPriceData(
-            PriceDataWithoutSignature({
+        priceData[1] = _signPriceData(
+            PriceData({
                 feedId: 1,
+                timestamp: uint64(block.timestamp - 1 minutes),
                 nonce: 2,
-                timestamp: uint96(block.timestamp - 1 minutes),
                 price: 3 ether,
                 extraData: ''
             }),
@@ -517,17 +510,11 @@ contract PricesTest is Test {
     // ***************************************************************
     // * ================= INTERNAL HELPERS ======================== *
     // ***************************************************************
-    function _getPriceData(
-        PriceDataWithoutSignature memory priceDataIn,
+    function _signPriceData(
+        PriceData memory priceData,
         uint256 signerPk
-    ) internal view returns (PriceData memory) {
-        bytes32 priceMessage = prices.getPriceMessage(
-            priceDataIn.feedId,
-            priceDataIn.nonce,
-            priceDataIn.timestamp,
-            priceDataIn.price,
-            priceDataIn.extraData
-        );
+    ) internal view returns (SignedPriceData memory) {
+        bytes32 priceMessage = prices.getPriceMessage(priceData);
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(
             signerPk,
@@ -535,13 +522,9 @@ contract PricesTest is Test {
         );
         bytes memory signature = abi.encodePacked(r, s, v);
 
-        return PriceData({
+        return SignedPriceData({
             signature: signature,
-            feedId: priceDataIn.feedId,
-            nonce: priceDataIn.nonce,
-            timestamp: priceDataIn.timestamp,
-            price: priceDataIn.price,
-            extraData: priceDataIn.extraData
+            priceData: priceData
         });
     }
 
