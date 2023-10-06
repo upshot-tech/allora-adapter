@@ -190,7 +190,8 @@ contract Prices is IPrices, Ownable2Step {
     /**
      * @notice Get the feed data for a given feedId
      * 
-     * @return  feedView The feed data
+     * @param feedId The feedId to get the feed data for
+     * @return feedView The feed data
      */
     function getFeed(uint256 feedId) external view returns (FeedView memory feedView) {
         feedView = FeedView({
@@ -340,6 +341,7 @@ contract Prices is IPrices, Ownable2Step {
     /**
      * @notice Admin function to update the aggregator to use for aggregating prices
      * 
+     * @param feedId The feedId to update the aggregator for
      * @param aggregator The aggregator to use for aggregating prices
      */
     function updateAggregator(uint256 feedId, IAggregator aggregator) external onlyOwner {
@@ -355,6 +357,7 @@ contract Prices is IPrices, Ownable2Step {
     /**
      * @notice Admin function to update the fee handler to use for handling fees
      * 
+     * @param feedId The feedId to update the fee handler for
      * @param feeHandler The fee handler to use for handling fees
      */
     function updateFeeHandler(uint256 feedId, IFeeHandler feeHandler) external onlyOwner {
