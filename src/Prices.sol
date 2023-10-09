@@ -4,7 +4,7 @@ pragma solidity ^0.8.13;
 import { IPrices, Feed, FeedView } from './interface/IPrices.sol';
 import { IAggregator } from './interface/IAggregator.sol';
 import { IFeeHandler } from './interface/IFeeHandler.sol';
-import { SignedPriceData, PriceData } from './interface/IPrices.sol';
+import { UpshotOraclePriceData, SignedPriceData, PriceData } from './interface/IPrices.sol';
 import { ECDSA } from "../lib/openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
 import { Math } from "../lib/openzeppelin-contracts/contracts/utils/math/Math.sol";
 import { Ownable2Step } from "../lib/openzeppelin-contracts/contracts/access/Ownable2Step.sol";
@@ -74,23 +74,21 @@ contract Prices is IPrices, Ownable2Step {
     // ***************************************************************
     // * ================== USER INTERFACE ========================= *
     // ***************************************************************
-
     ///@inheritdoc IPrices
     function getPrice(
-        SignedPriceData[] calldata signedPriceData,
-        bytes calldata
+        UpshotOraclePriceData calldata pd
     ) external payable override returns (uint256 price) {
         if (!switchedOn) {
             revert UpshotOracleV2NotSwitchedOn();
         }
 
-        uint256 priceDataCount = signedPriceData.length;
+        uint256 priceDataCount = pd.signedPriceData.length;
 
         if (priceDataCount == 0) {
             revert UpshotOracleV2NoPricesProvided();
         }
 
-        uint256 feedId = signedPriceData[0].priceData.feedId;
+        uint256 feedId = pd.signedPriceData[0].priceData.feedId;
 
         if (!feed[feedId].isValid) {
             revert UpshotOracleV2InvalidFeed();
@@ -104,7 +102,7 @@ contract Prices is IPrices, Ownable2Step {
             revert UpshotOracleV2NotEnoughPrices();
         }
 
-        uint128 nonce = signedPriceData[0].priceData.nonce;
+        uint128 nonce = pd.signedPriceData[0].priceData.nonce;
         _validateNonce(feedId, nonce);
 
         uint256[] memory prices = new uint256[](priceDataCount);
@@ -112,7 +110,7 @@ contract Prices is IPrices, Ownable2Step {
         PriceData calldata priceData;
 
         for(uint256 i = 0; i < priceDataCount;) {
-            priceData = signedPriceData[i].priceData;
+            priceData = pd.signedPriceData[i].priceData;
 
             if (priceData.feedId != feedId) {
                 revert UpshotOracleV2FeedMismatch();
@@ -132,7 +130,7 @@ contract Prices is IPrices, Ownable2Step {
             address priceSigner =
                 ECDSA.recover(
                     ECDSA.toEthSignedMessageHash(getPriceMessage(priceData)),
-                    signedPriceData[i].signature
+                    pd.signedPriceData[i].signature
                 );
 
             if (!EnumerableSet.contains(feed[feedId].validPriceProviders, priceSigner)) {

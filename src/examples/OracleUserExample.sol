@@ -2,7 +2,7 @@
 pragma solidity ^0.8.13;
 
 import { IPrices, Feed, FeedView } from '../interface/IPrices.sol';
-import { SignedPriceData, PriceData } from '../interface/IPrices.sol';
+import { UpshotOraclePriceData } from '../interface/IPrices.sol';
 import { Ownable2Step } from "../../lib/openzeppelin-contracts/contracts/access/Ownable2Step.sol";
 import { EnumerableSet } from "../../lib/openzeppelin-contracts/contracts/utils/structs/EnumerableSet.sol";
 
@@ -28,18 +28,13 @@ contract OracleUserExample is Ownable2Step {
      * @notice Example for calling a protocol function with a price from the Upshot Oracle
      * 
      * @param protocolFunctionArgument An argument for the protocol function
-     * @param signedUpshotOraclePriceData The signed price data from the Upshot Oracle
-     * @param upshotOracleExtraData Extra data for the Upshot Oracle
+     * @param upshotOraclePriceData The signed price data from the Upshot Oracle
      */
     function callProtocolFunctionWithUpshotOraclePrice(
         uint256 protocolFunctionArgument,
-        SignedPriceData[] calldata signedUpshotOraclePriceData,
-        bytes calldata upshotOracleExtraData
+        UpshotOraclePriceData calldata upshotOraclePriceData
     ) external payable {
-        uint256 price = upshotOraclePrices.getPrice{value: msg.value}(
-            signedUpshotOraclePriceData,
-            upshotOracleExtraData
-        );
+        uint256 price = upshotOraclePrices.getPrice{value: msg.value}(upshotOraclePriceData);
 
         _protocolFunctionRequiringPrice(protocolFunctionArgument, price);
     }

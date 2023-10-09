@@ -24,6 +24,11 @@ struct SignedPriceData {
     PriceData priceData;
 }
 
+struct UpshotOraclePriceData {
+    SignedPriceData[] signedPriceData;
+    bytes extraData;
+}
+
 /// @dev The struct for a feed, using a set for valid price providers 
 struct Feed { 
     string title;
@@ -63,10 +68,7 @@ interface IPrices {
     /**
      * @notice Get an aggregated price for a given feed
      * 
-     * @param signdPriceData The price data to aggregate
+     * @param pd The price data to aggregate
      */
-    function getPrice(
-        SignedPriceData[] calldata signdPriceData,
-        bytes calldata extraData
-    ) external payable returns (uint256 price);
+    function getPrice(UpshotOraclePriceData calldata pd) external payable returns (uint256 price);
 }

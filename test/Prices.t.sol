@@ -4,7 +4,7 @@ pragma solidity ^0.8.13;
 import "../lib/forge-std/src/Test.sol";
 import { ECDSA } from "../lib/openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
 import { Prices, PricesConstructorArgs } from "../src/Prices.sol";
-import { SignedPriceData, PriceData, FeedView } from "../src/interface/IPrices.sol";
+import { SignedPriceData, PriceData, FeedView, UpshotOraclePriceData } from "../src/interface/IPrices.sol";
 import { EvenFeeHandler, EvenFeeHandlerConstructorArgs } from "../src/feeHandler/EvenFeeHandler.sol";
 import { AverageAggregator } from "../src/aggregator/AverageAggregator.sol";
 import { MedianAggregator } from "../src/aggregator/MedianAggregator.sol";
@@ -75,7 +75,7 @@ contract PricesTest is Test {
         SignedPriceData[] memory priceData = new SignedPriceData[](0);
 
         vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2NotSwitchedOn()"));
-        prices.getPrice(priceData, '');
+        prices.getPrice(_packagePriceData(priceData, ''));
     }
 
     function test_cantCallGetPriceWithoutFee() public {
@@ -97,14 +97,14 @@ contract PricesTest is Test {
         );
 
         vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2InsufficientPayment()"));
-        prices.getPrice(priceData, '');
+        prices.getPrice(_packagePriceData(priceData, ''));
     }
 
     function test_cantCallGetPriceWithNoPrices() public {
         SignedPriceData[] memory priceData = new SignedPriceData[](0);
 
         vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2NoPricesProvided()"));
-        prices.getPrice{value: 1 ether}(priceData, '');
+        prices.getPrice{value: 1 ether}(_packagePriceData(priceData, ''));
     }
 
     function test_cantCallGetPriceWithLessThanThresholdPrices() public {
@@ -128,7 +128,7 @@ contract PricesTest is Test {
         );
 
         vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2NotEnoughPrices()"));
-        prices.getPrice{value: 1 ether}(priceData, '');
+        prices.getPrice{value: 1 ether}(_packagePriceData(priceData, ''));
     }
 
     function test_canCallGetPriceWithValidSignature() public {
@@ -149,7 +149,7 @@ contract PricesTest is Test {
             signer0pk
         );
 
-        prices.getPrice{value: 1 ether}(priceData, '');
+        prices.getPrice{value: 1 ether}(_packagePriceData(priceData, ''));
     }
 
     function test_cantCallGetPriceWithoutValidFeedId() public {
@@ -173,7 +173,7 @@ contract PricesTest is Test {
         );
 
         vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2InvalidFeed()"));
-        prices.getPrice{value: 1 ether}(priceData, '');
+        prices.getPrice{value: 1 ether}(_packagePriceData(priceData, ''));
     }
 
     function test_cantCallGetPriceWithoutValidNonce() public {
@@ -195,7 +195,7 @@ contract PricesTest is Test {
         );
 
         vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2InvalidNonce()"));
-        prices.getPrice{value: 1 ether}(priceData, '');
+        prices.getPrice{value: 1 ether}(_packagePriceData(priceData, ''));
     }
 
     function test_cantCallGetPriceWithMismatchedFeeds() public {
@@ -229,7 +229,7 @@ contract PricesTest is Test {
 
         vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2FeedMismatch()"));
 
-        prices.getPrice{value: 1 ether}(priceData, '');
+        prices.getPrice{value: 1 ether}(_packagePriceData(priceData, ''));
     }
 
     function test_cantCallGetPriceWithMismatchedNonces() public {
@@ -262,7 +262,7 @@ contract PricesTest is Test {
         );
 
         vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2NonceMismatch()"));
-        prices.getPrice{value: 1 ether}(priceData, '');
+        prices.getPrice{value: 1 ether}(_packagePriceData(priceData, ''));
     }
 
     function test_cantCallGetPriceWithInvalidTime() public {
@@ -284,7 +284,7 @@ contract PricesTest is Test {
         );
 
         vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2InvalidPriceTime()"));
-        prices.getPrice{value: 1 ether}(priceData, '');
+        prices.getPrice{value: 1 ether}(_packagePriceData(priceData, ''));
     }
 
     function test_cantCallGetPriceWithInvalidSigner() public {
@@ -306,7 +306,7 @@ contract PricesTest is Test {
         );
 
         vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2InvalidSigner()"));
-        prices.getPrice{value: 1 ether}(priceData, '');
+        prices.getPrice{value: 1 ether}(_packagePriceData(priceData, ''));
     }
 
     function test_cantCallGetPriceWithDuplicateSigner() public {
@@ -339,7 +339,7 @@ contract PricesTest is Test {
         );
 
         vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2DuplicateSigner()"));
-        prices.getPrice{value: 1 ether}(priceData, '');
+        prices.getPrice{value: 1 ether}(_packagePriceData(priceData, ''));
     }
 
     function test_priceAverageAggregationWorksCorrectly() public {
@@ -371,7 +371,7 @@ contract PricesTest is Test {
             signer1pk
         );
 
-        uint256 price = prices.getPrice{value: 1 ether}(priceData, '');
+        uint256 price = prices.getPrice{value: 1 ether}(_packagePriceData(priceData, ''));
         assertEq(price, 2 ether);
     }
 
@@ -408,7 +408,7 @@ contract PricesTest is Test {
             signer1pk
         );
 
-        uint256 price = prices.getPrice{value: 1 ether}(priceData, '');
+        uint256 price = prices.getPrice{value: 1 ether}(_packagePriceData(priceData, ''));
         assertEq(price, 2 ether);
     }
 
@@ -457,8 +457,7 @@ contract PricesTest is Test {
             signer2pk
         );
 
-
-        uint256 price = prices.getPrice{value: 1 ether}(priceData, '');
+        uint256 price = prices.getPrice{value: 1 ether}(_packagePriceData(priceData, ''));
         assertEq(price, 2 ether);
     }
 
@@ -491,7 +490,7 @@ contract PricesTest is Test {
             signer1pk
         );
 
-        prices.getPrice{value: 1 ether}(priceData, '');
+        prices.getPrice{value: 1 ether}(_packagePriceData(priceData, ''));
 
         assertEq(evenFeeHandler.feesAccrued(protocolFeeReceiver), 0.2 ether);
 
@@ -548,5 +547,15 @@ contract PricesTest is Test {
     function _getBasicFeedViewThreeSigners() internal view returns (FeedView memory feedView) {
         feedView = _getBasicFeedView();
         feedView.validPriceProviders = threeValidSigners;
+    }
+
+    function _packagePriceData(
+        SignedPriceData[] memory priceData,
+        bytes memory extraData
+    ) internal pure returns (UpshotOraclePriceData memory pd) {
+        pd = UpshotOraclePriceData({
+            signedPriceData: new SignedPriceData[](priceData.length),
+            extraData: extraData
+        });
     }
 }
