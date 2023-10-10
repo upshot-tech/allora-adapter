@@ -283,7 +283,7 @@ contract OracleTest is Test {
 
     function test_cantCallVerifyDataWithInvalidDataProvider() public {
         vm.startPrank(admin);
-        oracle.addFeed(_getBasicFeedViewNoSigners());
+        oracle.addFeed(_getBasicFeedViewNoDataProviders());
         vm.stopPrank();
 
         SignedNumericData[] memory numericData = new SignedNumericData[](1);
@@ -303,7 +303,7 @@ contract OracleTest is Test {
         oracle.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
     }
 
-    function test_cantCallVerifyDataWithDuplicateSigner() public {
+    function test_cantCallVerifyDataWithDuplicateDataProvider() public {
         vm.startPrank(admin);
         oracle.addFeed(_getBasicFeedView());
         vm.stopPrank();
@@ -338,7 +338,7 @@ contract OracleTest is Test {
 
     function test_dataAverageAggregationWorksCorrectly() public {
         vm.startPrank(admin);
-        oracle.addFeed(_getBasicFeedViewTwoSigners());
+        oracle.addFeed(_getBasicFeedViewTwoDataProviders());
         vm.stopPrank();
 
         SignedNumericData[] memory numericData = new SignedNumericData[](2);
@@ -373,7 +373,7 @@ contract OracleTest is Test {
         MedianAggregator medianAggregator = new MedianAggregator();
 
         vm.startPrank(admin);
-        FeedView memory feedView = _getBasicFeedViewTwoSigners();
+        FeedView memory feedView = _getBasicFeedViewTwoDataProviders();
         feedView.aggregator = medianAggregator;
         oracle.addFeed(feedView);
         vm.stopPrank();
@@ -411,7 +411,7 @@ contract OracleTest is Test {
 
         vm.startPrank(admin);
 
-        FeedView memory feedView = _getBasicFeedViewThreeSigners();
+        FeedView memory feedView = _getBasicFeedViewThreeDataProviders();
         feedView.aggregator = medianAggregator;
         oracle.addFeed(feedView);
         vm.stopPrank();
@@ -457,7 +457,7 @@ contract OracleTest is Test {
 
     function test_dataFeesSplitCorrectly() public {
         vm.startPrank(admin);
-        oracle.addFeed(_getBasicFeedViewTwoSigners());
+        oracle.addFeed(_getBasicFeedViewTwoDataProviders());
         vm.stopPrank();
 
         SignedNumericData[] memory numericData = new SignedNumericData[](2);
@@ -528,17 +528,17 @@ contract OracleTest is Test {
         });
     }
 
-    function _getBasicFeedViewNoSigners() internal view returns (FeedView memory feedView) {
+    function _getBasicFeedViewNoDataProviders() internal view returns (FeedView memory feedView) {
         feedView = _getBasicFeedView();
         feedView.validDataProviders = emptyValidSigners;
     }
 
-    function _getBasicFeedViewTwoSigners() internal view returns (FeedView memory feedView) {
+    function _getBasicFeedViewTwoDataProviders() internal view returns (FeedView memory feedView) {
         feedView = _getBasicFeedView();
         feedView.validDataProviders = twoValidSigners;
     }
 
-    function _getBasicFeedViewThreeSigners() internal view returns (FeedView memory feedView) {
+    function _getBasicFeedViewThreeDataProviders() internal view returns (FeedView memory feedView) {
         feedView = _getBasicFeedView();
         feedView.validDataProviders = threeValidSigners;
     }

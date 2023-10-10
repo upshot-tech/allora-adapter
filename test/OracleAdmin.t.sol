@@ -22,7 +22,7 @@ contract OraleAdmin is Test {
     address protocolFeeReceiver = address(101);
 
     address imposter = address(200);
-    address newSigner = address(201);
+    address newDataProvider = address(201);
     IAggregator dummyAggregator = IAggregator(address(202));
     IFeeHandler dummyFeeHandler = IFeeHandler(address(202));
 
@@ -105,44 +105,44 @@ contract OraleAdmin is Test {
     }
 
     // ***************************************************************
-    // * ==================== ADD VALID SIGNER ===================== *
+    // * ==================== ADD DATA PROVIDER ==================== *
     // ***************************************************************
 
-    function test_imposterCantAddValidSigner() public {
+    function test_imposterCantAddDataProvider() public {
         vm.startPrank(imposter);
 
         vm.expectRevert('Ownable: caller is not the owner');
         oracle.addDataProvider(1, imposter);
     }
 
-    function test_ownerCanAddValidSigner() public {
+    function test_ownerCanAddDataProvider() public {
         vm.startPrank(admin);
 
-        assertEq(_contains(newSigner, oracle.getFeed(1).validDataProviders), false);
+        assertEq(_contains(newDataProvider, oracle.getFeed(1).validDataProviders), false);
 
-        oracle.addDataProvider(1, newSigner);
-        assertEq(_contains(newSigner, oracle.getFeed(1).validDataProviders), true);
+        oracle.addDataProvider(1, newDataProvider);
+        assertEq(_contains(newDataProvider, oracle.getFeed(1).validDataProviders), true);
     }
 
     // ***************************************************************
-    // * ================== REMOVE VALID SIGNER ==================== *
+    // * ================== REMOVE DATA PROVIDER =================== *
     // ***************************************************************
 
-    function test_imposterCantRemoveValidSigner() public {
+    function test_imposterCantRemoveDataProvider() public {
         vm.startPrank(imposter);
 
         vm.expectRevert('Ownable: caller is not the owner');
         oracle.removeDataProvider(1, imposter);
     }
 
-    function test_ownerCanRemoveValidSigner() public {
+    function test_ownerCanRemoveDataProvider() public {
         vm.startPrank(admin);
-        oracle.addDataProvider(1, newSigner);
+        oracle.addDataProvider(1, newDataProvider);
 
-        assertEq(_contains(newSigner, oracle.getFeed(1).validDataProviders), true);
+        assertEq(_contains(newDataProvider, oracle.getFeed(1).validDataProviders), true);
 
-        oracle.removeDataProvider(1, newSigner);
-        assertEq(_contains(newSigner, oracle.getFeed(1).validDataProviders), false);
+        oracle.removeDataProvider(1, newDataProvider);
+        assertEq(_contains(newDataProvider, oracle.getFeed(1).validDataProviders), false);
     }
 
     // ***************************************************************
@@ -208,7 +208,7 @@ contract OraleAdmin is Test {
     }
 
     // ***************************************************************
-    // * =================== TURN OFF FEED ========================= *
+    // * ==================== TURN ON FEED ========================= *
     // ***************************************************************
 
     function test_imposterCantTurnOnFeed() public {

@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.13;
 
-import "../lib/forge-std/src/Test.sol";
+
 import { IAggregator } from './interface/IAggregator.sol';
 import { IFeeHandler } from './interface/IFeeHandler.sol';
-import { UpshotOracleNumericData, SignedNumericData, NumericData, IOracle, Feed, FeedView } from './interface/IOracle.sol';
+import { UpshotOracleNumericData, NumericData, IOracle, Feed, FeedView } from './interface/IOracle.sol';
 import { ECDSA } from "../lib/openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
 import { Math } from "../lib/openzeppelin-contracts/contracts/utils/math/Math.sol";
 import { Ownable2Step } from "../lib/openzeppelin-contracts/contracts/access/Ownable2Step.sol";
@@ -47,7 +47,7 @@ contract Oracle is IOracle, Ownable2Step {
     event UpshotOracleV2OracleAdminUpdatedFeeHandler(uint256 feedId, IFeeHandler feeHandler);
     event UpshotOracleV2OracleAdminSwitchedOff();
     event UpshotOracleV2OracleAdminSwitchedOn();
-    event UpshotOracleV2AdminUpdatedFeePerDataVerification(uint128 totalFee);
+    event UpshotOracleV2OracleAdminUpdatedFeePerDataVerification(uint128 totalFee);
 
     // ***************************************************************
     // * ========================= ERRORS ========================== *
@@ -89,7 +89,6 @@ contract Oracle is IOracle, Ownable2Step {
         }
 
         uint256 feedId = nd.signedNumericData[0].numericData.feedId;
-        console.log('feedId %s', feedId);
 
         if (!feed[feedId].isValid) {
             revert UpshotOracleV2InvalidFeed();
@@ -212,7 +211,7 @@ contract Oracle is IOracle, Ownable2Step {
     /**
      * @dev Update the nonce for the collection and revert if the nonce is invalid
      *
-     * @param feedId The feedId to update the nonce for
+     * @param feedId The feedId to validate and update the nonce for
      * @param nonce The new nonce
      */
     function _validateNonce(uint256 feedId, uint128 nonce) internal {
@@ -230,8 +229,8 @@ contract Oracle is IOracle, Ownable2Step {
     /**
      * @notice Admin function to update the minimum number of data providers needed to verify data
      * 
-     * @param feedId The feedId to update the minimum number of data providers for
-     * @param dataProviderQuorum The minimum number of data providers required to verify data
+     * @param feedId The feedId to update the minimum number of data providers required
+     * @param dataProviderQuorum The minimum number of data providers required
      */
     function updateDataProviderQuorum(uint256 feedId, uint48 dataProviderQuorum) external onlyOwner {
         if (dataProviderQuorum == 0) {
@@ -286,6 +285,7 @@ contract Oracle is IOracle, Ownable2Step {
     /**
      * @notice Admin function to add a new feed
      * 
+     * @param feedView The feed data to add
      */
     function addFeed(
         FeedView calldata feedView
@@ -399,6 +399,6 @@ contract Oracle is IOracle, Ownable2Step {
         }
         feed[feedId].totalFee = totalFee;
 
-        emit UpshotOracleV2AdminUpdatedFeePerDataVerification(totalFee);
+        emit UpshotOracleV2OracleAdminUpdatedFeePerDataVerification(totalFee);
     }
 }
