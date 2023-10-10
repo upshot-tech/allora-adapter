@@ -11,25 +11,25 @@ pragma solidity ^0.8.0;
 // * ========================= STRUCTS ========================= *
 // ***************************************************************
 
-struct PriceData {
+struct NumericData {
     uint64 feedId;
     uint64 timestamp;
     uint128 nonce;
-    uint256 price; 
+    uint256 numericValue; 
     bytes extraData;
 }
 
-struct SignedPriceData { 
+struct SignedNumericData { 
     bytes signature;
-    PriceData priceData;
+    NumericData numericData;
 }
 
-struct UpshotOraclePriceData {
-    SignedPriceData[] signedPriceData;
+struct UpshotOracleNumericData {
+    SignedNumericData[] signedNumericData;
     bytes extraData;
 }
 
-/// @dev The struct for a feed, using a set for valid price providers 
+/// @dev The struct for a feed, using a set for valid data providers 
 struct Feed { 
     string title;
     uint128 nonce;
@@ -37,9 +37,9 @@ struct Feed {
     IAggregator aggregator;
     bool isValid;
     IFeeHandler feeHandler;
-    uint48 minPrices;
-    uint48 priceValiditySeconds;
-    EnumerableSet.AddressSet validPriceProviders;
+    uint48 dataProviderQuorum;
+    uint48 dataValiditySeconds;
+    EnumerableSet.AddressSet validDataProviders;
 }
 
 // TODO reduce data structure size
@@ -51,9 +51,9 @@ struct FeedView {
     IAggregator aggregator;
     bool isValid;
     IFeeHandler feeHandler;
-    uint48 minPrices;
-    uint48 priceValiditySeconds;
-    address[] validPriceProviders;
+    uint48 dataProviderQuorum;
+    uint48 dataValiditySeconds;
+    address[] validDataProviders;
 }
 
 // ***************************************************************
@@ -61,14 +61,14 @@ struct FeedView {
 // ***************************************************************
 
 /**
- * @title Prices Interface
+ * @title Oracle Interface
  */
-interface IPrices {
+interface IOracle {
 
     /**
-     * @notice Get an aggregated price for a given feed
+     * @notice Get an verified piece of numeric data for a given feed
      * 
-     * @param pd The price data to aggregate
+     * @param pd The numeric data to aggregate
      */
-    function getPrice(UpshotOraclePriceData calldata pd) external payable returns (uint256 price);
+    function verifyData(UpshotOracleNumericData calldata pd) external payable returns (uint256 numericValue);
 }

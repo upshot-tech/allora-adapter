@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.13;
 
-import { IPrices, Feed, FeedView } from '../interface/IPrices.sol';
-import { UpshotOraclePriceData } from '../interface/IPrices.sol';
+import { IOracle, Feed, FeedView, UpshotOracleNumericData } from '../interface/IOracle.sol';
 import { Ownable2Step } from "../../lib/openzeppelin-contracts/contracts/access/Ownable2Step.sol";
 import { EnumerableSet } from "../../lib/openzeppelin-contracts/contracts/utils/structs/EnumerableSet.sol";
 
@@ -14,7 +13,7 @@ import { EnumerableSet } from "../../lib/openzeppelin-contracts/contracts/utils/
 contract OracleUserExample is Ownable2Step {
 
     // Sepolia oracle Address
-    IPrices public upshotOraclePrices = IPrices(0xA610B62931659779ad06821FFEfEDc48AF087C88);
+    IOracle public upshotOracle = IOracle(0xA610B62931659779ad06821FFEfEDc48AF087C88);
 
     constructor () {
         _transferOwnership(msg.sender);
@@ -28,13 +27,13 @@ contract OracleUserExample is Ownable2Step {
      * @notice Example for calling a protocol function with a price from the Upshot Oracle
      * 
      * @param protocolFunctionArgument An argument for the protocol function
-     * @param upshotOraclePriceData The signed price data from the Upshot Oracle
+     * @param upshotOracleData The signed data from the Upshot Oracle
      */
     function callProtocolFunctionWithUpshotOraclePrice(
         uint256 protocolFunctionArgument,
-        UpshotOraclePriceData calldata upshotOraclePriceData
+        UpshotOracleNumericData calldata upshotOracleData
     ) external payable {
-        uint256 price = upshotOraclePrices.getPrice{value: msg.value}(upshotOraclePriceData);
+        uint256 price = upshotOracle.verifyData{value: msg.value}(upshotOracleData);
 
         _protocolFunctionRequiringPrice(protocolFunctionArgument, price);
     }
@@ -52,7 +51,7 @@ contract OracleUserExample is Ownable2Step {
      * 
      * @param upshotOraclePrices_ The Upshot Oracle contract address
      */
-    function setUpshotOraclePricesContract(IPrices upshotOraclePrices_) external onlyOwner {
-        upshotOraclePrices = upshotOraclePrices_;
+    function setUpshotOraclePricesContract(IOracle upshotOraclePrices_) external onlyOwner {
+        upshotOracle = upshotOraclePrices_;
     }
 }
