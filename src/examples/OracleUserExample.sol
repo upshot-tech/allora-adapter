@@ -7,10 +7,10 @@ import { EnumerableSet } from "../../lib/openzeppelin-contracts/contracts/utils/
 
 
 /**
- * @title OracleUserExample
- * @notice Example contract for using the Upshot Oracle
+ * @title OraclePriceExample
+ * @notice Example contract for using the Upshot Oracle for prices
  */
-contract OracleUserExample is Ownable2Step {
+contract OraclePriceExample is Ownable2Step {
 
     // Sepolia oracle Address
     IOracle public upshotOracle = IOracle(0xA610B62931659779ad06821FFEfEDc48AF087C88);
@@ -49,9 +49,9 @@ contract OracleUserExample is Ownable2Step {
     /**
      * @notice Set the Upshot Oracle contract address
      * 
-     * @param upshotOraclePrices_ The Upshot Oracle contract address
+     * @param upshotOracle_ The Upshot Oracle contract address
      */
-    function setUpshotOraclePricesContract(IOracle upshotOraclePrices_) external onlyOwner {
-        upshotOracle = upshotOraclePrices_;
+    function setUpshotOracleContract(IOracle upshotOracle_) external onlyOwner {
+        upshotOracle = upshotOracle_;
     }
 }
