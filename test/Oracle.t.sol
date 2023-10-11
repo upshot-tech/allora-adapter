@@ -259,7 +259,7 @@ contract OracleTest is Test {
         oracle.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
     }
 
-    function test_cantCallVerifyDataWithInvalidTime() public {
+    function test_cantCallVerifyDataWithFutureTime() public {
         vm.startPrank(admin);
         oracle.addFeed(_getBasicFeedView());
         vm.stopPrank();
@@ -269,7 +269,29 @@ contract OracleTest is Test {
         numericData[0] = _signNumericData(
             NumericData({
                 feedId: 1,
-                timestamp: uint64(block.timestamp + 1 minutes),
+                timestamp: uint64(block.timestamp + 1),
+                nonce: 2,
+                numericValue: 1 ether,
+                extraData: ''
+            }),
+            signer0pk
+        );
+
+        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2InvalidDataTime()"));
+        oracle.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
+    }
+
+    function test_cantCallVerifyDataWithExpiredTime() public {
+        vm.startPrank(admin);
+        oracle.addFeed(_getBasicFeedView());
+        vm.stopPrank();
+
+        SignedNumericData[] memory numericData = new SignedNumericData[](1);
+
+        numericData[0] = _signNumericData(
+            NumericData({
+                feedId: 1,
+                timestamp: uint64((block.timestamp - oracle.getFeed(1).dataValiditySeconds) - 1),
                 nonce: 2,
                 numericValue: 1 ether,
                 extraData: ''
@@ -334,6 +356,44 @@ contract OracleTest is Test {
 
         vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2DuplicateDataProvider()"));
         oracle.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
+    }
+
+    function test_validatingANewPriceIncrementsNonceForTheFeed() public {
+        vm.startPrank(admin);
+        oracle.addFeed(_getBasicFeedViewTwoDataProviders());
+        vm.stopPrank();
+
+        uint256 nonce0 = oracle.getFeed(1).nonce;
+
+        SignedNumericData[] memory numericData = new SignedNumericData[](2);
+
+        numericData[0] = _signNumericData(
+            NumericData({
+                feedId: 1,
+                timestamp: uint64(block.timestamp - 1 minutes),
+                nonce: 2,
+                numericValue: 1 ether,
+                extraData: ''
+            }),
+            signer0pk
+        );
+
+        numericData[1] = _signNumericData(
+            NumericData({
+                feedId: 1,
+                timestamp: uint64(block.timestamp - 1 minutes),
+                nonce: 2,
+                numericValue: 3 ether,
+                extraData: ''
+            }),
+            signer1pk
+        );
+
+        oracle.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
+
+        uint256 nonce1 = oracle.getFeed(1).nonce;
+
+        assertEq(nonce1, nonce0 + 1);
     }
 
     function test_dataAverageAggregationWorksCorrectly() public {
