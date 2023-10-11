@@ -230,61 +230,22 @@ contract Oracle is IOracle, Ownable2Step {
     // ***************************************************************
     // * ========================= ADMIN =========================== *
     // ***************************************************************
-
     /**
-     * @notice Admin function to update the minimum number of data providers needed to verify data
-     * 
-     * @param feedId The feedId to update the minimum number of data providers required
-     * @param dataProviderQuorum The minimum number of data providers required
+     * @notice Admin function to switch off the oracle contract
      */
-    function updateDataProviderQuorum(uint256 feedId, uint48 dataProviderQuorum) external onlyOwner {
-        if (dataProviderQuorum == 0) {
-            revert UpshotOracleV2OracleInvalidDataProviderQuorum();
-        }
+    function turnOff() external onlyOwner {
+        switchedOn = false;
 
-        feed[feedId].dataProviderQuorum = dataProviderQuorum;
-
-        emit UpshotOracleV2OracleAdminUpdatedDataProviderQuorum(feedId, dataProviderQuorum);
+        emit UpshotOracleV2OracleAdminSwitchedOff();
     }
 
     /**
-     * @notice Admin function to update the number of seconds data is valid for
-     * 
-     * @param feedId The feedId to update the number of seconds data is valid for
-     * @param dataValiditySeconds The number of seconds data is valid for
+     * @notice Admin function to switch on the oracle contract
      */
-    function updateDataValiditySeconds(uint256 feedId, uint48 dataValiditySeconds) external onlyOwner {
-        if (dataValiditySeconds == 0) { 
-            revert UpshotOracleV2InvalidDataValiditySeconds();
-        }
+    function turnOn() external onlyOwner {
+        switchedOn = true;
 
-        feed[feedId].dataValiditySeconds = dataValiditySeconds;
-
-        emit UpshotOracleV2OracleAdminUpdatedDataValiditySeconds(feedId, dataValiditySeconds);
-  }
-
-  /**
-     * @notice Admin function to add a data provider
-     * 
-     * @param feedId The feedId to add the data provider to
-     * @param dataProvider The data provider to add
-     */
-    function addDataProvider(uint256 feedId, address dataProvider) external onlyOwner {
-        EnumerableSet.add(feed[feedId].validDataProviders, dataProvider);
-
-        emit UpshotOracleV2OracleAdminAddedDataProvider(feedId, dataProvider);
-    }
-
-    /**
-     * @notice Admin function to remove a valid data provider
-     * 
-     * @param feedId The feedId to remove the data provider from
-     * @param dataProvider the data provider to remove
-     */
-    function removeDataProvider(uint256 feedId, address dataProvider) external onlyOwner {
-        EnumerableSet.remove(feed[feedId].validDataProviders, dataProvider);
-
-        emit UpshotOracleV2OracleAdminRemovedDataProvider(dataProvider);
+        emit UpshotOracleV2OracleAdminSwitchedOn();
     }
 
     /**
@@ -318,6 +279,77 @@ contract Oracle is IOracle, Ownable2Step {
         }
 
         emit UpshotOracleV2OracleAdminAddedFeed(feedView);
+    }
+
+    /**
+     * @notice Admin function to update the minimum number of data providers needed to verify data
+     * 
+     * @param feedId The feedId to update the minimum number of data providers required
+     * @param dataProviderQuorum The minimum number of data providers required
+     */
+    function updateDataProviderQuorum(uint256 feedId, uint48 dataProviderQuorum) external onlyOwner {
+        if (dataProviderQuorum == 0) {
+            revert UpshotOracleV2OracleInvalidDataProviderQuorum();
+        }
+
+        feed[feedId].dataProviderQuorum = dataProviderQuorum;
+
+        emit UpshotOracleV2OracleAdminUpdatedDataProviderQuorum(feedId, dataProviderQuorum);
+    }
+
+    /**
+     * @notice Admin function to update the number of seconds data is valid for
+     * 
+     * @param feedId The feedId to update the number of seconds data is valid for
+     * @param dataValiditySeconds The number of seconds data is valid for
+     */
+    function updateDataValiditySeconds(uint256 feedId, uint48 dataValiditySeconds) external onlyOwner {
+        if (dataValiditySeconds == 0) { 
+            revert UpshotOracleV2InvalidDataValiditySeconds();
+        }
+
+        feed[feedId].dataValiditySeconds = dataValiditySeconds;
+
+        emit UpshotOracleV2OracleAdminUpdatedDataValiditySeconds(feedId, dataValiditySeconds);
+    }
+
+    /**
+     * @notice Admin function to update the total fee to be paid per piece of data
+     * 
+     * @param feedId The feedId to update the total fee for
+     * @param totalFee The total fee to be paid per piece of data
+     */
+    function updateTotalFee(uint256 feedId, uint128 totalFee) external onlyOwner {
+        if (0 < totalFee && totalFee < 1_000) {
+            revert UpshotOracleV2InvalidTotalFee();
+        }
+        feed[feedId].totalFee = totalFee;
+
+        emit UpshotOracleV2OracleAdminUpdatedFeePerDataVerification(totalFee);
+    }
+
+  /**
+     * @notice Admin function to add a data provider
+     * 
+     * @param feedId The feedId to add the data provider to
+     * @param dataProvider The data provider to add
+     */
+    function addDataProvider(uint256 feedId, address dataProvider) external onlyOwner {
+        EnumerableSet.add(feed[feedId].validDataProviders, dataProvider);
+
+        emit UpshotOracleV2OracleAdminAddedDataProvider(feedId, dataProvider);
+    }
+
+    /**
+     * @notice Admin function to remove a valid data provider
+     * 
+     * @param feedId The feedId to remove the data provider from
+     * @param dataProvider the data provider to remove
+     */
+    function removeDataProvider(uint256 feedId, address dataProvider) external onlyOwner {
+        EnumerableSet.remove(feed[feedId].validDataProviders, dataProvider);
+
+        emit UpshotOracleV2OracleAdminRemovedDataProvider(dataProvider);
     }
 
     /**
@@ -373,37 +405,4 @@ contract Oracle is IOracle, Ownable2Step {
 
         emit UpshotOracleV2OracleAdminUpdatedFeeHandler(feedId, feeHandler);
     } 
-
-    /**
-     * @notice Admin function to switch off the oracle contract
-     */
-    function turnOff() external onlyOwner {
-        switchedOn = false;
-
-        emit UpshotOracleV2OracleAdminSwitchedOff();
-    }
-
-    /**
-     * @notice Admin function to switch on the oracle contract
-     */
-    function turnOn() external onlyOwner {
-        switchedOn = true;
-
-        emit UpshotOracleV2OracleAdminSwitchedOn();
-    }
-
-    /**
-     * @notice Admin function to update the total fee to be paid per piece of data
-     * 
-     * @param feedId The feedId to update the total fee for
-     * @param totalFee The total fee to be paid per piece of data
-     */
-    function updateTotalFee(uint256 feedId, uint128 totalFee) external onlyOwner {
-        if (0 < totalFee && totalFee < 1_000) {
-            revert UpshotOracleV2InvalidTotalFee();
-        }
-        feed[feedId].totalFee = totalFee;
-
-        emit UpshotOracleV2OracleAdminUpdatedFeePerDataVerification(totalFee);
-    }
 }
