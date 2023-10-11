@@ -27,8 +27,16 @@ contract OraleAdmin is Test {
     IFeeHandler dummyFeeHandler = IFeeHandler(address(202));
 
     uint256 signer0pk = 0x1000;
+    uint256 signer1pk = 0x1001;
+    uint256 signer2pk = 0x1002;
+
     address signer0;
+    address signer1;
+    address signer2;
+
     address[] oneValidProvider;
+    address[] twoValidProvider;
+    address[] threeValidProviders;
 
     function setUp() public {
         vm.warp(1 hours);
@@ -42,8 +50,21 @@ contract OraleAdmin is Test {
             admin: admin
         }));
 
+        signer0 = vm.addr(signer0pk);
+        signer1 = vm.addr(signer1pk);
+        signer2 = vm.addr(signer2pk);
+
         oneValidProvider = new address[](1);
         oneValidProvider[0] = signer0;
+
+        twoValidProvider = new address[](2);
+        twoValidProvider[0] = signer0;
+        twoValidProvider[1] = signer1;
+
+        threeValidProviders = new address[](3);
+        threeValidProviders[0] = signer0;
+        threeValidProviders[1] = signer1;
+        threeValidProviders[2] = signer2;
 
         vm.startPrank(admin);
         oracle.addFeed(_getBasicFeedView());
@@ -184,6 +205,48 @@ contract OraleAdmin is Test {
         assertEq(thirdFeedId, 3);
         assertEq(oracle.getFeed(2).isValid, true);
         assertEq(oracle.getFeed(3).isValid, true);
+    }
+
+    function test_addingFeedGivesAllCorrectData() public {
+        vm.startPrank(admin);
+
+        assertEq(oracle.getFeed(2).isValid, false);
+
+        FeedView memory secondFeed = FeedView({
+            title: 'secondary feed',
+            nonce: 1234,
+            totalFee: 0.001 ether,
+            dataProviderQuorum: 3,
+            dataValiditySeconds: 12 minutes,
+            aggregator: aggregator,
+            isValid: false,
+            feeHandler: feeHandler,
+            validDataProviders: threeValidProviders
+        });
+
+        uint256 secondFeedId = oracle.addFeed(secondFeed);
+        assertEq(secondFeedId, 2);
+
+        FeedView memory addedFeed = oracle.getFeed(secondFeedId);
+        assertEq(addedFeed.isValid, true);
+
+        assertEq(addedFeed.title, secondFeed.title);
+        assertEq(addedFeed.nonce, 1); // should always be 1 regardless
+        assertEq(addedFeed.totalFee, secondFeed.totalFee);
+        assertEq(addedFeed.dataProviderQuorum, secondFeed.dataProviderQuorum);
+        assertEq(addedFeed.dataValiditySeconds, secondFeed.dataValiditySeconds);
+        assertEq(address(addedFeed.aggregator), address(secondFeed.aggregator));
+        assertTrue(address(secondFeed.aggregator) != address(0));
+        assertTrue(addedFeed.isValid);
+        assertEq(address(addedFeed.feeHandler), address(secondFeed.feeHandler));
+        assertTrue(address(addedFeed.feeHandler) != address(0));
+        assertEq(secondFeed.validDataProviders.length, 3);
+        assertEq(addedFeed.validDataProviders.length, 3);
+
+        for (uint256 i = 0; i < 3; i++) {
+            assertTrue(address(addedFeed.validDataProviders[i]) != address(0));
+            assertEq(addedFeed.validDataProviders[i], secondFeed.validDataProviders[i]);
+        }
     }
 
     // ***************************************************************
