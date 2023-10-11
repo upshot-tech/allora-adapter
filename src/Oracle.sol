@@ -35,7 +35,12 @@ contract Oracle is IOracle, Ownable2Step {
     // * ========================= EVENTS ========================== *
     // ***************************************************************
 
-    event UpshotOracleV2OracleVerifiedData(uint256 feedId, uint256 numericData, address[] dataProviders, uint128 nonce);
+    event UpshotOracleV2OracleVerifiedData(
+        uint256 feedId, 
+        uint256 numericData, 
+        address[] dataProviders, 
+        uint128 nonce
+    );
     event UpshotOracleV2OracleAdminUpdatedDataProviderQuorum(uint256 feedId, uint48 dataProviderQuorum);
     event UpshotOracleV2OracleAdminUpdatedDataValiditySeconds(uint256 feedId, uint48 dataValiditySeconds);
     event UpshotOracleV2OracleAdminAddedDataProvider(uint256 feedId, address dataProvider);
@@ -156,9 +161,9 @@ contract Oracle is IOracle, Ownable2Step {
             }
         }
 
-        numericValue = feed[feedId].aggregator.aggregate(dataList, '');
+        numericValue = feed[feedId].aggregator.aggregate(dataList, nd.extraData);
 
-        feed[feedId].feeHandler.handleFees{value: msg.value}(dataProviders, '');
+        feed[feedId].feeHandler.handleFees{value: msg.value}(dataProviders, nd.extraData);
 
         emit UpshotOracleV2OracleVerifiedData(feedId, numericValue, dataProviders, nonce);
     }
