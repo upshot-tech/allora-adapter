@@ -228,7 +228,6 @@ contract OraleAdmin is Test {
         assertEq(secondFeedId, 2);
 
         FeedView memory addedFeed = oracle.getFeed(secondFeedId);
-        assertEq(addedFeed.isValid, true);
 
         assertEq(addedFeed.title, secondFeed.title);
         assertEq(addedFeed.nonce, 1); // should always be 1 regardless
@@ -237,7 +236,7 @@ contract OraleAdmin is Test {
         assertEq(addedFeed.dataValiditySeconds, secondFeed.dataValiditySeconds);
         assertEq(address(addedFeed.aggregator), address(secondFeed.aggregator));
         assertTrue(address(secondFeed.aggregator) != address(0));
-        assertTrue(addedFeed.isValid);
+        assertEq(addedFeed.isValid, secondFeed.isValid);
         assertEq(address(addedFeed.feeHandler), address(secondFeed.feeHandler));
         assertTrue(address(addedFeed.feeHandler) != address(0));
         assertEq(secondFeed.validDataProviders.length, 3);

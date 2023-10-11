@@ -306,7 +306,7 @@ contract Oracle is IOracle, Ownable2Step {
         feed[newFeedId].dataProviderQuorum = feedView.dataProviderQuorum;
         feed[newFeedId].dataValiditySeconds = feedView.dataValiditySeconds;
         feed[newFeedId].aggregator = feedView.aggregator;
-        feed[newFeedId].isValid = true;
+        feed[newFeedId].isValid = feedView.isValid;
         feed[newFeedId].feeHandler = feedView.feeHandler;
 
         for (uint256 i = 0; i < feedView.validDataProviders.length;) {
