@@ -538,6 +538,62 @@ contract OracleTest is Test {
         assertEq(price, 2 ether);
     }
 
+    function test_dataAggregationWorksCorrectlyAfterUpdatingAggregator() public {
+        vm.startPrank(admin);
+        uint256 feedId = oracle.addFeed(_getBasicFeedViewThreeDataProviders());
+        vm.stopPrank();
+
+        SignedNumericData[] memory numericData = new SignedNumericData[](3);
+
+        NumericData memory rawNumericData0 = NumericData({
+            feedId: uint64(1),
+            timestamp: uint64(block.timestamp - 1 minutes),
+            nonce: 2,
+            numericValue: 1 ether,
+            extraData: ''
+        });
+
+        NumericData memory rawNumericData1 = NumericData({
+            feedId: uint64(1),
+            timestamp: uint64(block.timestamp - 1 minutes),
+            nonce: 2,
+            numericValue: 2 ether,
+            extraData: ''
+        });
+
+        NumericData memory rawNumericData2 = NumericData({
+            feedId: uint64(1),
+            timestamp: uint64(block.timestamp - 1 minutes),
+            nonce: 2,
+            numericValue: 6 ether,
+            extraData: ''
+        });
+
+        numericData[0] = _signNumericData(rawNumericData0, signer0pk);
+        numericData[1] = _signNumericData(rawNumericData1, signer1pk);
+        numericData[2] = _signNumericData(rawNumericData2, signer2pk);
+
+        uint256 numericValue = oracle.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
+        assertEq(numericValue, 3 ether);
+
+        MedianAggregator medianAggregator = new MedianAggregator();
+
+        vm.startPrank(admin);
+        oracle.updateAggregator(feedId, medianAggregator);
+        vm.stopPrank();
+
+        rawNumericData0.nonce++;
+        rawNumericData1.nonce++;
+        rawNumericData2.nonce++;
+
+        numericData[0] = _signNumericData(rawNumericData0, signer0pk);
+        numericData[1] = _signNumericData(rawNumericData1, signer1pk);
+        numericData[2] = _signNumericData(rawNumericData2, signer2pk);
+
+        uint256 numericValue2 = oracle.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
+        assertEq(numericValue2, 2 ether);
+    }
+
     function test_dataFeesSplitCorrectly() public {
         vm.startPrank(admin);
         oracle.addFeed(_getBasicFeedViewTwoDataProviders());
