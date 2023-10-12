@@ -26,6 +26,7 @@ contract OracleTest is Test {
 
     address admin = address(100);
     address protocolFeeReceiver = address(101);
+    address feedOwner = address(102);
 
     uint256 signer0pk = 0x1000;
     uint256 signer1pk = 0x1001;
@@ -172,12 +173,12 @@ contract OracleTest is Test {
             signer0pk
         );
 
-        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2InvalidFeed()"));
+        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2OwnerTurnedFeedOff()"));
         oracle.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
     }
 
-    function test_cantCallVerifyDataWhenFeedIsTurnedOff() public {
-        vm.startPrank(admin);
+    function test_cantCallVerifyDataWhenFeedIsTurnedOffByOwner() public {
+        vm.startPrank(feedOwner);
         uint feedId = oracle.addFeed(_getBasicFeedView());
         oracle.turnOffFeed(feedId);
         vm.stopPrank();
@@ -195,9 +196,36 @@ contract OracleTest is Test {
             signer0pk
         );
 
-        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2InvalidFeed()"));
+        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2OwnerTurnedFeedOff()"));
         oracle.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
     }
+
+    function test_cantCallVerifyDataWhenFeedIsTurnedOffByAdmin() public {
+        vm.startPrank(feedOwner);
+        uint feedId = oracle.addFeed(_getBasicFeedView());
+        vm.stopPrank();
+
+        vm.startPrank(admin);
+        oracle.adminTurnOffFeed(feedId);
+        vm.stopPrank();
+
+        SignedNumericData[] memory numericData = new SignedNumericData[](1);
+
+        numericData[0] = _signNumericData(
+            NumericData({
+                feedId: uint64(feedId),
+                timestamp: uint64(block.timestamp - 1 minutes),
+                nonce: 2,
+                numericValue: 1 ether,
+                extraData: ''
+            }),
+            signer0pk
+        );
+
+        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2AdminTurnedFeedOff()"));
+        oracle.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
+    }
+
 
     function test_cantCallVerifyDataWithoutValidNonce() public {
         vm.startPrank(admin);
