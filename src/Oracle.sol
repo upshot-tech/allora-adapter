@@ -25,6 +25,12 @@ contract Oracle is IOracle, Ownable2Step {
     /// @dev Whether the oracle contract is switched on and usable
     bool public switchedOn = true;
 
+    /// @dev The fee collected by the protocol per verification
+    uint256 public protocolFee = 0;
+
+    /// @dev the address that receives the protocol fee
+    address public protocolFeeReceiver;
+
     constructor(
         OracleConstructorArgs memory args
     ) {
@@ -50,9 +56,10 @@ contract Oracle is IOracle, Ownable2Step {
     event UpshotOracleV2OracleAdminFeedTurnedOn(uint256 feedId);
     event UpshotOracleV2OracleAdminUpdatedAggregator(uint256 feedId, IAggregator aggregator);
     event UpshotOracleV2OracleAdminUpdatedFeeHandler(uint256 feedId, IFeeHandler feeHandler);
-    event UpshotOracleV2OracleAdminSwitchedOff();
-    event UpshotOracleV2OracleAdminSwitchedOn();
+    event UpshotOracleV2OracleAdminOracleTurnedOff();
+    event UpshotOracleV2OracleAdminOracleTurnedOn();
     event UpshotOracleV2OracleAdminUpdatedFeePerDataVerification(uint128 totalFee);
+    event UpshotOracleV2OracleAdminUpdatedProtocolFee(uint256 newProtocolFee);
 
     // ***************************************************************
     // * ========================= ERRORS ========================== *
@@ -64,7 +71,8 @@ contract Oracle is IOracle, Ownable2Step {
     error UpshotOracleV2NoDataProvided();
     error UpshotOracleV2NotEnoughData();
     error UpshotOracleV2FeedMismatch();
-    error UpshotOracleV2InvalidFeed();
+    error UpshotOracleV2OwnerTurnedFeedOff();
+    error UpshotOracleV2AdminTurnedFeedOff();
     error UpshotOracleV2InvalidNonce();
     error UpshotOracleV2NonceMismatch();
     error UpshotOracleV2InsufficientPayment();
@@ -75,6 +83,8 @@ contract Oracle is IOracle, Ownable2Step {
     error UpshotOracleV2OracleInvalidDataProviderQuorum();
     error UpshotOracleV2InvalidDataValiditySeconds();
     error UpshotOracleV2InvalidFeedTitle();
+    error UpshotOracleV2OnlyFeedOwner();
+    error UpshotOracleV2EthTransferFailed();
 
     // ***************************************************************
     // * ================== USER INTERFACE ========================= *
@@ -95,19 +105,26 @@ contract Oracle is IOracle, Ownable2Step {
 
         uint256 feedId = nd.signedNumericData[0].numericData.feedId;
 
-        if (!feed[feedId].isValid) {
-            revert UpshotOracleV2InvalidFeed();
+        if (!feed[feedId].config.ownerSwitchedOn) {
+            revert UpshotOracleV2OwnerTurnedFeedOff();
         }
 
-        if (msg.value < feed[feedId].totalFee) {
+        if (!feed[feedId].config.adminSwitchedOn) {
+            revert UpshotOracleV2AdminTurnedFeedOff();
+        }
+
+        // load once to save gas
+        uint256 _protocolFee = protocolFee;
+
+        if (msg.value < feed[feedId].config.totalFee + _protocolFee) {
             revert UpshotOracleV2InsufficientPayment();
         }
 
-        if (dataCount < feed[feedId].dataProviderQuorum) {
+        if (dataCount < feed[feedId].config.dataProviderQuorum) {
             revert UpshotOracleV2NotEnoughData();
         }
 
-        uint128 nonce = nd.signedNumericData[0].numericData.nonce;
+        uint96 nonce = nd.signedNumericData[0].numericData.nonce;
         _validateNonce(feedId, nonce);
 
         uint256[] memory dataList = new uint256[](dataCount);
@@ -127,7 +144,7 @@ contract Oracle is IOracle, Ownable2Step {
 
             if (
                 block.timestamp < numericData.timestamp ||
-                numericData.timestamp + feed[feedId].dataValiditySeconds < block.timestamp
+                numericData.timestamp + feed[feedId].config.dataValiditySeconds < block.timestamp
             ) {
                 revert UpshotOracleV2InvalidDataTime();
             }
@@ -161,9 +178,13 @@ contract Oracle is IOracle, Ownable2Step {
             }
         }
 
-        numericValue = feed[feedId].aggregator.aggregate(dataList, nd.extraData);
+        numericValue = feed[feedId].config.aggregator.aggregate(dataList, nd.extraData);
 
-        feed[feedId].feeHandler.handleFees{value: msg.value}(dataProviders, nd.extraData);
+        if (_protocolFee != 0) {
+            _safeTransferETH(protocolFeeReceiver, _protocolFee);
+        }
+
+        feed[feedId].config.feeHandler.handleFees{value: msg.value - _protocolFee}(dataProviders, nd.extraData);
 
         emit UpshotOracleV2OracleVerifiedData(feedId, numericValue, dataProviders, nonce);
     }
@@ -198,14 +219,7 @@ contract Oracle is IOracle, Ownable2Step {
      */
     function getFeed(uint256 feedId) external view returns (FeedView memory feedView) {
         feedView = FeedView({
-            title: feed[feedId].title,
-            nonce: feed[feedId].nonce,
-            totalFee: feed[feedId].totalFee,
-            dataProviderQuorum: feed[feedId].dataProviderQuorum,
-            dataValiditySeconds: feed[feedId].dataValiditySeconds,
-            aggregator: feed[feedId].aggregator,
-            isValid: feed[feedId].isValid,
-            feeHandler: feed[feedId].feeHandler,
+            config: feed[feedId].config,
             validDataProviders: EnumerableSet.values(feed[feedId].validDataProviders)
         });
     }
@@ -219,35 +233,42 @@ contract Oracle is IOracle, Ownable2Step {
      * @param feedId The feedId to validate and update the nonce for
      * @param nonce The new nonce
      */
-    function _validateNonce(uint256 feedId, uint128 nonce) internal {
-        if (nonce != feed[feedId].nonce + 1) {
+    function _validateNonce(uint256 feedId, uint96 nonce) internal {
+        if (nonce != feed[feedId].config.nonce + 1) {
             revert UpshotOracleV2InvalidNonce();
         }
 
-        feed[feedId].nonce = nonce;
-    }
-
-    // ***************************************************************
-    // * ========================= ADMIN =========================== *
-    // ***************************************************************
-    /**
-     * @notice Admin function to switch off the oracle contract
-     */
-    function turnOff() external onlyOwner {
-        switchedOn = false;
-
-        emit UpshotOracleV2OracleAdminSwitchedOff();
+        feed[feedId].config.nonce = nonce;
     }
 
     /**
-     * @notice Admin function to switch on the oracle contract
+     * @dev Modifier to check that the caller is the owner of the feed
+     * 
+     * @param feedId The feedId to validate the owner for
      */
-    function turnOn() external onlyOwner {
-        switchedOn = true;
-
-        emit UpshotOracleV2OracleAdminSwitchedOn();
+    modifier onlyFeedOwner(uint256 feedId) {
+        if (msg.sender != feed[feedId].config.owner) {
+            revert UpshotOracleV2OnlyFeedOwner();
+        }
+        _;
     }
 
+    /**
+     * @notice Safely transfer ETH to an address
+     * 
+     * @param to The address to send ETH to
+     * @param value The amount of ETH to send
+     */
+    function _safeTransferETH(address to, uint256 value) internal {
+        (bool success, ) = to.call{value: value}(new bytes(0));
+        if (!success) {
+            revert UpshotOracleV2EthTransferFailed();
+        }
+    }
+
+    // ***************************************************************
+    // * ====================== FEED UPDATES ======================= *
+    // ***************************************************************
     /**
      * @notice Admin function to add a new feed
      * 
@@ -255,27 +276,20 @@ contract Oracle is IOracle, Ownable2Step {
      */
     function addFeed(
         FeedView calldata feedView
-    ) external onlyOwner returns (uint256 newFeedId) {
-        if (bytes(feedView.title).length == 0) {
+    ) external returns (uint256 newFeedId) {
+        if (bytes(feedView.config.title).length == 0) {
             revert UpshotOracleV2InvalidFeedTitle();
         }
         newFeedId = nextFeedId++;
 
-        feed[newFeedId].title = feedView.title;
-        feed[newFeedId].nonce = 1;
-        feed[newFeedId].totalFee = feedView.totalFee;
-        feed[newFeedId].dataProviderQuorum = feedView.dataProviderQuorum;
-        feed[newFeedId].dataValiditySeconds = feedView.dataValiditySeconds;
-        feed[newFeedId].aggregator = feedView.aggregator;
-        feed[newFeedId].isValid = feedView.isValid;
-        feed[newFeedId].feeHandler = feedView.feeHandler;
+        feed[newFeedId].config = feedView.config;
+        feed[newFeedId].config.owner = msg.sender;
+        feed[newFeedId].config.nonce = 1;
 
         for (uint256 i = 0; i < feedView.validDataProviders.length;) {
             EnumerableSet.add(feed[newFeedId].validDataProviders, feedView.validDataProviders[i]);
 
-            unchecked {
-                ++i;
-            }
+            unchecked { ++i; }
         }
 
         emit UpshotOracleV2OracleAdminAddedFeed(feedView);
@@ -287,12 +301,15 @@ contract Oracle is IOracle, Ownable2Step {
      * @param feedId The feedId to update the minimum number of data providers required
      * @param dataProviderQuorum The minimum number of data providers required
      */
-    function updateDataProviderQuorum(uint256 feedId, uint48 dataProviderQuorum) external onlyOwner {
+    function updateDataProviderQuorum(
+        uint256 feedId, 
+        uint48 dataProviderQuorum
+    ) external onlyFeedOwner(feedId) {
         if (dataProviderQuorum == 0) {
             revert UpshotOracleV2OracleInvalidDataProviderQuorum();
         }
 
-        feed[feedId].dataProviderQuorum = dataProviderQuorum;
+        feed[feedId].config.dataProviderQuorum = dataProviderQuorum;
 
         emit UpshotOracleV2OracleAdminUpdatedDataProviderQuorum(feedId, dataProviderQuorum);
     }
@@ -303,12 +320,15 @@ contract Oracle is IOracle, Ownable2Step {
      * @param feedId The feedId to update the number of seconds data is valid for
      * @param dataValiditySeconds The number of seconds data is valid for
      */
-    function updateDataValiditySeconds(uint256 feedId, uint48 dataValiditySeconds) external onlyOwner {
+    function updateDataValiditySeconds(
+        uint256 feedId, 
+        uint48 dataValiditySeconds
+    ) external onlyFeedOwner(feedId) {
         if (dataValiditySeconds == 0) { 
             revert UpshotOracleV2InvalidDataValiditySeconds();
         }
 
-        feed[feedId].dataValiditySeconds = dataValiditySeconds;
+        feed[feedId].config.dataValiditySeconds = dataValiditySeconds;
 
         emit UpshotOracleV2OracleAdminUpdatedDataValiditySeconds(feedId, dataValiditySeconds);
     }
@@ -319,11 +339,11 @@ contract Oracle is IOracle, Ownable2Step {
      * @param feedId The feedId to update the total fee for
      * @param totalFee The total fee to be paid per piece of data
      */
-    function updateTotalFee(uint256 feedId, uint128 totalFee) external onlyOwner {
+    function updateTotalFee(uint256 feedId, uint128 totalFee) external onlyFeedOwner(feedId) {
         if (0 < totalFee && totalFee < 1_000) {
             revert UpshotOracleV2InvalidTotalFee();
         }
-        feed[feedId].totalFee = totalFee;
+        feed[feedId].config.totalFee = totalFee;
 
         emit UpshotOracleV2OracleAdminUpdatedFeePerDataVerification(totalFee);
     }
@@ -334,7 +354,7 @@ contract Oracle is IOracle, Ownable2Step {
      * @param feedId The feedId to add the data provider to
      * @param dataProvider The data provider to add
      */
-    function addDataProvider(uint256 feedId, address dataProvider) external onlyOwner {
+    function addDataProvider(uint256 feedId, address dataProvider) external onlyFeedOwner(feedId) {
         EnumerableSet.add(feed[feedId].validDataProviders, dataProvider);
 
         emit UpshotOracleV2OracleAdminAddedDataProvider(feedId, dataProvider);
@@ -346,7 +366,7 @@ contract Oracle is IOracle, Ownable2Step {
      * @param feedId The feedId to remove the data provider from
      * @param dataProvider the data provider to remove
      */
-    function removeDataProvider(uint256 feedId, address dataProvider) external onlyOwner {
+    function removeDataProvider(uint256 feedId, address dataProvider) external onlyFeedOwner(feedId) {
         EnumerableSet.remove(feed[feedId].validDataProviders, dataProvider);
 
         emit UpshotOracleV2OracleAdminRemovedDataProvider(dataProvider);
@@ -357,8 +377,8 @@ contract Oracle is IOracle, Ownable2Step {
      * 
      * @param feedId The feedId of the feed to turn off
      */
-    function turnOffFeed(uint256 feedId) external onlyOwner {
-        feed[feedId].isValid = false;
+    function turnOffFeed(uint256 feedId) external onlyFeedOwner(feedId) {
+        feed[feedId].config.ownerSwitchedOn = false;
         
         emit UpshotOracleV2OracleAdminFeedTurnedOff(feedId);
     }
@@ -368,8 +388,8 @@ contract Oracle is IOracle, Ownable2Step {
      * 
      * @param feedId The feedId of the feed to turn on
      */
-    function turnOnFeed(uint256 feedId) external onlyOwner {
-        feed[feedId].isValid = true;
+    function turnOnFeed(uint256 feedId) external onlyFeedOwner(feedId) {
+        feed[feedId].config.ownerSwitchedOn = true;
         
         emit UpshotOracleV2OracleAdminFeedTurnedOn(feedId);
     }
@@ -380,12 +400,12 @@ contract Oracle is IOracle, Ownable2Step {
      * @param feedId The feedId to update the aggregator for
      * @param aggregator The aggregator to use for aggregating numeric data
      */
-    function updateAggregator(uint256 feedId, IAggregator aggregator) external onlyOwner {
+    function updateAggregator(uint256 feedId, IAggregator aggregator) external onlyFeedOwner(feedId) {
         if (address(aggregator) == address(0)) {
             revert UpshotOracleV2InvalidAggregator();
         }
 
-        feed[feedId].aggregator = aggregator;
+        feed[feedId].config.aggregator = aggregator;
 
         emit UpshotOracleV2OracleAdminUpdatedAggregator(feedId, aggregator);
     }
@@ -396,13 +416,68 @@ contract Oracle is IOracle, Ownable2Step {
      * @param feedId The feedId to update the fee handler for
      * @param feeHandler The fee handler to use for handling fees
      */
-    function updateFeeHandler(uint256 feedId, IFeeHandler feeHandler) external onlyOwner {
+    function updateFeeHandler(uint256 feedId, IFeeHandler feeHandler) external onlyFeedOwner(feedId) {
         if (address(feeHandler) == address(0)) {
             revert UpshotOracleV2InvalidFeeHandler();
         }
 
-        feed[feedId].feeHandler = feeHandler;
+        feed[feedId].config.feeHandler = feeHandler;
 
         emit UpshotOracleV2OracleAdminUpdatedFeeHandler(feedId, feeHandler);
     } 
+
+    // ***************************************************************
+    // * ========================= ADMIN =========================== *
+    // ***************************************************************
+    /**
+     * @notice Admin function to switch off the oracle contract
+     */
+    function adminTurnOffOracle() external onlyOwner {
+        switchedOn = false;
+
+        emit UpshotOracleV2OracleAdminOracleTurnedOff();
+    }
+
+    /**
+     * @notice Admin function to switch on the oracle contract
+     */
+    function adminTurnOnOracle() external onlyOwner {
+        switchedOn = true;
+
+        emit UpshotOracleV2OracleAdminOracleTurnedOn();
+    }
+    
+    /**
+     * @notice Admin function to turn off a feed
+     * 
+     * @param feedId The feedId of the feed to turn off
+     */
+    function adminTurnOffFeed(uint256 feedId) external onlyOwner {
+        feed[feedId].config.adminSwitchedOn = false;
+        
+        emit UpshotOracleV2OracleAdminFeedTurnedOff(feedId);
+    }
+
+    /**
+     * @notice Admin function to turn on a feed
+     * 
+     * @param feedId The feedId of the feed to turn on
+     */
+    function adminTurnOnFeed(uint256 feedId) external onlyOwner {
+        feed[feedId].config.adminSwitchedOn = true;
+        
+        emit UpshotOracleV2OracleAdminFeedTurnedOn(feedId);
+    }
+
+    /**
+     * @notice Admin function to update the portion of the total fee that goes to the protocol
+     * 
+     * @param newProtocolFee The new protocol fee
+     */
+    function adminSetProtocolFee(uint256 newProtocolFee) external onlyOwner {
+        protocolFee = newProtocolFee;
+
+        emit UpshotOracleV2OracleAdminUpdatedProtocolFee(newProtocolFee);
+    }
+
 }
