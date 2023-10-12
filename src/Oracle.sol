@@ -44,27 +44,33 @@ contract Oracle is IOracle, Ownable2Step {
     // * ========================= EVENTS ========================== *
     // ***************************************************************
 
+    // main interface
     event UpshotOracleV2OracleVerifiedData(
         uint256 feedId, 
         uint256 numericData, 
         address[] dataProviders, 
         uint128 nonce
     );
-    event UpshotOracleV2OracleAdminUpdatedDataProviderQuorum(uint256 feedId, uint48 dataProviderQuorum);
-    event UpshotOracleV2OracleAdminUpdatedDataValiditySeconds(uint256 feedId, uint48 dataValiditySeconds);
-    event UpshotOracleV2OracleAdminAddedDataProvider(uint256 feedId, address dataProvider);
-    event UpshotOracleV2OracleAdminRemovedDataProvider(address dataProvider);
-    event UpshotOracleV2OracleAdminAddedFeed(FeedView feedView);
-    event UpshotOracleV2OracleAdminFeedTurnedOff(uint256 feedId);
-    event UpshotOracleV2OracleAdminFeedTurnedOn(uint256 feedId);
-    event UpshotOracleV2OracleAdminUpdatedAggregator(uint256 feedId, IAggregator aggregator);
-    event UpshotOracleV2OracleAdminUpdatedFeeHandler(uint256 feedId, IFeeHandler feeHandler);
-    event UpshotOracleV2OracleAdminOracleTurnedOff();
-    event UpshotOracleV2OracleAdminOracleTurnedOn();
-    event UpshotOracleV2OracleAdminUpdatedFeePerDataVerification(uint128 totalFee);
+    
+    // feed owner updates
+    event UpshotOracleV2FeedAdded(FeedView feedView);
+    event UpshotOracleV2OracleFeedOwnerUpdatedDataProviderQuorum(uint256 feedId, uint48 dataProviderQuorum);
+    event UpshotOracleV2OracleFeedOwnerUpdatedDataValiditySeconds(uint256 feedId, uint48 dataValiditySeconds);
+    event UpshotOracleV2OracleFeedOwnerAddedDataProvider(uint256 feedId, address dataProvider);
+    event UpshotOracleV2OracleFeedOwnerRemovedDataProvider(address dataProvider);
+    event UpshotOracleV2OracleFeedOwnerUpdatedAggregator(uint256 feedId, IAggregator aggregator);
+    event UpshotOracleV2OracleFeedOwnerUpdatedFeeHandler(uint256 feedId, IFeeHandler feeHandler);
+    event UpshotOracleV2OracleFeedOwnerUpdatedFee(uint128 totalFee);
+    event UpshotOracleV2OracleFeedOwnerUpdatedOwner(uint256 feedId, address newOwner);
+    event UpshotOracleV2OracleFeedOwnerFeedTurnedOff(uint256 feedId);
+    event UpshotOracleV2OracleFeedOwnerFeedTurnedOn(uint256 feedId);
+
     event UpshotOracleV2OracleAdminUpdatedProtocolFee(uint256 newProtocolFee);
     event UpshotOracleV2OracleAdminUpdatedProtocolFeeReceiver(address protocolFeeReceiver);
-    event UpshotOracleV2OracleFeedOwnerUpdatedOwner(uint256 feedId, address newOwner);
+    event UpshotOracleV2OracleAdminFeedTurnedOff(uint256 feedId);
+    event UpshotOracleV2OracleAdminFeedTurnedOn(uint256 feedId);
+    event UpshotOracleV2OracleAdminOracleTurnedOff();
+    event UpshotOracleV2OracleAdminOracleTurnedOn();
 
     // ***************************************************************
     // * ========================= ERRORS ========================== *
@@ -296,7 +302,7 @@ contract Oracle is IOracle, Ownable2Step {
     // * ====================== FEED UPDATES ======================= *
     // ***************************************************************
     /**
-     * @notice Admin function to add a new feed
+     * @notice Function to add a new feed, can be called by anyone
      * 
      * @param feedView The feed data to add
      */
@@ -317,11 +323,11 @@ contract Oracle is IOracle, Ownable2Step {
             unchecked { ++i; }
         }
 
-        emit UpshotOracleV2OracleAdminAddedFeed(feedView);
+        emit UpshotOracleV2FeedAdded(feedView);
     }
 
     /**
-     * @notice Admin function to update the minimum number of data providers needed to verify data
+     * @notice Feed owner function to update the minimum number of data providers needed to verify data
      * 
      * @param feedId The feedId to update the minimum number of data providers required
      * @param dataProviderQuorum The minimum number of data providers required
@@ -336,11 +342,11 @@ contract Oracle is IOracle, Ownable2Step {
 
         feed[feedId].config.dataProviderQuorum = dataProviderQuorum;
 
-        emit UpshotOracleV2OracleAdminUpdatedDataProviderQuorum(feedId, dataProviderQuorum);
+        emit UpshotOracleV2OracleFeedOwnerUpdatedDataProviderQuorum(feedId, dataProviderQuorum);
     }
 
     /**
-     * @notice Admin function to update the number of seconds data is valid for
+     * @notice Feed owner function to update the number of seconds data is valid for
      * 
      * @param feedId The feedId to update the number of seconds data is valid for
      * @param dataValiditySeconds The number of seconds data is valid for
@@ -355,11 +361,11 @@ contract Oracle is IOracle, Ownable2Step {
 
         feed[feedId].config.dataValiditySeconds = dataValiditySeconds;
 
-        emit UpshotOracleV2OracleAdminUpdatedDataValiditySeconds(feedId, dataValiditySeconds);
+        emit UpshotOracleV2OracleFeedOwnerUpdatedDataValiditySeconds(feedId, dataValiditySeconds);
     }
 
     /**
-     * @notice Admin function to update the total fee to be paid per piece of data
+     * @notice Feed owner function to update the total fee
      * 
      * @param feedId The feedId to update the total fee for
      * @param totalFee The total fee to be paid per piece of data
@@ -370,11 +376,11 @@ contract Oracle is IOracle, Ownable2Step {
         }
         feed[feedId].config.totalFee = totalFee;
 
-        emit UpshotOracleV2OracleAdminUpdatedFeePerDataVerification(totalFee);
+        emit UpshotOracleV2OracleFeedOwnerUpdatedFee(totalFee);
     }
 
   /**
-     * @notice Admin function to add a data provider
+     * @notice Feed owner function to add a data provider
      * 
      * @param feedId The feedId to add the data provider to
      * @param dataProvider The data provider to add
@@ -382,11 +388,11 @@ contract Oracle is IOracle, Ownable2Step {
     function addDataProvider(uint256 feedId, address dataProvider) external onlyFeedOwner(feedId) {
         EnumerableSet.add(feed[feedId].validDataProviders, dataProvider);
 
-        emit UpshotOracleV2OracleAdminAddedDataProvider(feedId, dataProvider);
+        emit UpshotOracleV2OracleFeedOwnerAddedDataProvider(feedId, dataProvider);
     }
 
     /**
-     * @notice Admin function to remove a valid data provider
+     * @notice Feed owner function to remove a data provider
      * 
      * @param feedId The feedId to remove the data provider from
      * @param dataProvider the data provider to remove
@@ -394,33 +400,33 @@ contract Oracle is IOracle, Ownable2Step {
     function removeDataProvider(uint256 feedId, address dataProvider) external onlyFeedOwner(feedId) {
         EnumerableSet.remove(feed[feedId].validDataProviders, dataProvider);
 
-        emit UpshotOracleV2OracleAdminRemovedDataProvider(dataProvider);
+        emit UpshotOracleV2OracleFeedOwnerRemovedDataProvider(dataProvider);
     }
 
     /**
-     * @notice Admin function to turn off a feed
+     * @notice Feed owner function to turn off a feed
      * 
      * @param feedId The feedId of the feed to turn off
      */
     function turnOffFeed(uint256 feedId) external onlyFeedOwner(feedId) {
         feed[feedId].config.ownerSwitchedOn = false;
         
-        emit UpshotOracleV2OracleAdminFeedTurnedOff(feedId);
+        emit UpshotOracleV2OracleFeedOwnerFeedTurnedOff(feedId);
     }
 
     /**
-     * @notice Admin function to turn on a feed
+     * @notice Feed owner function to turn on a feed
      * 
      * @param feedId The feedId of the feed to turn on
      */
     function turnOnFeed(uint256 feedId) external onlyFeedOwner(feedId) {
         feed[feedId].config.ownerSwitchedOn = true;
         
-        emit UpshotOracleV2OracleAdminFeedTurnedOn(feedId);
+        emit UpshotOracleV2OracleFeedOwnerFeedTurnedOn(feedId);
     }
 
     /**
-     * @notice Admin function to update the aggregator to use for aggregating numeric data
+     * @notice Feed owner function to update the aggregator to use for aggregating numeric data
      * 
      * @param feedId The feedId to update the aggregator for
      * @param aggregator The aggregator to use for aggregating numeric data
@@ -432,11 +438,11 @@ contract Oracle is IOracle, Ownable2Step {
 
         feed[feedId].config.aggregator = aggregator;
 
-        emit UpshotOracleV2OracleAdminUpdatedAggregator(feedId, aggregator);
+        emit UpshotOracleV2OracleFeedOwnerUpdatedAggregator(feedId, aggregator);
     }
 
     /**
-     * @notice Admin function to update the fee handler to use for handling fees
+     * @notice Feed owner function to update the fee handler to use for handling fees
      * 
      * @param feedId The feedId to update the fee handler for
      * @param feeHandler The fee handler to use for handling fees
@@ -448,11 +454,11 @@ contract Oracle is IOracle, Ownable2Step {
 
         feed[feedId].config.feeHandler = feeHandler;
 
-        emit UpshotOracleV2OracleAdminUpdatedFeeHandler(feedId, feeHandler);
+        emit UpshotOracleV2OracleFeedOwnerUpdatedFeeHandler(feedId, feeHandler);
     } 
 
     /**
-     * @notice Admin function to update the owner of the feed 
+     * @notice Feed owner function to update the owner of the feed 
      * 
      * @param feedId The feedId to update the fee handler for
      * @param owner_ The new owner of the feed
