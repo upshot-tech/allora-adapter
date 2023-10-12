@@ -27,10 +27,11 @@ const deploy = async () => {
   const deployer = new Deployer(contractInfoMap)
 
   const MedianAggregator = await deployer.deploy('MedianAggregator', [])
-  const EvenFeeHandler = await deployer.deploy('EvenFeeHandler', [{admin: ADMIN, protocolFeeReceiver: PROTOCOL_FEE_RECIEVER}])
+  const EvenFeeHandler = await deployer.deploy('EvenFeeHandler', [{admin: ADMIN}])
 
   const Oracle = await deployer.deploy('Oracle', [{
     admin: ADMIN, 
+    protocolFeeReceiver: PROTOCOL_FEE_RECIEVER,
   }])
 
   // Example contract call post deployment
