@@ -12,6 +12,7 @@ import { EnumerableSet } from "../lib/openzeppelin-contracts/contracts/utils/str
 
 struct OracleConstructorArgs {
     address admin;
+    address protocolFeeReceiver;
 }
 
 contract Oracle is IOracle, Ownable2Step {
@@ -35,6 +36,10 @@ contract Oracle is IOracle, Ownable2Step {
         OracleConstructorArgs memory args
     ) {
         _transferOwnership(args.admin);
+
+        protocolFeeReceiver = args.protocolFeeReceiver;
+
+        emit UpshotOracleV2OracleAdminUpdatedProtocolFeeReceiver(args.protocolFeeReceiver);
     }
 
     // ***************************************************************
@@ -60,6 +65,7 @@ contract Oracle is IOracle, Ownable2Step {
     event UpshotOracleV2OracleAdminOracleTurnedOn();
     event UpshotOracleV2OracleAdminUpdatedFeePerDataVerification(uint128 totalFee);
     event UpshotOracleV2OracleAdminUpdatedProtocolFee(uint256 newProtocolFee);
+    event UpshotOracleV2OracleAdminUpdatedProtocolFeeReceiver(address protocolFeeReceiver);
 
     // ***************************************************************
     // * ========================= ERRORS ========================== *
@@ -85,6 +91,7 @@ contract Oracle is IOracle, Ownable2Step {
     error UpshotOracleV2InvalidFeedTitle();
     error UpshotOracleV2OnlyFeedOwner();
     error UpshotOracleV2EthTransferFailed();
+    error UpshotOracleV2ProtocolFeeTooHigh();
 
     // ***************************************************************
     // * ================== USER INTERFACE ========================= *
@@ -184,11 +191,18 @@ contract Oracle is IOracle, Ownable2Step {
             _safeTransferETH(protocolFeeReceiver, _protocolFee);
         }
 
-        feed[feedId].config.feeHandler.handleFees{value: msg.value - _protocolFee}(dataProviders, nd.extraData);
+        feed[feedId].config.feeHandler.handleFees{value: msg.value - _protocolFee}(
+            feed[feedId].config.owner,
+            dataProviders, 
+            nd.extraData
+        );
 
         emit UpshotOracleV2OracleVerifiedData(feedId, numericValue, dataProviders, nonce);
     }
 
+    // ***************************************************************
+    // * ===================== VIEW FUNCTIONS ====================== *
+    // ***************************************************************
     /**
      * @notice The message that must be signed by the provider to provide valid data
      *   recognized by verifyData
@@ -208,9 +222,6 @@ contract Oracle is IOracle, Ownable2Step {
         ));
     }
 
-    // ***************************************************************
-    // * ===================== VIEW FUNCTIONS ====================== *
-    // ***************************************************************
     /**
      * @notice Get the feed data for a given feedId
      * 
@@ -472,12 +483,27 @@ contract Oracle is IOracle, Ownable2Step {
     /**
      * @notice Admin function to update the portion of the total fee that goes to the protocol
      * 
-     * @param newProtocolFee The new protocol fee
+     * @param protocolFee_ The new protocol fee
      */
-    function adminSetProtocolFee(uint256 newProtocolFee) external onlyOwner {
-        protocolFee = newProtocolFee;
+    function adminSetProtocolFee(uint256 protocolFee_) external onlyOwner {
+        if (protocolFee_ > 0.5 ether) {
+            revert UpshotOracleV2ProtocolFeeTooHigh();
+        }
 
-        emit UpshotOracleV2OracleAdminUpdatedProtocolFee(newProtocolFee);
+        protocolFee = protocolFee_;
+
+        emit UpshotOracleV2OracleAdminUpdatedProtocolFee(protocolFee_);
+    }
+
+    /**
+     * @notice Admin function to update the protocol fee receiver
+     * 
+     * @param protocolFeeReceiver_ The new protocol fee receiver
+     */
+    function adminSetProtocolFeeReceiver(address protocolFeeReceiver_) external onlyOwner {
+        protocolFeeReceiver = protocolFeeReceiver_;
+
+        emit UpshotOracleV2OracleAdminUpdatedProtocolFeeReceiver(protocolFeeReceiver_);
     }
 
 }

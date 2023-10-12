@@ -11,7 +11,7 @@ import { MedianAggregator } from "../src/aggregator/MedianAggregator.sol";
 import { IAggregator } from "../src/interface/IAggregator.sol";
 import { IFeeHandler } from "../src/interface/IFeeHandler.sol";
 
-contract OraleAdmin is Test {
+contract OracleAdmin is Test {
 
     EvenFeeHandler public evenFeeHandler;
     IAggregator aggregator;
@@ -20,7 +20,8 @@ contract OraleAdmin is Test {
 
     address admin = address(100);
     address protocolFeeReceiver = address(101);
-    address feedOwner = address(102);
+    address protocolFeeReceiver2 = address(102);
+    address feedOwner = address(103);
 
     address imposter = address(200);
     address newDataProvider = address(201);
@@ -44,11 +45,11 @@ contract OraleAdmin is Test {
 
         aggregator = new AverageAggregator();
         feeHandler = new EvenFeeHandler(EvenFeeHandlerConstructorArgs({
-            admin: admin,
-            protocolFeeReceiver: protocolFeeReceiver
+            admin: admin
         }));
         oracle = new Oracle(OracleConstructorArgs({
-            admin: admin
+            admin: admin,
+            protocolFeeReceiver: protocolFeeReceiver
         }));
 
         signer0 = vm.addr(signer0pk);
@@ -386,8 +387,7 @@ contract OraleAdmin is Test {
         vm.startPrank(feedOwner);
 
         EvenFeeHandler newFeeHandler = new EvenFeeHandler(EvenFeeHandlerConstructorArgs({
-            admin: admin,
-            protocolFeeReceiver: protocolFeeReceiver
+            admin: admin
         }));
 
         assertTrue(address(feeHandler) != address(newFeeHandler));
@@ -397,6 +397,44 @@ contract OraleAdmin is Test {
         oracle.updateFeeHandler(1, newFeeHandler);
 
         assertEq(address(oracle.getFeed(1).config.feeHandler), address(newFeeHandler));
+    }
+
+    // ***************************************************************
+    // * ================== UPDATE TOTAL FEE ======================= *
+    // ***************************************************************
+
+    function test_imposterCantUpdateTotalFee() public {
+        vm.startPrank(imposter);
+
+        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2OnlyFeedOwner()"));
+        oracle.updateTotalFee(1, 1 ether);
+    }
+
+    function test_ownerCantUpdateTotalFeeToLessThan1000() public {
+        vm.startPrank(feedOwner);
+
+        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2InvalidTotalFee()"));
+        oracle.updateTotalFee(1, 999);
+    }
+
+    function test_ownerCanUpdateTotalFeeToZero() public {
+        vm.startPrank(feedOwner);
+
+        assertEq(oracle.getFeed(1).config.totalFee, 0.001 ether);
+
+        oracle.updateTotalFee(1, 0);
+
+        assertEq(oracle.getFeed(1).config.totalFee, 0);
+    }
+
+    function test_ownerCanUpdateTotalFee() public {
+        vm.startPrank(feedOwner);
+
+        assertEq(oracle.getFeed(1).config.totalFee, 0.001 ether);
+
+        oracle.updateTotalFee(1, 1 ether);
+
+        assertEq(oracle.getFeed(1).config.totalFee, 1 ether);
     }
 
     // ***************************************************************
@@ -443,42 +481,59 @@ contract OraleAdmin is Test {
     }
 
     // ***************************************************************
-    // * ================== UPDATE TOTAL FEE ======================= *
+    // * ================ UPDATE PROTOCOL FEE ====================== *
     // ***************************************************************
 
-    function test_imposterCantUpdateTotalFee() public {
+    function test_imposterCantUpdateProtocolFee() public {
         vm.startPrank(imposter);
 
-        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2OnlyFeedOwner()"));
-        oracle.updateTotalFee(1, 1 ether);
+        vm.expectRevert('Ownable: caller is not the owner');
+        oracle.adminSetProtocolFee(1);
     }
 
-    function test_ownerCantUpdateTotalFeeToLessThan1000() public {
-        vm.startPrank(feedOwner);
+    function test_ownerCantUpdateProtocolFeeToBeTooLarge() public {
+        vm.startPrank(admin);
 
-        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2InvalidTotalFee()"));
-        oracle.updateTotalFee(1, 999);
+        assertEq(oracle.protocolFee(), 0);
+
+        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2ProtocolFeeTooHigh()"));
+        oracle.adminSetProtocolFee(0.5 ether + 1);
     }
 
-    function test_ownerCanUpdateTotalFeeToZero() public {
-        vm.startPrank(feedOwner);
+    function test_ownerCanUpdateProtocolFee() public {
+        vm.startPrank(admin);
 
-        assertEq(oracle.getFeed(1).config.totalFee, 0.001 ether);
+        assertEq(oracle.protocolFee(), 0);
 
-        oracle.updateTotalFee(1, 0);
+        oracle.adminSetProtocolFee(0.1 ether);
 
-        assertEq(oracle.getFeed(1).config.totalFee, 0);
+        assertEq(oracle.protocolFee(), 0.1 ether);
     }
 
-    function test_ownerCanUpdateTotalFee() public {
-        vm.startPrank(feedOwner);
+    // ***************************************************************
+    // * ============ UPDATE PROTOCOL FEE RECEIVER ================= *
+    // ***************************************************************
 
-        assertEq(oracle.getFeed(1).config.totalFee, 0.001 ether);
+    function test_imposterCantUpdateProtocolFeeReciever() public {
+        vm.startPrank(imposter);
 
-        oracle.updateTotalFee(1, 1 ether);
-
-        assertEq(oracle.getFeed(1).config.totalFee, 1 ether);
+        vm.expectRevert('Ownable: caller is not the owner');
+        oracle.adminSetProtocolFeeReceiver(protocolFeeReceiver2);
     }
+
+    function test_ownerCanUpdateProtocolFeeReceiver() public {
+        vm.startPrank(admin);
+
+        assertEq(oracle.protocolFeeReceiver(), protocolFeeReceiver);
+
+        oracle.adminSetProtocolFeeReceiver(protocolFeeReceiver2);
+
+        assertEq(oracle.protocolFeeReceiver(), protocolFeeReceiver2);
+    }
+
+    // ***************************************************************
+    // * ================= INTERNAL HELPERS ======================== *
+    // ***************************************************************
 
     function _contains(address needle, address[] memory haystack) internal pure returns (bool) {
         for (uint i = 0; i < haystack.length; i++) {
@@ -488,10 +543,6 @@ contract OraleAdmin is Test {
         }
         return false;
     }
-
-    // ***************************************************************
-    // * ================= INTERNAL HELPERS ======================== *
-    // ***************************************************************
 
     function _getBasicFeedView() internal view returns (FeedView memory feedView) {
         return FeedView({

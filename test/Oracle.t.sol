@@ -47,11 +47,11 @@ contract OracleTest is Test {
 
         aggregator = new AverageAggregator();
         evenFeeHandler = new EvenFeeHandler(EvenFeeHandlerConstructorArgs({
-            admin: admin,
-            protocolFeeReceiver: protocolFeeReceiver
+            admin: admin
         }));
         oracle = new Oracle(OracleConstructorArgs({
-            admin: admin 
+            admin: admin,
+            protocolFeeReceiver: protocolFeeReceiver
         }));
 
         signer0 = vm.addr(signer0pk);
@@ -629,7 +629,7 @@ contract OracleTest is Test {
     }
 
     function test_dataFeesSplitCorrectly() public {
-        vm.startPrank(admin);
+        vm.startPrank(feedOwner);
         oracle.addFeed(_getBasicFeedViewTwoDataProviders());
         vm.stopPrank();
 
@@ -659,12 +659,56 @@ contract OracleTest is Test {
 
         oracle.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
 
-        assertEq(evenFeeHandler.feesAccrued(protocolFeeReceiver), 0.2 ether);
+        assertEq(evenFeeHandler.feesAccrued(feedOwner), 0.2 ether);
 
         assertEq(evenFeeHandler.feesAccrued(signer0), 0.4 ether);
         assertEq(evenFeeHandler.feesAccrued(signer1), 0.4 ether);
 
     }
+
+    function test_dataFeesSplitCorrectlyWithProtocol() public {
+        vm.startPrank(feedOwner);
+        oracle.addFeed(_getBasicFeedViewTwoDataProviders());
+        vm.stopPrank();
+
+        vm.startPrank(admin);
+        oracle.adminSetProtocolFee(0.2 ether);
+        vm.stopPrank();
+
+        SignedNumericData[] memory numericData = new SignedNumericData[](2);
+
+        numericData[0] = _signNumericData(
+            NumericData({
+                feedId: 1,
+                timestamp: uint64(block.timestamp - 1 minutes),
+                nonce: 2,
+                numericValue: 1 ether,
+                extraData: ''
+            }),
+            signer0pk
+        );
+
+        numericData[1] = _signNumericData(
+            NumericData({
+                feedId: 1,
+                timestamp: uint64(block.timestamp - 1 minutes),
+                nonce: 2,
+                numericValue: 3 ether,
+                extraData: ''
+            }),
+            signer1pk
+        );
+
+        oracle.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
+
+        assertEq(oracle.protocolFeeReceiver().balance, 0.2 ether);
+        assertEq(evenFeeHandler.feesAccrued(feedOwner), 0.16 ether);
+
+        assertEq(evenFeeHandler.feesAccrued(signer0), 0.32 ether);
+        assertEq(evenFeeHandler.feesAccrued(signer1), 0.32 ether);
+
+    }
+
 
     // ***************************************************************
     // * ================= INTERNAL HELPERS ======================== *

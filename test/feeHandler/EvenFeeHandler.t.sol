@@ -8,14 +8,13 @@ contract EvenFeeHandlerTest is Test {
     EvenFeeHandler public evenFeeHandler;
 
     address admin = address(100);
-    address protocolFeeReceiver = address(101);
-    address protocolFeeReceiver2 = address(102);
+    address feedOwner = address(101);
+
     address imposter = address(200);
 
     function setUp() public {
         evenFeeHandler = new EvenFeeHandler(EvenFeeHandlerConstructorArgs({
-            admin: admin,
-            protocolFeeReceiver: protocolFeeReceiver
+            admin: admin
         }));
     }
 
@@ -27,9 +26,9 @@ contract EvenFeeHandlerTest is Test {
         feeReceivers[0] = address(1);
         feeReceivers[1] = address(2);
         uint256 totalFee = 0.001 ether;
-        evenFeeHandler.handleFees{value: totalFee}(feeReceivers, "");
+        evenFeeHandler.handleFees{value: totalFee}(feedOwner, feeReceivers, "");
 
-        assertEq(evenFeeHandler.feesAccrued(protocolFeeReceiver), 0.0002 ether);
+        assertEq(evenFeeHandler.feesAccrued(feedOwner), 0.0002 ether);
 
         assertEq(evenFeeHandler.feesAccrued(address(1)), 0.0004 ether);
         assertEq(evenFeeHandler.feesAccrued(address(2)), 0.0004 ether);
@@ -43,9 +42,9 @@ contract EvenFeeHandlerTest is Test {
         feeReceivers[2] = address(3);
         feeReceivers[3] = address(4);
 
-        evenFeeHandler.handleFees{value: 1 ether}(feeReceivers, "");
+        evenFeeHandler.handleFees{value: 1 ether}(feedOwner, feeReceivers, "");
 
-        assertEq(evenFeeHandler.feesAccrued(protocolFeeReceiver), 0.2 ether);
+        assertEq(evenFeeHandler.feesAccrued(feedOwner), 0.2 ether);
 
         assertEq(evenFeeHandler.feesAccrued(address(1)), 0.2 ether);
         assertEq(evenFeeHandler.feesAccrued(address(2)), 0.2 ether);
@@ -59,14 +58,14 @@ contract EvenFeeHandlerTest is Test {
         feeReceivers[0] = address(1);
         feeReceivers[1] = address(2);
         uint256 totalFee = 1 ether;
-        evenFeeHandler.handleFees{value: totalFee}(feeReceivers, "");
+        evenFeeHandler.handleFees{value: totalFee}(feedOwner, feeReceivers, "");
 
-        uint256 protocolFeeReceiverBal0 = protocolFeeReceiver.balance;
+        uint256 feedOwnerBal0 = feedOwner.balance;
         uint256 feeReceiver1Bal0 = address(1).balance;
         uint256 feeReceiver2Bal0 = address(2).balance;
         uint256 feeReceiver3Bal0 = address(3).balance;
 
-        vm.startPrank(protocolFeeReceiver);
+        vm.startPrank(feedOwner);
         evenFeeHandler.claimFees();
         vm.stopPrank();
 
@@ -83,7 +82,7 @@ contract EvenFeeHandlerTest is Test {
         vm.stopPrank();
 
 
-        assertEq(protocolFeeReceiver.balance - protocolFeeReceiverBal0, 0.2 ether);
+        assertEq(feedOwner.balance - feedOwnerBal0, 0.2 ether);
         assertEq(address(1).balance - feeReceiver1Bal0, 0.4 ether);
         assertEq(address(2).balance - feeReceiver2Bal0, 0.4 ether);
         assertEq(address(3).balance - feeReceiver3Bal0, 0 ether);
@@ -97,7 +96,7 @@ contract EvenFeeHandlerTest is Test {
         feeReceivers[3] = address(4);
 
         vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2EvenFeeHandlerFeeTooLow()"));
-        evenFeeHandler.handleFees{value: 50}(feeReceivers, "");
+        evenFeeHandler.handleFees{value: 50}(feedOwner, feeReceivers, "");
     }
 
     function test_evenFeeHandlerCanHandleZeroFees() public {
@@ -107,13 +106,13 @@ contract EvenFeeHandlerTest is Test {
         feeReceivers[2] = address(3);
         feeReceivers[3] = address(4);
 
-        evenFeeHandler.handleFees{value: 0}(feeReceivers, "");
+        evenFeeHandler.handleFees{value: 0}(feedOwner, feeReceivers, "");
 
         assertEq(address(1).balance, 0 ether);
         assertEq(address(2).balance, 0 ether);
         assertEq(address(3).balance, 0 ether);
         assertEq(address(4).balance, 0 ether);
-        assertEq(protocolFeeReceiver.balance, 0 ether);
+        assertEq(feedOwner.balance, 0 ether);
     }
 
 
@@ -121,46 +120,26 @@ contract EvenFeeHandlerTest is Test {
     // * ============ UPDATE PROTOCOL FEE PORTION ================== *
     // ***************************************************************
     
-    function test_imposterCantUpdateProtocolFeePortion() public {
+    function test_imposterCantUpdateFeedOwnerFeePortion() public {
         vm.startPrank(imposter);
 
         vm.expectRevert('Ownable: caller is not the owner');
-        evenFeeHandler.updateProtocolFeePortion(0.1 ether);
+        evenFeeHandler.updateProtocolFeedOwnerPortion(0.1 ether);
     }
 
-    function test_ownerCantUpdateProtocolFeePortionToInvalidValue() public {
+    function test_ownerCantUpdateFeedOwnerFeePortionToInvalidValue() public {
         vm.startPrank(admin);
 
-        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2EvenFeeHandlerInvalidProtocolFeePortion()"));
-        evenFeeHandler.updateProtocolFeePortion(1.1 ether);
+        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2EvenFeeHandlerInvalidFeedOwnerFeePortion()"));
+        evenFeeHandler.updateProtocolFeedOwnerPortion(1.1 ether);
     }
 
-    function test_ownerCanUpdateProtocolFeePortion() public {
+    function test_ownerCanUpdateFeedOwnerFeePortion() public {
         vm.startPrank(admin);
 
-        assertEq(evenFeeHandler.protocolFeePortion(), 0.2 ether);
+        assertEq(evenFeeHandler.feedOwnerPortion(), 0.2 ether);
 
-        evenFeeHandler.updateProtocolFeePortion(0.3 ether);
-        assertEq(evenFeeHandler.protocolFeePortion(), 0.3 ether);
-    }
-
-    // ***************************************************************
-    // * ============ UPDATE PROTOCOL FEE RECEIVER ================= *
-    // ***************************************************************
-
-    function test_imposterCantUpdateProtocolFeeReceiver() public {
-        vm.startPrank(imposter);
-
-        vm.expectRevert('Ownable: caller is not the owner');
-        evenFeeHandler.updateProtocolFeeReceiver(protocolFeeReceiver2);
-    }
-
-    function test_ownerCanUpdateProtocolFeeReciever() public {
-        vm.startPrank(admin);
-
-        assertEq(evenFeeHandler.protocolFeeReceiver(), protocolFeeReceiver);
-
-        evenFeeHandler.updateProtocolFeeReceiver(protocolFeeReceiver2);
-        assertEq(evenFeeHandler.protocolFeeReceiver(), protocolFeeReceiver2);
+        evenFeeHandler.updateProtocolFeedOwnerPortion(0.3 ether);
+        assertEq(evenFeeHandler.feedOwnerPortion(), 0.3 ether);
     }
 }
