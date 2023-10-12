@@ -88,7 +88,7 @@ contract OracleAdmin is Test {
     function test_ownerCantUpdateDataProviderQuorumToZero() public {
         vm.startPrank(feedOwner);
 
-        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2OracleInvalidDataProviderQuorum()"));
+        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2InvalidDataProviderQuorum()"));
         oracle.updateDataProviderQuorum(1, 0);
     }
 

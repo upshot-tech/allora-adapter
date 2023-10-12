@@ -76,28 +76,31 @@ contract Oracle is IOracle, Ownable2Step {
     // * ========================= ERRORS ========================== *
     // ***************************************************************
 
+    // verification errors
+    error UpshotOracleV2NotSwitchedOn();
+    error UpshotOracleV2NoDataProvided();
+    error UpshotOracleV2OwnerTurnedFeedOff();
+    error UpshotOracleV2AdminTurnedFeedOff();
+    error UpshotOracleV2InsufficientPayment();
+    error UpshotOracleV2NotEnoughData();
+    error UpshotOracleV2FeedMismatch();
+    error UpshotOracleV2NonceMismatch();
     error UpshotOracleV2InvalidDataTime();
     error UpshotOracleV2InvalidDataProvider();
     error UpshotOracleV2DuplicateDataProvider();
-    error UpshotOracleV2NoDataProvided();
-    error UpshotOracleV2NotEnoughData();
-    error UpshotOracleV2FeedMismatch();
-    error UpshotOracleV2OwnerTurnedFeedOff();
-    error UpshotOracleV2AdminTurnedFeedOff();
     error UpshotOracleV2InvalidNonce();
-    error UpshotOracleV2NonceMismatch();
-    error UpshotOracleV2InsufficientPayment();
-    error UpshotOracleV2NotSwitchedOn();
+    error UpshotOracleV2EthTransferFailed();
+
+    // parameter update errors
+    error UpshotOracleV2InvalidFeedTitle();
+    error UpshotOracleV2OnlyFeedOwner();
     error UpshotOracleV2InvalidTotalFee();
     error UpshotOracleV2InvalidFeeHandler();
     error UpshotOracleV2InvalidAggregator();
-    error UpshotOracleV2OracleInvalidDataProviderQuorum();
+    error UpshotOracleV2InvalidDataProviderQuorum();
     error UpshotOracleV2InvalidDataValiditySeconds();
-    error UpshotOracleV2InvalidFeedTitle();
-    error UpshotOracleV2OnlyFeedOwner();
-    error UpshotOracleV2EthTransferFailed();
-    error UpshotOracleV2ProtocolFeeTooHigh();
     error UpshotOracleV2InvalidProtocolFeeReceiver();
+    error UpshotOracleV2ProtocolFeeTooHigh();
 
     // ***************************************************************
     // * ================== USER INTERFACE ========================= *
@@ -337,7 +340,7 @@ contract Oracle is IOracle, Ownable2Step {
         uint48 dataProviderQuorum
     ) external onlyFeedOwner(feedId) {
         if (dataProviderQuorum == 0) {
-            revert UpshotOracleV2OracleInvalidDataProviderQuorum();
+            revert UpshotOracleV2InvalidDataProviderQuorum();
         }
 
         feed[feedId].config.dataProviderQuorum = dataProviderQuorum;
