@@ -44,7 +44,7 @@ contract Oracle is IOracle, Ownable2Step {
     // * ========================= EVENTS ========================== *
     // ***************************************************************
 
-    // main interface
+    // main interface events
     event UpshotOracleV2OracleVerifiedData(
         uint256 feedId, 
         uint256 numericData, 
@@ -52,7 +52,7 @@ contract Oracle is IOracle, Ownable2Step {
         uint128 nonce
     );
     
-    // feed owner updates
+    // feed owner update events
     event UpshotOracleV2FeedAdded(FeedView feedView);
     event UpshotOracleV2OracleFeedOwnerUpdatedDataProviderQuorum(uint256 feedId, uint48 dataProviderQuorum);
     event UpshotOracleV2OracleFeedOwnerUpdatedDataValiditySeconds(uint256 feedId, uint48 dataValiditySeconds);
@@ -65,6 +65,7 @@ contract Oracle is IOracle, Ownable2Step {
     event UpshotOracleV2OracleFeedOwnerFeedTurnedOff(uint256 feedId);
     event UpshotOracleV2OracleFeedOwnerFeedTurnedOn(uint256 feedId);
 
+    // oracle admin updates
     event UpshotOracleV2OracleAdminUpdatedProtocolFee(uint256 newProtocolFee);
     event UpshotOracleV2OracleAdminUpdatedProtocolFeeReceiver(address protocolFeeReceiver);
     event UpshotOracleV2OracleAdminFeedTurnedOff(uint256 feedId);
