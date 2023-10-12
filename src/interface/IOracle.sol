@@ -14,7 +14,7 @@ pragma solidity ^0.8.0;
 struct NumericData {
     uint64 feedId;
     uint64 timestamp;
-    uint128 nonce;
+    uint96 nonce;
     uint256 numericValue; 
     bytes extraData;
 }
@@ -29,30 +29,29 @@ struct UpshotOracleNumericData {
     bytes extraData;
 }
 
-/// @dev The struct for a feed, using a set for valid data providers 
-struct Feed { 
+struct FeedConfig {
     string title;
-    uint128 nonce;
-    uint128 totalFee;
+    address owner;
+    uint96 nonce;
+    uint256 totalFee;
     IAggregator aggregator;
-    bool isValid;
+    bool ownerSwitchedOn;
+    bool adminSwitchedOn;
     IFeeHandler feeHandler;
     uint48 dataProviderQuorum;
     uint48 dataValiditySeconds;
+}
+
+/// @dev The struct for a feed, using a set for valid data providers 
+struct Feed { 
+    FeedConfig config;
     EnumerableSet.AddressSet validDataProviders;
 }
 
 // TODO reduce data structure size
 /// @dev The struct for viewing a feed, which can be loaded into memory and returned
 struct FeedView { 
-    string title;
-    uint128 nonce;
-    uint128 totalFee;
-    IAggregator aggregator;
-    bool isValid;
-    IFeeHandler feeHandler;
-    uint48 dataProviderQuorum;
-    uint48 dataValiditySeconds;
+    FeedConfig config;
     address[] validDataProviders;
 }
 

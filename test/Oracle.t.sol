@@ -4,7 +4,13 @@ pragma solidity ^0.8.13;
 import "../lib/forge-std/src/Test.sol";
 import { ECDSA } from "../lib/openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
 import { Oracle, OracleConstructorArgs } from "../src/Oracle.sol";
-import { SignedNumericData, NumericData, FeedView, UpshotOracleNumericData } from "../src/interface/IOracle.sol";
+import { 
+    SignedNumericData, 
+    NumericData, 
+    FeedView, 
+    FeedConfig, 
+    UpshotOracleNumericData
+} from "../src/interface/IOracle.sol";
 import { EvenFeeHandler, EvenFeeHandlerConstructorArgs } from "../src/feeHandler/EvenFeeHandler.sol";
 import { AverageAggregator } from "../src/aggregator/AverageAggregator.sol";
 import { MedianAggregator } from "../src/aggregator/MedianAggregator.sol";
@@ -20,6 +26,7 @@ contract OracleTest is Test {
 
     address admin = address(100);
     address protocolFeeReceiver = address(101);
+    address feedOwner = address(102);
 
     uint256 signer0pk = 0x1000;
     uint256 signer1pk = 0x1001;
@@ -40,11 +47,11 @@ contract OracleTest is Test {
 
         aggregator = new AverageAggregator();
         evenFeeHandler = new EvenFeeHandler(EvenFeeHandlerConstructorArgs({
-            admin: admin,
-            protocolFeeReceiver: protocolFeeReceiver
+            admin: admin
         }));
         oracle = new Oracle(OracleConstructorArgs({
-            admin: admin 
+            admin: admin,
+            protocolFeeReceiver: protocolFeeReceiver
         }));
 
         signer0 = vm.addr(signer0pk);
@@ -70,7 +77,7 @@ contract OracleTest is Test {
     function test_cantCallVerifyDataWhenContractSwitchedOff() public {
         vm.startPrank(admin);
         vm.deal(admin, 2^128);
-        oracle.turnOff();
+        oracle.adminTurnOffOracle();
         
         SignedNumericData[] memory numericData = new SignedNumericData[](0);
 
@@ -110,7 +117,7 @@ contract OracleTest is Test {
     function test_cantCallVerifyDAtaWithLessThanThresholdData() public {
         vm.startPrank(admin);
         FeedView memory feedView = _getBasicFeedView();
-        feedView.dataProviderQuorum = 2;
+        feedView.config.dataProviderQuorum = 2;
         oracle.addFeed(feedView);
         vm.stopPrank();
 
@@ -166,12 +173,12 @@ contract OracleTest is Test {
             signer0pk
         );
 
-        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2InvalidFeed()"));
+        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2OwnerTurnedFeedOff()"));
         oracle.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
     }
 
-    function test_cantCallVerifyDataWhenFeedIsTurnedOff() public {
-        vm.startPrank(admin);
+    function test_cantCallVerifyDataWhenFeedIsTurnedOffByOwner() public {
+        vm.startPrank(feedOwner);
         uint feedId = oracle.addFeed(_getBasicFeedView());
         oracle.turnOffFeed(feedId);
         vm.stopPrank();
@@ -189,9 +196,36 @@ contract OracleTest is Test {
             signer0pk
         );
 
-        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2InvalidFeed()"));
+        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2OwnerTurnedFeedOff()"));
         oracle.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
     }
+
+    function test_cantCallVerifyDataWhenFeedIsTurnedOffByAdmin() public {
+        vm.startPrank(feedOwner);
+        uint feedId = oracle.addFeed(_getBasicFeedView());
+        vm.stopPrank();
+
+        vm.startPrank(admin);
+        oracle.adminTurnOffFeed(feedId);
+        vm.stopPrank();
+
+        SignedNumericData[] memory numericData = new SignedNumericData[](1);
+
+        numericData[0] = _signNumericData(
+            NumericData({
+                feedId: uint64(feedId),
+                timestamp: uint64(block.timestamp - 1 minutes),
+                nonce: 2,
+                numericValue: 1 ether,
+                extraData: ''
+            }),
+            signer0pk
+        );
+
+        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2AdminTurnedFeedOff()"));
+        oracle.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
+    }
+
 
     function test_cantCallVerifyDataWithoutValidNonce() public {
         vm.startPrank(admin);
@@ -314,7 +348,7 @@ contract OracleTest is Test {
         numericData[0] = _signNumericData(
             NumericData({
                 feedId: 1,
-                timestamp: uint64((block.timestamp - oracle.getFeed(1).dataValiditySeconds) - 1),
+                timestamp: uint64((block.timestamp - oracle.getFeed(1).config.dataValiditySeconds) - 1),
                 nonce: 2,
                 numericValue: 1 ether,
                 extraData: ''
@@ -386,7 +420,7 @@ contract OracleTest is Test {
         oracle.addFeed(_getBasicFeedViewTwoDataProviders());
         vm.stopPrank();
 
-        uint256 nonce0 = oracle.getFeed(1).nonce;
+        uint256 nonce0 = oracle.getFeed(1).config.nonce;
 
         SignedNumericData[] memory numericData = new SignedNumericData[](2);
 
@@ -414,7 +448,7 @@ contract OracleTest is Test {
 
         oracle.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
 
-        uint256 nonce1 = oracle.getFeed(1).nonce;
+        uint256 nonce1 = oracle.getFeed(1).config.nonce;
 
         assertEq(nonce1, nonce0 + 1);
     }
@@ -457,7 +491,7 @@ contract OracleTest is Test {
 
         vm.startPrank(admin);
         FeedView memory feedView = _getBasicFeedViewTwoDataProviders();
-        feedView.aggregator = medianAggregator;
+        feedView.config.aggregator = medianAggregator;
         oracle.addFeed(feedView);
         vm.stopPrank();
 
@@ -495,7 +529,7 @@ contract OracleTest is Test {
         vm.startPrank(admin);
 
         FeedView memory feedView = _getBasicFeedViewThreeDataProviders();
-        feedView.aggregator = medianAggregator;
+        feedView.config.aggregator = medianAggregator;
         oracle.addFeed(feedView);
         vm.stopPrank();
 
@@ -539,9 +573,7 @@ contract OracleTest is Test {
     }
 
     function test_dataAggregationWorksCorrectlyAfterUpdatingAggregator() public {
-        vm.startPrank(admin);
         uint256 feedId = oracle.addFeed(_getBasicFeedViewThreeDataProviders());
-        vm.stopPrank();
 
         SignedNumericData[] memory numericData = new SignedNumericData[](3);
 
@@ -578,7 +610,7 @@ contract OracleTest is Test {
 
         MedianAggregator medianAggregator = new MedianAggregator();
 
-        vm.startPrank(admin);
+        vm.startPrank(feedOwner);
         oracle.updateAggregator(feedId, medianAggregator);
         vm.stopPrank();
 
@@ -595,7 +627,7 @@ contract OracleTest is Test {
     }
 
     function test_dataFeesSplitCorrectly() public {
-        vm.startPrank(admin);
+        vm.startPrank(feedOwner);
         oracle.addFeed(_getBasicFeedViewTwoDataProviders());
         vm.stopPrank();
 
@@ -625,12 +657,56 @@ contract OracleTest is Test {
 
         oracle.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
 
-        assertEq(evenFeeHandler.feesAccrued(protocolFeeReceiver), 0.2 ether);
+        assertEq(evenFeeHandler.feesAccrued(feedOwner), 0.2 ether);
 
         assertEq(evenFeeHandler.feesAccrued(signer0), 0.4 ether);
         assertEq(evenFeeHandler.feesAccrued(signer1), 0.4 ether);
 
     }
+
+    function test_dataFeesSplitCorrectlyWithProtocol() public {
+        vm.startPrank(feedOwner);
+        oracle.addFeed(_getBasicFeedViewTwoDataProviders());
+        vm.stopPrank();
+
+        vm.startPrank(admin);
+        oracle.adminSetProtocolFee(0.2 ether);
+        vm.stopPrank();
+
+        SignedNumericData[] memory numericData = new SignedNumericData[](2);
+
+        numericData[0] = _signNumericData(
+            NumericData({
+                feedId: 1,
+                timestamp: uint64(block.timestamp - 1 minutes),
+                nonce: 2,
+                numericValue: 1 ether,
+                extraData: ''
+            }),
+            signer0pk
+        );
+
+        numericData[1] = _signNumericData(
+            NumericData({
+                feedId: 1,
+                timestamp: uint64(block.timestamp - 1 minutes),
+                nonce: 2,
+                numericValue: 3 ether,
+                extraData: ''
+            }),
+            signer1pk
+        );
+
+        oracle.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
+
+        assertEq(oracle.protocolFeeReceiver().balance, 0.2 ether);
+        assertEq(evenFeeHandler.feesAccrued(feedOwner), 0.16 ether);
+
+        assertEq(evenFeeHandler.feesAccrued(signer0), 0.32 ether);
+        assertEq(evenFeeHandler.feesAccrued(signer1), 0.32 ether);
+
+    }
+
 
     // ***************************************************************
     // * ================= INTERNAL HELPERS ======================== *
@@ -655,14 +731,18 @@ contract OracleTest is Test {
 
     function _getBasicFeedView() internal view returns (FeedView memory feedView) {
         return FeedView({
-            title: 'Initial feed',
-            nonce: 1,
-            totalFee: 0.001 ether,
-            dataProviderQuorum: 1,
-            dataValiditySeconds: 5 minutes,
-            aggregator: aggregator,
-            isValid: true,
-            feeHandler: evenFeeHandler,
+            config: FeedConfig({
+                title: 'Initial feed',
+                owner: feedOwner,
+                nonce: 1,
+                totalFee: 0.001 ether,
+                aggregator: aggregator,
+                ownerSwitchedOn: true,
+                adminSwitchedOn: true,
+                feeHandler: evenFeeHandler,
+                dataProviderQuorum: 1,
+                dataValiditySeconds: 5 minutes
+            }),
             validDataProviders: oneValidSigner
         });
     }
