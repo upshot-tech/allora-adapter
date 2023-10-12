@@ -22,6 +22,7 @@ contract OracleAdmin is Test {
     address protocolFeeReceiver = address(101);
     address protocolFeeReceiver2 = address(102);
     address feedOwner = address(103);
+    address feedOwner2 = address(104);
 
     address imposter = address(200);
     address newDataProvider = address(201);
@@ -209,7 +210,7 @@ contract OracleAdmin is Test {
         FeedView memory secondFeed = FeedView({
             config: FeedConfig({
                 title: 'secondary feed',
-                owner: admin,
+                owner: feedOwner2,
                 nonce: 1234,
                 totalFee: 0.001 ether,
                 aggregator: aggregator,
@@ -228,6 +229,7 @@ contract OracleAdmin is Test {
         FeedView memory addedFeed = oracle.getFeed(secondFeedId);
 
         assertEq(addedFeed.config.title, secondFeed.config.title);
+        assertEq(addedFeed.config.owner, secondFeed.config.owner);
         assertEq(addedFeed.config.nonce, 1); // should always be 1 regardless
         assertEq(addedFeed.config.totalFee, secondFeed.config.totalFee);
         assertEq(addedFeed.config.dataProviderQuorum, secondFeed.config.dataProviderQuorum);
@@ -438,6 +440,27 @@ contract OracleAdmin is Test {
     }
 
     // ***************************************************************
+    // * ================== UPDATE FEED OWNER ====================== *
+    // ***************************************************************
+
+    function test_imposterCantUpdateFeedOwner() public {
+        vm.startPrank(imposter);
+
+        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2OnlyFeedOwner()"));
+        oracle.updateFeedOwner(1, feedOwner2);
+    }
+
+    function test_ownerCanUpdateFeedOwner() public {
+        vm.startPrank(feedOwner);
+
+        assertEq(oracle.getFeed(1).config.owner, feedOwner);
+
+        oracle.updateFeedOwner(1, feedOwner2);
+
+        assertEq(oracle.getFeed(1).config.owner, feedOwner2);
+    }
+
+    // ***************************************************************
     // * ================== TURN OFF ORACLE ======================== *
     // ***************************************************************
 
@@ -555,7 +578,7 @@ contract OracleAdmin is Test {
         return FeedView({
             config: FeedConfig({
                 title: 'Initial feed',
-                owner: admin,
+                owner: feedOwner,
                 nonce: 1,
                 totalFee: 0.001 ether,
                 aggregator: aggregator,

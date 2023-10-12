@@ -573,9 +573,7 @@ contract OracleTest is Test {
     }
 
     function test_dataAggregationWorksCorrectlyAfterUpdatingAggregator() public {
-        vm.startPrank(admin);
         uint256 feedId = oracle.addFeed(_getBasicFeedViewThreeDataProviders());
-        vm.stopPrank();
 
         SignedNumericData[] memory numericData = new SignedNumericData[](3);
 
@@ -612,7 +610,7 @@ contract OracleTest is Test {
 
         MedianAggregator medianAggregator = new MedianAggregator();
 
-        vm.startPrank(admin);
+        vm.startPrank(feedOwner);
         oracle.updateAggregator(feedId, medianAggregator);
         vm.stopPrank();
 
@@ -735,7 +733,7 @@ contract OracleTest is Test {
         return FeedView({
             config: FeedConfig({
                 title: 'Initial feed',
-                owner: admin,
+                owner: feedOwner,
                 nonce: 1,
                 totalFee: 0.001 ether,
                 aggregator: aggregator,

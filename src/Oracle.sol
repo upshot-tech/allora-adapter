@@ -64,6 +64,7 @@ contract Oracle is IOracle, Ownable2Step {
     event UpshotOracleV2OracleAdminUpdatedFeePerDataVerification(uint128 totalFee);
     event UpshotOracleV2OracleAdminUpdatedProtocolFee(uint256 newProtocolFee);
     event UpshotOracleV2OracleAdminUpdatedProtocolFeeReceiver(address protocolFeeReceiver);
+    event UpshotOracleV2OracleFeedOwnerUpdatedOwner(uint256 feedId, address newOwner);
 
     // ***************************************************************
     // * ========================= ERRORS ========================== *
@@ -308,7 +309,6 @@ contract Oracle is IOracle, Ownable2Step {
         newFeedId = nextFeedId++;
 
         feed[newFeedId].config = feedView.config;
-        feed[newFeedId].config.owner = msg.sender;
         feed[newFeedId].config.nonce = 1;
 
         for (uint256 i = 0; i < feedView.validDataProviders.length;) {
@@ -449,6 +449,18 @@ contract Oracle is IOracle, Ownable2Step {
         feed[feedId].config.feeHandler = feeHandler;
 
         emit UpshotOracleV2OracleAdminUpdatedFeeHandler(feedId, feeHandler);
+    } 
+
+    /**
+     * @notice Admin function to update the owner of the feed 
+     * 
+     * @param feedId The feedId to update the fee handler for
+     * @param owner_ The new owner of the feed
+     */
+    function updateFeedOwner(uint256 feedId, address owner_) external onlyFeedOwner(feedId) {
+        feed[feedId].config.owner = owner_;
+
+        emit UpshotOracleV2OracleFeedOwnerUpdatedOwner(feedId, owner_);
     } 
 
     // ***************************************************************
