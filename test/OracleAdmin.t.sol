@@ -521,6 +521,13 @@ contract OracleAdmin is Test {
         oracle.adminSetProtocolFeeReceiver(protocolFeeReceiver2);
     }
 
+    function test_ownerCantUpdateProtocolFeeReceiverToZeroAddress() public {
+        vm.startPrank(admin);
+
+        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2InvalidProtocolFeeReceiver()"));
+        oracle.adminSetProtocolFeeReceiver(address(0));
+    }
+
     function test_ownerCanUpdateProtocolFeeReceiver() public {
         vm.startPrank(admin);
 

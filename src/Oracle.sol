@@ -37,9 +37,7 @@ contract Oracle is IOracle, Ownable2Step {
     ) {
         _transferOwnership(args.admin);
 
-        protocolFeeReceiver = args.protocolFeeReceiver;
-
-        emit UpshotOracleV2OracleAdminUpdatedProtocolFeeReceiver(args.protocolFeeReceiver);
+        _setProtocolFeeReceiver(args.protocolFeeReceiver);
     }
 
     // ***************************************************************
@@ -92,6 +90,7 @@ contract Oracle is IOracle, Ownable2Step {
     error UpshotOracleV2OnlyFeedOwner();
     error UpshotOracleV2EthTransferFailed();
     error UpshotOracleV2ProtocolFeeTooHigh();
+    error UpshotOracleV2InvalidProtocolFeeReceiver();
 
     // ***************************************************************
     // * ================== USER INTERFACE ========================= *
@@ -275,6 +274,21 @@ contract Oracle is IOracle, Ownable2Step {
         if (!success) {
             revert UpshotOracleV2EthTransferFailed();
         }
+    }
+
+    /**
+     * @dev Update the protocol fee receiver
+     * 
+     * @param protocolFeeReceiver_ The new protocol fee receiver
+     */
+    function _setProtocolFeeReceiver(address protocolFeeReceiver_) internal {
+        if (protocolFeeReceiver_ == address(0)) {
+            revert UpshotOracleV2InvalidProtocolFeeReceiver();
+        }
+
+        protocolFeeReceiver = protocolFeeReceiver_;
+
+        emit UpshotOracleV2OracleAdminUpdatedProtocolFeeReceiver(protocolFeeReceiver_);
     }
 
     // ***************************************************************
@@ -501,9 +515,6 @@ contract Oracle is IOracle, Ownable2Step {
      * @param protocolFeeReceiver_ The new protocol fee receiver
      */
     function adminSetProtocolFeeReceiver(address protocolFeeReceiver_) external onlyOwner {
-        protocolFeeReceiver = protocolFeeReceiver_;
-
-        emit UpshotOracleV2OracleAdminUpdatedProtocolFeeReceiver(protocolFeeReceiver_);
+        _setProtocolFeeReceiver(protocolFeeReceiver_);
     }
-
 }
