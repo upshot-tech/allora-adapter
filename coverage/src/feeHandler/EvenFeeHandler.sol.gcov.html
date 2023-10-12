@@ -31,17 +31,17 @@
             <td class="headerValue">lcov.info</td>
             <td></td>
             <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">23</td>
             <td class="headerCovTableEntry">24</td>
-            <td class="headerCovTableEntry">25</td>
-            <td class="headerCovTableEntryHi">96.0 %</td>
+            <td class="headerCovTableEntryHi">95.8 %</td>
           </tr>
           <tr>
             <td class="headerItem">Date:</td>
-            <td class="headerValue">2023-10-10 13:03:53</td>
+            <td class="headerValue">2023-10-12 08:26:01</td>
             <td></td>
             <td class="headerItem">Functions:</td>
-            <td class="headerCovTableEntry">5</td>
-            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntry">4</td>
             <td class="headerCovTableEntryHi">100.0 %</td>
           </tr>
           <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
@@ -69,140 +69,121 @@
 <a name="7"><span class="lineNum">       7 </span>            : </a>
 <a name="8"><span class="lineNum">       8 </span>            : struct EvenFeeHandlerConstructorArgs {</a>
 <a name="9"><span class="lineNum">       9 </span>            :     address admin;</a>
-<a name="10"><span class="lineNum">      10 </span>            :     address protocolFeeReceiver;</a>
-<a name="11"><span class="lineNum">      11 </span>            : }</a>
-<a name="12"><span class="lineNum">      12 </span>            : </a>
+<a name="10"><span class="lineNum">      10 </span>            : }</a>
+<a name="11"><span class="lineNum">      11 </span>            : </a>
+<a name="12"><span class="lineNum">      12 </span>            : contract EvenFeeHandler is IFeeHandler, Ownable2Step {</a>
 <a name="13"><span class="lineNum">      13 </span>            : </a>
-<a name="14"><span class="lineNum">      14 </span>            : contract EvenFeeHandler is IFeeHandler, Ownable2Step {</a>
-<a name="15"><span class="lineNum">      15 </span>            : </a>
-<a name="16"><span class="lineNum">      16 </span>            :     /// @dev the portion of the total fee that goes to the protocol</a>
-<a name="17"><span class="lineNum">      17 </span>            :     uint256 public protocolFeePortion = 0.2 ether;</a>
-<a name="18"><span class="lineNum">      18 </span>            : </a>
-<a name="19"><span class="lineNum">      19 </span>            :     /// @dev the address that receives the protocol fee</a>
-<a name="20"><span class="lineNum">      20 </span>            :     address public protocolFeeReceiver;</a>
-<a name="21"><span class="lineNum">      21 </span>            : </a>
-<a name="22"><span class="lineNum">      22 </span>            :     /// @dev the address that receives the protocol fee</a>
-<a name="23"><span class="lineNum">      23 </span>            :     mapping(address feeReciever =&gt; uint256 feesAccrued) public feesAccrued;</a>
-<a name="24"><span class="lineNum">      24 </span>            : </a>
-<a name="25"><span class="lineNum">      25 </span>            :     // ***************************************************************</a>
-<a name="26"><span class="lineNum">      26 </span>            :     // * ========================= EVENTS ========================== *</a>
-<a name="27"><span class="lineNum">      27 </span>            :     // ***************************************************************</a>
-<a name="28"><span class="lineNum">      28 </span>            : </a>
-<a name="29"><span class="lineNum">      29 </span>            :     event UpshotOracleV2EvenFeeHandlerFeesHandled(uint256 fee, address[] feeReceivers);</a>
-<a name="30"><span class="lineNum">      30 </span>            :     event UpshotOracleV2EvenFeeHandlerAdminUpdatedTotalFee(uint256 totalFee);</a>
-<a name="31"><span class="lineNum">      31 </span>            :     event UpshotOracleV2EvenFeeHandlerAdminUpdatedProtocolFeePortion(uint256 protocolFeePortion);</a>
-<a name="32"><span class="lineNum">      32 </span>            :     event UpshotOracleV2EvenFeeHandlerAdminUpdatedProtocolFeeReceiver(address protocolFeeReceiver);</a>
-<a name="33"><span class="lineNum">      33 </span>            :     event UpshotOracleV2EvenFeeHandlerFeesClaimed(address claimer, uint256 fees);</a>
-<a name="34"><span class="lineNum">      34 </span>            : </a>
-<a name="35"><span class="lineNum">      35 </span>            :     // ***************************************************************</a>
-<a name="36"><span class="lineNum">      36 </span>            :     // * ========================= ERRORS ========================== *</a>
-<a name="37"><span class="lineNum">      37 </span>            :     // ***************************************************************</a>
-<a name="38"><span class="lineNum">      38 </span>            : </a>
-<a name="39"><span class="lineNum">      39 </span>            :     error UpshotOracleV2EvenFeeHandlerEthTransferFailed();</a>
-<a name="40"><span class="lineNum">      40 </span>            :     error UpshotOracleV2EvenFeeHandlerFeeTooLow();</a>
-<a name="41"><span class="lineNum">      41 </span>            :     error UpshotOracleV2EvenFeeHandlerInvalidProtocolFeePortion();</a>
-<a name="42"><span class="lineNum">      42 </span>            : </a>
-<a name="43"><span class="lineNum">      43 </span>            :     constructor(</a>
-<a name="44"><span class="lineNum">      44 </span>            :         EvenFeeHandlerConstructorArgs memory args</a>
-<a name="45"><span class="lineNum">      45 </span>            :     ) {</a>
-<a name="46"><span class="lineNum">      46 </span>            :         _transferOwnership(args.admin);</a>
-<a name="47"><span class="lineNum">      47 </span>            : </a>
-<a name="48"><span class="lineNum">      48 </span>            :         protocolFeeReceiver = args.protocolFeeReceiver;</a>
+<a name="14"><span class="lineNum">      14 </span>            :     /// @dev the portion of the total fee that goes to the protocol</a>
+<a name="15"><span class="lineNum">      15 </span>            :     uint256 public feedOwnerPortion = 0.2 ether;</a>
+<a name="16"><span class="lineNum">      16 </span>            : </a>
+<a name="17"><span class="lineNum">      17 </span>            :     /// @dev the address that receives the protocol fee</a>
+<a name="18"><span class="lineNum">      18 </span>            :     mapping(address feeReciever =&gt; uint256 feesAccrued) public feesAccrued;</a>
+<a name="19"><span class="lineNum">      19 </span>            : </a>
+<a name="20"><span class="lineNum">      20 </span>            :     // ***************************************************************</a>
+<a name="21"><span class="lineNum">      21 </span>            :     // * ========================= EVENTS ========================== *</a>
+<a name="22"><span class="lineNum">      22 </span>            :     // ***************************************************************</a>
+<a name="23"><span class="lineNum">      23 </span>            : </a>
+<a name="24"><span class="lineNum">      24 </span>            :     event UpshotOracleV2EvenFeeHandlerFeesHandled(uint256 fee, address[] feeReceivers);</a>
+<a name="25"><span class="lineNum">      25 </span>            :     event UpshotOracleV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortion(uint256 protocolFeePortion);</a>
+<a name="26"><span class="lineNum">      26 </span>            :     event UpshotOracleV2EvenFeeHandlerFeesClaimed(address claimer, uint256 fees);</a>
+<a name="27"><span class="lineNum">      27 </span>            : </a>
+<a name="28"><span class="lineNum">      28 </span>            :     // ***************************************************************</a>
+<a name="29"><span class="lineNum">      29 </span>            :     // * ========================= ERRORS ========================== *</a>
+<a name="30"><span class="lineNum">      30 </span>            :     // ***************************************************************</a>
+<a name="31"><span class="lineNum">      31 </span>            : </a>
+<a name="32"><span class="lineNum">      32 </span>            :     error UpshotOracleV2EvenFeeHandlerEthTransferFailed();</a>
+<a name="33"><span class="lineNum">      33 </span>            :     error UpshotOracleV2EvenFeeHandlerFeeTooLow();</a>
+<a name="34"><span class="lineNum">      34 </span>            :     error UpshotOracleV2EvenFeeHandlerInvalidFeedOwnerFeePortion();</a>
+<a name="35"><span class="lineNum">      35 </span>            : </a>
+<a name="36"><span class="lineNum">      36 </span>            :     constructor(</a>
+<a name="37"><span class="lineNum">      37 </span>            :         EvenFeeHandlerConstructorArgs memory args</a>
+<a name="38"><span class="lineNum">      38 </span>            :     ) {</a>
+<a name="39"><span class="lineNum">      39 </span>            :         _transferOwnership(args.admin);</a>
+<a name="40"><span class="lineNum">      40 </span>            :     }</a>
+<a name="41"><span class="lineNum">      41 </span>            : </a>
+<a name="42"><span class="lineNum">      42 </span>            :     /// @inheritdoc IFeeHandler</a>
+<a name="43"><span class="lineNum">      43 </span>            :     function handleFees(</a>
+<a name="44"><span class="lineNum">      44 </span>            :         address feedOwner, </a>
+<a name="45"><span class="lineNum">      45 </span>            :         address[] memory feeReceivers, </a>
+<a name="46"><span class="lineNum">      46 </span>            :         bytes memory</a>
+<a name="47"><span class="lineNum">      47 </span>            :     ) external payable {</a>
+<a name="48"><span class="lineNum">      48 </span><span class="lineCov">         14 :         uint256 fee = msg.value;</span></a>
 <a name="49"><span class="lineNum">      49 </span>            : </a>
-<a name="50"><span class="lineNum">      50 </span>            :         emit UpshotOracleV2EvenFeeHandlerAdminUpdatedProtocolFeeReceiver(args.protocolFeeReceiver);</a>
-<a name="51"><span class="lineNum">      51 </span>            :     }</a>
-<a name="52"><span class="lineNum">      52 </span>            : </a>
-<a name="53"><span class="lineNum">      53 </span>            :     /// @inheritdoc IFeeHandler</a>
-<a name="54"><span class="lineNum">      54 </span>            :     function handleFees(</a>
-<a name="55"><span class="lineNum">      55 </span>            :         address[] memory feeReceivers, </a>
-<a name="56"><span class="lineNum">      56 </span>            :         bytes memory</a>
-<a name="57"><span class="lineNum">      57 </span>            :     ) external payable {</a>
-<a name="58"><span class="lineNum">      58 </span><span class="lineCov">         10 :         uint256 fee = msg.value;</span></a>
-<a name="59"><span class="lineNum">      59 </span>            : </a>
-<a name="60"><span class="lineNum">      60 </span><span class="lineCov">         10 :         if (fee == 0) {</span></a>
-<a name="61"><span class="lineNum">      61 </span><span class="lineCov">          1 :             return;</span></a>
-<a name="62"><span class="lineNum">      62 </span>            :         }</a>
+<a name="50"><span class="lineNum">      50 </span><span class="lineCov">         14 :         if (fee == 0) {</span></a>
+<a name="51"><span class="lineNum">      51 </span><span class="lineCov">          1 :             return;</span></a>
+<a name="52"><span class="lineNum">      52 </span>            :         }</a>
+<a name="53"><span class="lineNum">      53 </span>            : </a>
+<a name="54"><span class="lineNum">      54 </span><span class="lineCov">         13 :         if (fee &lt; 1_000) {</span></a>
+<a name="55"><span class="lineNum">      55 </span><span class="lineCov">          1 :             revert UpshotOracleV2EvenFeeHandlerFeeTooLow();</span></a>
+<a name="56"><span class="lineNum">      56 </span>            :         }</a>
+<a name="57"><span class="lineNum">      57 </span>            : </a>
+<a name="58"><span class="lineNum">      58 </span>            :         // load once to save gas</a>
+<a name="59"><span class="lineNum">      59 </span><span class="lineCov">         12 :         uint256 _feedOwnerPortion = feedOwnerPortion;</span></a>
+<a name="60"><span class="lineNum">      60 </span>            : </a>
+<a name="61"><span class="lineNum">      61 </span><span class="lineCov">         12 :         uint256 protocolFee = Math.mulDiv(fee, _feedOwnerPortion, 1 ether);</span></a>
+<a name="62"><span class="lineNum">      62 </span><span class="lineCov">         12 :         uint256 priceProviderFee = (fee - protocolFee) / feeReceivers.length;</span></a>
 <a name="63"><span class="lineNum">      63 </span>            : </a>
-<a name="64"><span class="lineNum">      64 </span><span class="lineCov">          9 :         if (fee &lt; 1_000) {</span></a>
-<a name="65"><span class="lineNum">      65 </span><span class="lineCov">          1 :             revert UpshotOracleV2EvenFeeHandlerFeeTooLow();</span></a>
-<a name="66"><span class="lineNum">      66 </span>            :         }</a>
-<a name="67"><span class="lineNum">      67 </span>            : </a>
-<a name="68"><span class="lineNum">      68 </span><span class="lineCov">          8 :         uint256 protocolFee = Math.mulDiv(fee, protocolFeePortion, 1 ether);</span></a>
-<a name="69"><span class="lineNum">      69 </span><span class="lineCov">          8 :         uint256 priceProviderFee = (fee - protocolFee) / feeReceivers.length;</span></a>
-<a name="70"><span class="lineNum">      70 </span>            : </a>
-<a name="71"><span class="lineNum">      71 </span><span class="lineCov">          8 :         feesAccrued[protocolFeeReceiver] += protocolFee;</span></a>
-<a name="72"><span class="lineNum">      72 </span>            : </a>
-<a name="73"><span class="lineNum">      73 </span><span class="lineCov">          8 :         for (uint i = 0; i &lt; feeReceivers.length;) {</span></a>
-<a name="74"><span class="lineNum">      74 </span><span class="lineCov">         18 :             feesAccrued[feeReceivers[i]] += priceProviderFee;</span></a>
-<a name="75"><span class="lineNum">      75 </span>            : </a>
-<a name="76"><span class="lineNum">      76 </span>            :             unchecked {</a>
-<a name="77"><span class="lineNum">      77 </span><span class="lineCov">         18 :                 ++i;</span></a>
-<a name="78"><span class="lineNum">      78 </span>            :             }</a>
-<a name="79"><span class="lineNum">      79 </span>            :         }</a>
-<a name="80"><span class="lineNum">      80 </span>            : </a>
-<a name="81"><span class="lineNum">      81 </span><span class="lineCov">          8 :         emit UpshotOracleV2EvenFeeHandlerFeesHandled(fee, feeReceivers);</span></a>
-<a name="82"><span class="lineNum">      82 </span>            :     }</a>
+<a name="64"><span class="lineNum">      64 </span><span class="lineCov">         12 :         feesAccrued[feedOwner] += protocolFee;</span></a>
+<a name="65"><span class="lineNum">      65 </span>            : </a>
+<a name="66"><span class="lineNum">      66 </span><span class="lineCov">         12 :         for (uint i = 0; i &lt; feeReceivers.length;) {</span></a>
+<a name="67"><span class="lineNum">      67 </span><span class="lineCov">         28 :             feesAccrued[feeReceivers[i]] += priceProviderFee;</span></a>
+<a name="68"><span class="lineNum">      68 </span>            : </a>
+<a name="69"><span class="lineNum">      69 </span>            :             unchecked {</a>
+<a name="70"><span class="lineNum">      70 </span><span class="lineCov">         28 :                 ++i;</span></a>
+<a name="71"><span class="lineNum">      71 </span>            :             }</a>
+<a name="72"><span class="lineNum">      72 </span>            :         }</a>
+<a name="73"><span class="lineNum">      73 </span>            : </a>
+<a name="74"><span class="lineNum">      74 </span><span class="lineCov">         12 :         emit UpshotOracleV2EvenFeeHandlerFeesHandled(fee, feeReceivers);</span></a>
+<a name="75"><span class="lineNum">      75 </span>            :     }</a>
+<a name="76"><span class="lineNum">      76 </span>            : </a>
+<a name="77"><span class="lineNum">      77 </span>            :     /**</a>
+<a name="78"><span class="lineNum">      78 </span>            :      * @notice Claim fees accrued by the sender</a>
+<a name="79"><span class="lineNum">      79 </span>            :      */</a>
+<a name="80"><span class="lineNum">      80 </span>            :     function claimFees() external {</a>
+<a name="81"><span class="lineNum">      81 </span><span class="lineCov">          4 :         uint256 feesOwed = feesAccrued[msg.sender];</span></a>
+<a name="82"><span class="lineNum">      82 </span><span class="lineCov">          4 :         feesAccrued[msg.sender] = 0;</span></a>
 <a name="83"><span class="lineNum">      83 </span>            : </a>
-<a name="84"><span class="lineNum">      84 </span>            :     /**</a>
-<a name="85"><span class="lineNum">      85 </span>            :      * @notice Claim fees accrued by the sender</a>
-<a name="86"><span class="lineNum">      86 </span>            :      */</a>
-<a name="87"><span class="lineNum">      87 </span>            :     function claimFees() external {</a>
-<a name="88"><span class="lineNum">      88 </span><span class="lineCov">          4 :         uint256 feesOwed = feesAccrued[msg.sender];</span></a>
-<a name="89"><span class="lineNum">      89 </span><span class="lineCov">          4 :         feesAccrued[msg.sender] = 0;</span></a>
-<a name="90"><span class="lineNum">      90 </span>            : </a>
-<a name="91"><span class="lineNum">      91 </span><span class="lineCov">          4 :         _safeTransferETH(msg.sender, feesOwed);</span></a>
-<a name="92"><span class="lineNum">      92 </span>            : </a>
-<a name="93"><span class="lineNum">      93 </span><span class="lineCov">          4 :         emit UpshotOracleV2EvenFeeHandlerFeesClaimed(msg.sender, feesOwed);</span></a>
-<a name="94"><span class="lineNum">      94 </span>            :     }</a>
-<a name="95"><span class="lineNum">      95 </span>            : </a>
-<a name="96"><span class="lineNum">      96 </span>            :     </a>
-<a name="97"><span class="lineNum">      97 </span>            :     // ***************************************************************</a>
-<a name="98"><span class="lineNum">      98 </span>            :     // * ==================== INTERNAL HELPERS ===================== *</a>
-<a name="99"><span class="lineNum">      99 </span>            :     // ***************************************************************</a>
-<a name="100"><span class="lineNum">     100 </span>            :     /**</a>
-<a name="101"><span class="lineNum">     101 </span>            :      * @notice Safely transfer ETH to an address</a>
-<a name="102"><span class="lineNum">     102 </span>            :      * </a>
-<a name="103"><span class="lineNum">     103 </span>            :      * @param to The address to send ETH to</a>
-<a name="104"><span class="lineNum">     104 </span>            :      * @param value The amount of ETH to send</a>
-<a name="105"><span class="lineNum">     105 </span>            :      */</a>
-<a name="106"><span class="lineNum">     106 </span>            :     function _safeTransferETH(address to, uint256 value) internal {</a>
-<a name="107"><span class="lineNum">     107 </span><span class="lineCov">          4 :         (bool success, ) = to.call{value: value}(new bytes(0));</span></a>
-<a name="108"><span class="lineNum">     108 </span><span class="lineCov">          4 :         if (!success) {</span></a>
-<a name="109"><span class="lineNum">     109 </span><span class="lineNoCov">          0 :             revert UpshotOracleV2EvenFeeHandlerEthTransferFailed();</span></a>
-<a name="110"><span class="lineNum">     110 </span>            :         }</a>
-<a name="111"><span class="lineNum">     111 </span>            :     }</a>
-<a name="112"><span class="lineNum">     112 </span>            : </a>
-<a name="113"><span class="lineNum">     113 </span>            :     // ***************************************************************</a>
-<a name="114"><span class="lineNum">     114 </span>            :     // * ========================= ADMIN =========================== *</a>
-<a name="115"><span class="lineNum">     115 </span>            :     // ***************************************************************</a>
-<a name="116"><span class="lineNum">     116 </span>            : </a>
-<a name="117"><span class="lineNum">     117 </span>            :     /**</a>
-<a name="118"><span class="lineNum">     118 </span>            :      * @notice Admin function to update the portion of the total fee that goes to the protocol</a>
-<a name="119"><span class="lineNum">     119 </span>            :      * </a>
-<a name="120"><span class="lineNum">     120 </span>            :      * @param protocolFeePortion_ The portion of the total fee that goes to the protocol</a>
-<a name="121"><span class="lineNum">     121 </span>            :      */</a>
-<a name="122"><span class="lineNum">     122 </span>            :     function updateProtocolFeePortion(uint256 protocolFeePortion_) external onlyOwner {</a>
-<a name="123"><span class="lineNum">     123 </span><span class="lineCov">          2 :         if (protocolFeePortion_ &gt; 1 ether) {</span></a>
-<a name="124"><span class="lineNum">     124 </span><span class="lineCov">          1 :             revert UpshotOracleV2EvenFeeHandlerInvalidProtocolFeePortion();</span></a>
-<a name="125"><span class="lineNum">     125 </span>            :         }</a>
-<a name="126"><span class="lineNum">     126 </span>            : </a>
-<a name="127"><span class="lineNum">     127 </span><span class="lineCov">          1 :         protocolFeePortion = protocolFeePortion_;</span></a>
-<a name="128"><span class="lineNum">     128 </span>            : </a>
-<a name="129"><span class="lineNum">     129 </span><span class="lineCov">          1 :         emit UpshotOracleV2EvenFeeHandlerAdminUpdatedProtocolFeePortion(protocolFeePortion_);</span></a>
-<a name="130"><span class="lineNum">     130 </span>            :     }</a>
-<a name="131"><span class="lineNum">     131 </span>            : </a>
-<a name="132"><span class="lineNum">     132 </span>            :     /**</a>
-<a name="133"><span class="lineNum">     133 </span>            :      * @notice Admin function to update the address that receives the protocol fee</a>
-<a name="134"><span class="lineNum">     134 </span>            :      * </a>
-<a name="135"><span class="lineNum">     135 </span>            :      * @param protocolFeeReceiver_ The address that receives the protocol fee</a>
-<a name="136"><span class="lineNum">     136 </span>            :      */</a>
-<a name="137"><span class="lineNum">     137 </span>            :     function updateProtocolFeeReceiver(address protocolFeeReceiver_) external onlyOwner {</a>
-<a name="138"><span class="lineNum">     138 </span><span class="lineCov">          1 :         protocolFeeReceiver = protocolFeeReceiver_;</span></a>
-<a name="139"><span class="lineNum">     139 </span>            : </a>
-<a name="140"><span class="lineNum">     140 </span><span class="lineCov">          1 :         emit UpshotOracleV2EvenFeeHandlerAdminUpdatedProtocolFeeReceiver(protocolFeeReceiver_);</span></a>
-<a name="141"><span class="lineNum">     141 </span>            :     }</a>
-<a name="142"><span class="lineNum">     142 </span>            : </a>
-<a name="143"><span class="lineNum">     143 </span>            : }</a>
+<a name="84"><span class="lineNum">      84 </span><span class="lineCov">          4 :         _safeTransferETH(msg.sender, feesOwed);</span></a>
+<a name="85"><span class="lineNum">      85 </span>            : </a>
+<a name="86"><span class="lineNum">      86 </span><span class="lineCov">          4 :         emit UpshotOracleV2EvenFeeHandlerFeesClaimed(msg.sender, feesOwed);</span></a>
+<a name="87"><span class="lineNum">      87 </span>            :     }</a>
+<a name="88"><span class="lineNum">      88 </span>            : </a>
+<a name="89"><span class="lineNum">      89 </span>            :     </a>
+<a name="90"><span class="lineNum">      90 </span>            :     // ***************************************************************</a>
+<a name="91"><span class="lineNum">      91 </span>            :     // * ==================== INTERNAL HELPERS ===================== *</a>
+<a name="92"><span class="lineNum">      92 </span>            :     // ***************************************************************</a>
+<a name="93"><span class="lineNum">      93 </span>            :     /**</a>
+<a name="94"><span class="lineNum">      94 </span>            :      * @notice Safely transfer ETH to an address</a>
+<a name="95"><span class="lineNum">      95 </span>            :      * </a>
+<a name="96"><span class="lineNum">      96 </span>            :      * @param to The address to send ETH to</a>
+<a name="97"><span class="lineNum">      97 </span>            :      * @param value The amount of ETH to send</a>
+<a name="98"><span class="lineNum">      98 </span>            :      */</a>
+<a name="99"><span class="lineNum">      99 </span>            :     function _safeTransferETH(address to, uint256 value) internal {</a>
+<a name="100"><span class="lineNum">     100 </span><span class="lineCov">          4 :         (bool success, ) = to.call{value: value}(new bytes(0));</span></a>
+<a name="101"><span class="lineNum">     101 </span><span class="lineCov">          4 :         if (!success) {</span></a>
+<a name="102"><span class="lineNum">     102 </span><span class="lineNoCov">          0 :             revert UpshotOracleV2EvenFeeHandlerEthTransferFailed();</span></a>
+<a name="103"><span class="lineNum">     103 </span>            :         }</a>
+<a name="104"><span class="lineNum">     104 </span>            :     }</a>
+<a name="105"><span class="lineNum">     105 </span>            : </a>
+<a name="106"><span class="lineNum">     106 </span>            :     // ***************************************************************</a>
+<a name="107"><span class="lineNum">     107 </span>            :     // * ========================= ADMIN =========================== *</a>
+<a name="108"><span class="lineNum">     108 </span>            :     // ***************************************************************</a>
+<a name="109"><span class="lineNum">     109 </span>            : </a>
+<a name="110"><span class="lineNum">     110 </span>            :     /**</a>
+<a name="111"><span class="lineNum">     111 </span>            :      * @notice Admin function to update the portion of the total fee that goes to the feed owner</a>
+<a name="112"><span class="lineNum">     112 </span>            :      * </a>
+<a name="113"><span class="lineNum">     113 </span>            :      * @param feedOwnerPortion_ The new portion of the total fee that goes to the protocol</a>
+<a name="114"><span class="lineNum">     114 </span>            :      */</a>
+<a name="115"><span class="lineNum">     115 </span>            :     function updateProtocolFeedOwnerPortion(uint256 feedOwnerPortion_) external onlyOwner {</a>
+<a name="116"><span class="lineNum">     116 </span><span class="lineCov">          2 :         if (feedOwnerPortion_ &gt; 1 ether) {</span></a>
+<a name="117"><span class="lineNum">     117 </span><span class="lineCov">          1 :             revert UpshotOracleV2EvenFeeHandlerInvalidFeedOwnerFeePortion();</span></a>
+<a name="118"><span class="lineNum">     118 </span>            :         }</a>
+<a name="119"><span class="lineNum">     119 </span>            : </a>
+<a name="120"><span class="lineNum">     120 </span><span class="lineCov">          1 :         feedOwnerPortion = feedOwnerPortion_;</span></a>
+<a name="121"><span class="lineNum">     121 </span>            : </a>
+<a name="122"><span class="lineNum">     122 </span><span class="lineCov">          1 :         emit UpshotOracleV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortion(feedOwnerPortion_);</span></a>
+<a name="123"><span class="lineNum">     123 </span>            :     }</a>
+<a name="124"><span class="lineNum">     124 </span>            : }</a>
 </pre>
       </td>
     </tr>
