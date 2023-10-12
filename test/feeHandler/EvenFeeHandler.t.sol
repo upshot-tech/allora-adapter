@@ -124,14 +124,14 @@ contract EvenFeeHandlerTest is Test {
         vm.startPrank(imposter);
 
         vm.expectRevert('Ownable: caller is not the owner');
-        evenFeeHandler.updateProtocolFeedOwnerPortion(0.1 ether);
+        evenFeeHandler.updateFeedOwnerPortion(0.1 ether);
     }
 
     function test_ownerCantUpdateFeedOwnerFeePortionToInvalidValue() public {
         vm.startPrank(admin);
 
         vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2EvenFeeHandlerInvalidFeedOwnerFeePortion()"));
-        evenFeeHandler.updateProtocolFeedOwnerPortion(1.1 ether);
+        evenFeeHandler.updateFeedOwnerPortion(1.1 ether);
     }
 
     function test_ownerCanUpdateFeedOwnerFeePortion() public {
@@ -139,7 +139,7 @@ contract EvenFeeHandlerTest is Test {
 
         assertEq(evenFeeHandler.feedOwnerPortion(), 0.2 ether);
 
-        evenFeeHandler.updateProtocolFeedOwnerPortion(0.3 ether);
+        evenFeeHandler.updateFeedOwnerPortion(0.3 ether);
         assertEq(evenFeeHandler.feedOwnerPortion(), 0.3 ether);
     }
 }

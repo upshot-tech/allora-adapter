@@ -11,10 +11,10 @@ struct EvenFeeHandlerConstructorArgs {
 
 contract EvenFeeHandler is IFeeHandler, Ownable2Step {
 
-    /// @dev the portion of the total fee that goes to the protocol
+    /// @dev the portion of the total fee that goes to the feed owner
     uint256 public feedOwnerPortion = 0.2 ether;
 
-    /// @dev the address that receives the protocol fee
+    /// @dev The fees accrued by each fee receiver
     mapping(address feeReciever => uint256 feesAccrued) public feesAccrued;
 
     // ***************************************************************
@@ -22,7 +22,7 @@ contract EvenFeeHandler is IFeeHandler, Ownable2Step {
     // ***************************************************************
 
     event UpshotOracleV2EvenFeeHandlerFeesHandled(uint256 fee, address[] feeReceivers);
-    event UpshotOracleV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortion(uint256 protocolFeePortion);
+    event UpshotOracleV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortion(uint256 feedOwnerPortion);
     event UpshotOracleV2EvenFeeHandlerFeesClaimed(address claimer, uint256 fees);
 
     // ***************************************************************
@@ -58,10 +58,10 @@ contract EvenFeeHandler is IFeeHandler, Ownable2Step {
         // load once to save gas
         uint256 _feedOwnerPortion = feedOwnerPortion;
 
-        uint256 protocolFee = Math.mulDiv(fee, _feedOwnerPortion, 1 ether);
-        uint256 priceProviderFee = (fee - protocolFee) / feeReceivers.length;
+        uint256 feedOwnerFee = Math.mulDiv(fee, _feedOwnerPortion, 1 ether);
+        uint256 priceProviderFee = (fee - feedOwnerFee) / feeReceivers.length;
 
-        feesAccrued[feedOwner] += protocolFee;
+        feesAccrued[feedOwner] += feedOwnerFee;
 
         for (uint i = 0; i < feeReceivers.length;) {
             feesAccrued[feeReceivers[i]] += priceProviderFee;
@@ -110,9 +110,9 @@ contract EvenFeeHandler is IFeeHandler, Ownable2Step {
     /**
      * @notice Admin function to update the portion of the total fee that goes to the feed owner
      * 
-     * @param feedOwnerPortion_ The new portion of the total fee that goes to the protocol
+     * @param feedOwnerPortion_ The new portion of the total fee that goes to the feed owner
      */
-    function updateProtocolFeedOwnerPortion(uint256 feedOwnerPortion_) external onlyOwner {
+    function updateFeedOwnerPortion(uint256 feedOwnerPortion_) external onlyOwner {
         if (feedOwnerPortion_ > 1 ether) {
             revert UpshotOracleV2EvenFeeHandlerInvalidFeedOwnerFeePortion();
         }
