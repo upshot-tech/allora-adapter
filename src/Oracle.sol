@@ -288,7 +288,8 @@ contract Oracle is IOracle, Ownable2Step {
     }
 
     /**
-     * @dev Update the protocol fee receiver
+     * @dev Update the protocol fee receiver. Pulled out into a helper function because 
+     *   this is called in the constructor and in the admin function
      * 
      * @param protocolFeeReceiver_ The new protocol fee receiver
      */
