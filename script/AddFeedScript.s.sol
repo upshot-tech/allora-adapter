@@ -18,7 +18,7 @@ contract AddFeedScript is Script {
     function run() public virtual {
         uint256 scriptRunnerPrivateKey = vm.envUint('SCRIPT_RUNNER_PRIVATE_KEY');
         address scriptRunner = vm.addr(scriptRunnerPrivateKey);
-        Oracle oracle = Oracle(0xb5f9d3BeEdf68f4246a232d52Ae8f005e199B010);
+        Oracle oracle = Oracle(0x7ec114a7682a3441d4b6595FB067d7b1Faa255Ca);
 
         vm.startBroadcast(scriptRunnerPrivateKey);
         console.log('Broadcast started by %s', scriptRunner);
@@ -27,10 +27,10 @@ contract AddFeedScript is Script {
             title: 'HACKER FEED',
             owner: scriptRunner,
             totalFee: 0.01 ether,
-            aggregator: IAggregator(0x3Ae558be9B1D540f83F0404de9C10eFb100D66B2),
+            aggregator: IAggregator(0x877Fb79de29C8f65d89Af7e69627Ae9d2C466Bf1),
             ownerSwitchedOn: true,
             adminSwitchedOn: true,
-            feeHandler: IFeeHandler(0xa762c6288ad4CAB3750dC615c7cd531D99c6e169),
+            feeHandler: IFeeHandler(0x805F824C3342187122B1d22AFadc17A4Ab5845c9),
             dataProviderQuorum: 1,
             dataValiditySeconds: 1 hours
         });
