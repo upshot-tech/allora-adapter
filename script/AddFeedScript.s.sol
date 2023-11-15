@@ -26,7 +26,6 @@ contract AddFeedScript is Script {
         FeedConfig memory feedConfig = FeedConfig({
             title: 'HACKER FEED',
             owner: scriptRunner,
-            nonce: 1,
             totalFee: 0.01 ether,
             aggregator: IAggregator(0x3Ae558be9B1D540f83F0404de9C10eFb100D66B2),
             ownerSwitchedOn: true,
