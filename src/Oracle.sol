@@ -45,12 +45,7 @@ contract Oracle is IOracle, Ownable2Step {
     // ***************************************************************
 
     // main interface events
-    event UpshotOracleV2OracleVerifiedData(
-        uint256 feedId, 
-        uint256 numericData, 
-        address[] dataProviders, 
-        uint128 nonce
-    );
+    event UpshotOracleV2OracleVerifiedData(uint256 feedId, uint256 numericData, address[] dataProviders);
     
     // feed owner update events
     event UpshotOracleV2FeedAdded(FeedView feedView);
@@ -85,11 +80,9 @@ contract Oracle is IOracle, Ownable2Step {
     error UpshotOracleV2InsufficientPayment();
     error UpshotOracleV2NotEnoughData();
     error UpshotOracleV2FeedMismatch();
-    error UpshotOracleV2NonceMismatch();
     error UpshotOracleV2InvalidDataTime();
     error UpshotOracleV2InvalidDataProvider();
     error UpshotOracleV2DuplicateDataProvider();
-    error UpshotOracleV2InvalidNonce();
     error UpshotOracleV2EthTransferFailed();
 
     // parameter update errors
@@ -141,9 +134,6 @@ contract Oracle is IOracle, Ownable2Step {
             revert UpshotOracleV2NotEnoughData();
         }
 
-        uint96 nonce = nd.signedNumericData[0].numericData.nonce;
-        _validateNonce(feedId, nonce);
-
         uint256[] memory dataList = new uint256[](dataCount);
         address[] memory dataProviders = new address[](dataCount);
         NumericData calldata numericData;
@@ -153,10 +143,6 @@ contract Oracle is IOracle, Ownable2Step {
 
             if (numericData.feedId != feedId) {
                 revert UpshotOracleV2FeedMismatch();
-            }
-
-            if (numericData.nonce != nonce) {
-                revert UpshotOracleV2NonceMismatch();
             }
 
             if (
@@ -207,7 +193,7 @@ contract Oracle is IOracle, Ownable2Step {
             nd.extraData
         );
 
-        emit UpshotOracleV2OracleVerifiedData(feedId, numericValue, dataProviders, nonce);
+        emit UpshotOracleV2OracleVerifiedData(feedId, numericValue, dataProviders);
     }
 
     // ***************************************************************
@@ -225,7 +211,6 @@ contract Oracle is IOracle, Ownable2Step {
         return keccak256(abi.encodePacked(
             block.chainid, 
             numericData.feedId,
-            numericData.nonce,
             numericData.timestamp,
             numericData.numericValue, 
             numericData.extraData
@@ -248,20 +233,6 @@ contract Oracle is IOracle, Ownable2Step {
     // ***************************************************************
     // * ==================== INTERNAL HELPERS ===================== *
     // ***************************************************************
-    /**
-     * @dev Update the nonce for the collection and revert if the nonce is invalid
-     *
-     * @param feedId The feedId to validate and update the nonce for
-     * @param nonce The new nonce
-     */
-    function _validateNonce(uint256 feedId, uint96 nonce) internal {
-        if (nonce != feed[feedId].config.nonce + 1) {
-            revert UpshotOracleV2InvalidNonce();
-        }
-
-        feed[feedId].config.nonce = nonce;
-    }
-
     /**
      * @dev Modifier to check that the caller is the owner of the feed
      * 
@@ -320,7 +291,6 @@ contract Oracle is IOracle, Ownable2Step {
         newFeedId = nextFeedId++;
 
         feed[newFeedId].config = feedView.config;
-        feed[newFeedId].config.nonce = 1;
 
         for (uint256 i = 0; i < feedView.validDataProviders.length;) {
             EnumerableSet.add(feed[newFeedId].validDataProviders, feedView.validDataProviders[i]);

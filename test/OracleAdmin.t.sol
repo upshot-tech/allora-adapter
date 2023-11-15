@@ -184,11 +184,11 @@ contract OracleAdmin is Test {
     function test_ownerCanAddFeed() public {
         vm.startPrank(admin);
 
-        assertEq(oracle.getFeed(2).config.nonce, 0);
+        assertEq(oracle.getFeed(2).config.dataProviderQuorum, 0);
 
         oracle.addFeed(_getBasicFeedView());
 
-        assertEq(oracle.getFeed(2).config.nonce, 1);
+        assertEq(oracle.getFeed(2).config.dataProviderQuorum, 1);
     }
 
     function test_addingFeedGivesProperId() public {
@@ -198,20 +198,17 @@ contract OracleAdmin is Test {
 
         assertEq(secondFeedId, 2);
         assertEq(thirdFeedId, 3);
-        assertEq(oracle.getFeed(2).config.nonce, 1);
-        assertEq(oracle.getFeed(3).config.nonce, 1);
     }
 
     function test_addingFeedGivesAllCorrectData() public {
         vm.startPrank(admin);
 
-        assertEq(oracle.getFeed(2).config.nonce, 0);
+        assertEq(oracle.getFeed(2).config.dataProviderQuorum, 0);
 
         FeedView memory secondFeed = FeedView({
             config: FeedConfig({
                 title: 'secondary feed',
                 owner: feedOwner2,
-                nonce: 1234,
                 totalFee: 0.001 ether,
                 aggregator: aggregator,
                 ownerSwitchedOn: false,
@@ -230,7 +227,6 @@ contract OracleAdmin is Test {
 
         assertEq(addedFeed.config.title, secondFeed.config.title);
         assertEq(addedFeed.config.owner, secondFeed.config.owner);
-        assertEq(addedFeed.config.nonce, 1); // should always be 1 regardless
         assertEq(addedFeed.config.totalFee, secondFeed.config.totalFee);
         assertEq(addedFeed.config.dataProviderQuorum, secondFeed.config.dataProviderQuorum);
         assertEq(addedFeed.config.dataValiditySeconds, secondFeed.config.dataValiditySeconds);
@@ -579,7 +575,6 @@ contract OracleAdmin is Test {
             config: FeedConfig({
                 title: 'Initial feed',
                 owner: feedOwner,
-                nonce: 1,
                 totalFee: 0.001 ether,
                 aggregator: aggregator,
                 ownerSwitchedOn: true,

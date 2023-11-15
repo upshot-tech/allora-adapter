@@ -14,7 +14,6 @@ pragma solidity ^0.8.0;
 struct NumericData {
     uint64 feedId;
     uint64 timestamp;
-    uint96 nonce;
     uint256 numericValue; 
     bytes extraData;
 }
@@ -32,7 +31,6 @@ struct UpshotOracleNumericData {
 struct FeedConfig {
     string title;
     address owner;
-    uint96 nonce;
     uint256 totalFee;
     IAggregator aggregator;
     bool ownerSwitchedOn;

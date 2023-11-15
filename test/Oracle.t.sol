@@ -96,7 +96,6 @@ contract OracleTest is Test {
             NumericData({
                 feedId: 1,
                 timestamp: uint64(block.timestamp - 1 minutes),
-                nonce: 2,
                 numericValue: 1 ether,
                 extraData: ''
             }),
@@ -127,7 +126,6 @@ contract OracleTest is Test {
             NumericData({
                 feedId: 1,
                 timestamp: uint64(block.timestamp - 1 minutes),
-                nonce: 2,
                 numericValue: 1 ether,
                 extraData: ''
             }),
@@ -149,7 +147,6 @@ contract OracleTest is Test {
             NumericData({
                 feedId: 1,
                 timestamp: uint64(block.timestamp - 1 minutes),
-                nonce: 2,
                 numericValue: 1 ether,
                 extraData: ''
             }),
@@ -166,7 +163,6 @@ contract OracleTest is Test {
             NumericData({
                 feedId: 1,
                 timestamp: uint64(block.timestamp - 1 minutes),
-                nonce: 2,
                 numericValue: 1 ether,
                 extraData: ''
             }),
@@ -189,7 +185,6 @@ contract OracleTest is Test {
             NumericData({
                 feedId: uint64(feedId),
                 timestamp: uint64(block.timestamp - 1 minutes),
-                nonce: 2,
                 numericValue: 1 ether,
                 extraData: ''
             }),
@@ -215,7 +210,6 @@ contract OracleTest is Test {
             NumericData({
                 feedId: uint64(feedId),
                 timestamp: uint64(block.timestamp - 1 minutes),
-                nonce: 2,
                 numericValue: 1 ether,
                 extraData: ''
             }),
@@ -223,29 +217,6 @@ contract OracleTest is Test {
         );
 
         vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2AdminTurnedFeedOff()"));
-        oracle.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
-    }
-
-
-    function test_cantCallVerifyDataWithoutValidNonce() public {
-        vm.startPrank(admin);
-        oracle.addFeed(_getBasicFeedView());
-        vm.stopPrank();
-
-        SignedNumericData[] memory numericData = new SignedNumericData[](1);
-
-        numericData[0] = _signNumericData(
-            NumericData({
-                feedId: 1,
-                timestamp: uint64(block.timestamp - 1 minutes),
-                nonce: 3,
-                numericValue: 1 ether,
-                extraData: ''
-            }),
-            signer0pk
-        );
-
-        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2InvalidNonce()"));
         oracle.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
     }
 
@@ -260,7 +231,6 @@ contract OracleTest is Test {
             NumericData({
                 feedId: 1,
                 timestamp: uint64(block.timestamp - 1 minutes),
-                nonce: 2,
                 numericValue: 1 ether,
                 extraData: ''
             }),
@@ -271,7 +241,6 @@ contract OracleTest is Test {
             NumericData({
                 feedId: 2,
                 timestamp: uint64(block.timestamp - 1 minutes),
-                nonce: 2,
                 numericValue: 1 ether,
                 extraData: ''
             }),
@@ -280,39 +249,6 @@ contract OracleTest is Test {
 
         vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2FeedMismatch()"));
 
-        oracle.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
-    }
-
-    function test_cantCallVerifyDataWithMismatchedNonces() public {
-        vm.startPrank(admin);
-        oracle.addFeed(_getBasicFeedView());
-        vm.stopPrank();
-
-        SignedNumericData[] memory numericData = new SignedNumericData[](2);
-
-        numericData[0] = _signNumericData(
-            NumericData({
-                feedId: 1,
-                timestamp: uint64(block.timestamp - 1 minutes),
-                nonce: 2,
-                numericValue: 1 ether,
-                extraData: ''
-            }),
-            signer0pk
-        );
-
-        numericData[1] = _signNumericData(
-            NumericData({
-                feedId: 1,
-                timestamp: uint64(block.timestamp - 1 minutes),
-                nonce: 3,
-                numericValue: 1 ether,
-                extraData: ''
-            }),
-            signer0pk
-        );
-
-        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2NonceMismatch()"));
         oracle.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
     }
 
@@ -327,7 +263,6 @@ contract OracleTest is Test {
             NumericData({
                 feedId: 1,
                 timestamp: uint64(block.timestamp + 1),
-                nonce: 2,
                 numericValue: 1 ether,
                 extraData: ''
             }),
@@ -349,7 +284,6 @@ contract OracleTest is Test {
             NumericData({
                 feedId: 1,
                 timestamp: uint64((block.timestamp - oracle.getFeed(1).config.dataValiditySeconds) - 1),
-                nonce: 2,
                 numericValue: 1 ether,
                 extraData: ''
             }),
@@ -371,7 +305,6 @@ contract OracleTest is Test {
             NumericData({
                 feedId: 1,
                 timestamp: uint64(block.timestamp - 1 minutes),
-                nonce: 2,
                 numericValue: 1 ether,
                 extraData: ''
             }),
@@ -393,7 +326,6 @@ contract OracleTest is Test {
             NumericData({
                 feedId: 1,
                 timestamp: uint64(block.timestamp - 1 minutes),
-                nonce: 2,
                 numericValue: 1 ether,
                 extraData: ''
             }),
@@ -404,7 +336,6 @@ contract OracleTest is Test {
             NumericData({
                 feedId: 1,
                 timestamp: uint64(block.timestamp - 1 minutes),
-                nonce: 2,
                 numericValue: 1 ether,
                 extraData: ''
             }),
@@ -413,44 +344,6 @@ contract OracleTest is Test {
 
         vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2DuplicateDataProvider()"));
         oracle.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
-    }
-
-    function test_validatingANewPriceIncrementsNonceForTheFeed() public {
-        vm.startPrank(admin);
-        oracle.addFeed(_getBasicFeedViewTwoDataProviders());
-        vm.stopPrank();
-
-        uint256 nonce0 = oracle.getFeed(1).config.nonce;
-
-        SignedNumericData[] memory numericData = new SignedNumericData[](2);
-
-        numericData[0] = _signNumericData(
-            NumericData({
-                feedId: 1,
-                timestamp: uint64(block.timestamp - 1 minutes),
-                nonce: 2,
-                numericValue: 1 ether,
-                extraData: ''
-            }),
-            signer0pk
-        );
-
-        numericData[1] = _signNumericData(
-            NumericData({
-                feedId: 1,
-                timestamp: uint64(block.timestamp - 1 minutes),
-                nonce: 2,
-                numericValue: 3 ether,
-                extraData: ''
-            }),
-            signer1pk
-        );
-
-        oracle.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
-
-        uint256 nonce1 = oracle.getFeed(1).config.nonce;
-
-        assertEq(nonce1, nonce0 + 1);
     }
 
     function test_dataAverageAggregationWorksCorrectly() public {
@@ -464,7 +357,6 @@ contract OracleTest is Test {
             NumericData({
                 feedId: 1,
                 timestamp: uint64(block.timestamp - 1 minutes),
-                nonce: 2,
                 numericValue: 1 ether,
                 extraData: ''
             }),
@@ -475,7 +367,6 @@ contract OracleTest is Test {
             NumericData({
                 feedId: 1,
                 timestamp: uint64(block.timestamp - 1 minutes),
-                nonce: 2,
                 numericValue: 3 ether,
                 extraData: ''
             }),
@@ -501,7 +392,6 @@ contract OracleTest is Test {
             NumericData({
                 feedId: 1,
                 timestamp: uint64(block.timestamp - 1 minutes),
-                nonce: 2,
                 numericValue: 1 ether,
                 extraData: ''
             }),
@@ -512,7 +402,6 @@ contract OracleTest is Test {
             NumericData({
                 feedId: 1,
                 timestamp: uint64(block.timestamp - 1 minutes),
-                nonce: 2,
                 numericValue: 3 ether,
                 extraData: ''
             }),
@@ -539,7 +428,6 @@ contract OracleTest is Test {
             NumericData({
                 feedId: 1,
                 timestamp: uint64(block.timestamp - 1 minutes),
-                nonce: 2,
                 numericValue: 1 ether,
                 extraData: ''
             }),
@@ -550,7 +438,6 @@ contract OracleTest is Test {
             NumericData({
                 feedId: 1,
                 timestamp: uint64(block.timestamp - 1 minutes),
-                nonce: 2,
                 numericValue: 2 ether,
                 extraData: ''
             }),
@@ -561,7 +448,6 @@ contract OracleTest is Test {
             NumericData({
                 feedId: 1,
                 timestamp: uint64(block.timestamp - 1 minutes),
-                nonce: 2,
                 numericValue: 5 ether,
                 extraData: ''
             }),
@@ -580,7 +466,6 @@ contract OracleTest is Test {
         NumericData memory rawNumericData0 = NumericData({
             feedId: uint64(1),
             timestamp: uint64(block.timestamp - 1 minutes),
-            nonce: 2,
             numericValue: 1 ether,
             extraData: ''
         });
@@ -588,7 +473,6 @@ contract OracleTest is Test {
         NumericData memory rawNumericData1 = NumericData({
             feedId: uint64(1),
             timestamp: uint64(block.timestamp - 1 minutes),
-            nonce: 2,
             numericValue: 2 ether,
             extraData: ''
         });
@@ -596,7 +480,6 @@ contract OracleTest is Test {
         NumericData memory rawNumericData2 = NumericData({
             feedId: uint64(1),
             timestamp: uint64(block.timestamp - 1 minutes),
-            nonce: 2,
             numericValue: 6 ether,
             extraData: ''
         });
@@ -613,10 +496,6 @@ contract OracleTest is Test {
         vm.startPrank(feedOwner);
         oracle.updateAggregator(feedId, medianAggregator);
         vm.stopPrank();
-
-        rawNumericData0.nonce++;
-        rawNumericData1.nonce++;
-        rawNumericData2.nonce++;
 
         numericData[0] = _signNumericData(rawNumericData0, signer0pk);
         numericData[1] = _signNumericData(rawNumericData1, signer1pk);
@@ -637,7 +516,6 @@ contract OracleTest is Test {
             NumericData({
                 feedId: 1,
                 timestamp: uint64(block.timestamp - 1 minutes),
-                nonce: 2,
                 numericValue: 1 ether,
                 extraData: ''
             }),
@@ -648,7 +526,6 @@ contract OracleTest is Test {
             NumericData({
                 feedId: 1,
                 timestamp: uint64(block.timestamp - 1 minutes),
-                nonce: 2,
                 numericValue: 3 ether,
                 extraData: ''
             }),
@@ -679,7 +556,6 @@ contract OracleTest is Test {
             NumericData({
                 feedId: 1,
                 timestamp: uint64(block.timestamp - 1 minutes),
-                nonce: 2,
                 numericValue: 1 ether,
                 extraData: ''
             }),
@@ -690,7 +566,6 @@ contract OracleTest is Test {
             NumericData({
                 feedId: 1,
                 timestamp: uint64(block.timestamp - 1 minutes),
-                nonce: 2,
                 numericValue: 3 ether,
                 extraData: ''
             }),
@@ -734,7 +609,6 @@ contract OracleTest is Test {
             config: FeedConfig({
                 title: 'Initial feed',
                 owner: feedOwner,
-                nonce: 1,
                 totalFee: 0.001 ether,
                 aggregator: aggregator,
                 ownerSwitchedOn: true,
