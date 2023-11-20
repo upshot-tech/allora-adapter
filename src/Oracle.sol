@@ -183,6 +183,9 @@ contract Oracle is IOracle, Ownable2Step {
 
         numericValue = feed[feedId].config.aggregator.aggregate(dataList, nd.extraData);
 
+        feed[feedId].config.recentValue = numericValue;
+        feed[feedId].config.recentValueTime = uint48(block.timestamp);
+
         if (_protocolFee != 0) {
             _safeTransferETH(protocolFeeReceiver, _protocolFee);
         }
@@ -291,6 +294,8 @@ contract Oracle is IOracle, Ownable2Step {
         newFeedId = nextFeedId++;
 
         feed[newFeedId].config = feedView.config;
+        feed[newFeedId].config.recentValue = 0;
+        feed[newFeedId].config.recentValueTime = 0;
 
         for (uint256 i = 0; i < feedView.validDataProviders.length;) {
             EnumerableSet.add(feed[newFeedId].validDataProviders, feedView.validDataProviders[i]);
