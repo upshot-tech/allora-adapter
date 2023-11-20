@@ -31,6 +31,8 @@ struct UpshotOracleNumericData {
 struct FeedConfig {
     string title;
     address owner;
+    uint48 recentValueTime;
+    uint256 recentValue;
     uint256 totalFee;
     IAggregator aggregator;
     bool ownerSwitchedOn;

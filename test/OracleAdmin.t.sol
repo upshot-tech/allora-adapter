@@ -181,6 +181,20 @@ contract OracleAdmin is Test {
         oracle.addFeed(feedView);
     }
 
+    function test_addingFeedWithValueSetIsIgnored() public {
+        vm.startPrank(admin);
+
+        FeedView memory feedView = _getBasicFeedView();
+        feedView.config.recentValue = 1;
+        feedView.config.recentValueTime = 2;
+
+        uint256 feedId = oracle.addFeed(feedView);
+
+        assertEq(oracle.getFeed(feedId).config.recentValue, 0);
+        assertEq(oracle.getFeed(feedId).config.recentValueTime, 0);
+
+    }
+
     function test_ownerCanAddFeed() public {
         vm.startPrank(admin);
 
@@ -210,6 +224,8 @@ contract OracleAdmin is Test {
                 title: 'secondary feed',
                 owner: feedOwner2,
                 totalFee: 0.001 ether,
+                recentValueTime: 0,
+                recentValue: 0,
                 aggregator: aggregator,
                 ownerSwitchedOn: false,
                 adminSwitchedOn: false,
@@ -576,6 +592,8 @@ contract OracleAdmin is Test {
                 title: 'Initial feed',
                 owner: feedOwner,
                 totalFee: 0.001 ether,
+                recentValueTime: 0,
+                recentValue: 0,
                 aggregator: aggregator,
                 ownerSwitchedOn: true,
                 adminSwitchedOn: true,

@@ -11,7 +11,8 @@ import { NumericData } from '../src/interface/IOracle.sol';
 import { ECDSA } from '../lib/openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol';
 
 
-// run with forge script ./script/AddFeedScript.s.sol:AddFeedScript --rpc-url https://eth-sepolia.g.alchemy.com/v2/pmw7pjM7F-GtiJLxKnOBcOP41znmwVeY --broadcast --verify -vvvv
+// run with 
+// forge script ./script/AddFeedScript.s.sol:AddFeedScript --rpc-url <rpc url> --broadcast --verify -vvvv
 
 
 contract AddFeedScript is Script {
@@ -27,6 +28,8 @@ contract AddFeedScript is Script {
             title: 'HACKER FEED',
             owner: scriptRunner,
             totalFee: 0.01 ether,
+            recentValueTime: 0,
+            recentValue: 0,
             aggregator: IAggregator(0x3Ae558be9B1D540f83F0404de9C10eFb100D66B2),
             ownerSwitchedOn: true,
             adminSwitchedOn: true,

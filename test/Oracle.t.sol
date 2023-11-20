@@ -156,6 +156,41 @@ contract OracleTest is Test {
         oracle.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
     }
 
+    function test_canValueIsSavedWhenCallingVerifyDataWithValidSignature() public {
+        vm.startPrank(admin);
+        oracle.addFeed(_getBasicFeedView());
+        vm.stopPrank();
+
+        SignedNumericData[] memory numericData = new SignedNumericData[](1);
+
+        uint48 timestamp = 1672527600;
+        vm.warp(timestamp);
+
+        uint48 recentValueTime0 = oracle.getFeed(1).config.recentValueTime;
+        uint256 recentValue0 = oracle.getFeed(1).config.recentValue;
+
+        numericData[0] = _signNumericData(
+            NumericData({
+                feedId: 1,
+                timestamp: uint64(block.timestamp - 1 minutes),
+                numericValue: 1 ether,
+                extraData: ''
+            }),
+            signer0pk
+        );
+
+        oracle.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
+
+        uint48 recentValueTime1 = oracle.getFeed(1).config.recentValueTime;
+        uint256 recentValue1 = oracle.getFeed(1).config.recentValue;
+
+        assertEq(recentValueTime0, 0);
+        assertEq(recentValueTime1, timestamp);
+
+        assertEq(recentValue0, 0);
+        assertEq(recentValue1, 1 ether);
+    }
+
     function test_cantCallVerifyDataWithoutValidFeedId() public {
         SignedNumericData[] memory numericData = new SignedNumericData[](1);
 
@@ -376,6 +411,45 @@ contract OracleTest is Test {
         uint256 numericValue = oracle.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
         assertEq(numericValue, 2 ether);
     }
+
+    function test_valueIsSavedWhenCallingVerifyDataWithMultipleValidSignatures() public {
+        vm.startPrank(admin);
+        oracle.addFeed(_getBasicFeedViewTwoDataProviders());
+        vm.stopPrank();
+
+        SignedNumericData[] memory numericData = new SignedNumericData[](2);
+
+
+        uint256 recentValue0 = oracle.getFeed(1).config.recentValue;
+
+        numericData[0] = _signNumericData(
+            NumericData({
+                feedId: 1,
+                timestamp: uint64(block.timestamp - 1 minutes),
+                numericValue: 1 ether,
+                extraData: ''
+            }),
+            signer0pk
+        );
+
+        numericData[1] = _signNumericData(
+            NumericData({
+                feedId: 1,
+                timestamp: uint64(block.timestamp - 1 minutes),
+                numericValue: 3 ether,
+                extraData: ''
+            }),
+            signer1pk
+        );
+
+        oracle.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
+
+        uint256 recentValue1 = oracle.getFeed(1).config.recentValue;
+
+        assertEq(recentValue0, 0);
+        assertEq(recentValue1, 2 ether);
+    }
+
 
     function test_dataMedianAggregationWorksCorrectly() public {
         MedianAggregator medianAggregator = new MedianAggregator();
@@ -610,6 +684,8 @@ contract OracleTest is Test {
                 title: 'Initial feed',
                 owner: feedOwner,
                 totalFee: 0.001 ether,
+                recentValueTime: 0,
+                recentValue: 0,
                 aggregator: aggregator,
                 ownerSwitchedOn: true,
                 adminSwitchedOn: true,
