@@ -12,7 +12,7 @@ pragma solidity ^0.8.0;
 // ***************************************************************
 
 struct NumericData {
-    uint64 feedId;
+    uint64 topicId;
     uint64 timestamp;
     uint256 numericValue; 
     bytes extraData;
@@ -28,7 +28,7 @@ struct UpshotOracleNumericData {
     bytes extraData;
 }
 
-struct FeedConfig {
+struct TopicConfig {
     string title;
     address owner;
     uint48 recentValueTime;
@@ -42,16 +42,16 @@ struct FeedConfig {
     uint48 dataValiditySeconds;
 }
 
-/// @dev The struct for a feed, using a set for valid data providers 
-struct Feed { 
-    FeedConfig config;
+/// @dev The struct for a topic, using a set for valid data providers 
+struct Topic { 
+    TopicConfig config;
     EnumerableSet.AddressSet validDataProviders;
 }
 
 // TODO reduce data structure size
-/// @dev The struct for viewing a feed, which can be loaded into memory and returned
-struct FeedView { 
-    FeedConfig config;
+/// @dev The struct for viewing a topic, which can be loaded into memory and returned
+struct TopicView { 
+    TopicConfig config;
     address[] validDataProviders;
 }
 
@@ -65,7 +65,7 @@ struct FeedView {
 interface IOracle {
 
     /**
-     * @notice Get an verified piece of numeric data for a given feed
+     * @notice Get an verified piece of numeric data for a given topic
      * 
      * @param pd The numeric data to aggregate
      */

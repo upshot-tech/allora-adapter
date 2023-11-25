@@ -4,7 +4,7 @@ pragma solidity ^0.8.13;
 import "../lib/forge-std/src/Test.sol";
 import { ECDSA } from "../lib/openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
 import { Oracle, OracleConstructorArgs } from "../src/Oracle.sol";
-import { NumericData, Feed, FeedView, FeedConfig } from "../src/interface/IOracle.sol";
+import { NumericData, Topic, TopicView, TopicConfig } from "../src/interface/IOracle.sol";
 import { EvenFeeHandler, EvenFeeHandlerConstructorArgs } from "../src/feeHandler/EvenFeeHandler.sol";
 import { AverageAggregator } from "../src/aggregator/AverageAggregator.sol";
 import { MedianAggregator } from "../src/aggregator/MedianAggregator.sol";
@@ -21,8 +21,8 @@ contract OracleAdmin is Test {
     address admin = address(100);
     address protocolFeeReceiver = address(101);
     address protocolFeeReceiver2 = address(102);
-    address feedOwner = address(103);
-    address feedOwner2 = address(104);
+    address topicOwner = address(103);
+    address topicOwner2 = address(104);
 
     address imposter = address(200);
     address newDataProvider = address(201);
@@ -69,8 +69,8 @@ contract OracleAdmin is Test {
         threeValidProviders[1] = signer1;
         threeValidProviders[2] = signer2;
 
-        vm.startPrank(feedOwner);
-        oracle.addFeed(_getBasicFeedView());
+        vm.startPrank(topicOwner);
+        oracle.addTopic(_getBasicTopicView());
         vm.stopPrank();
     }
 
@@ -81,24 +81,24 @@ contract OracleAdmin is Test {
     function test_imposterCantUpdateDataProviderQuorum() public {
         vm.startPrank(imposter);
 
-        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2OnlyFeedOwner()"));
+        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2OnlyTopicOwner()"));
         oracle.updateDataProviderQuorum(1, 3);
     }
 
     function test_ownerCantUpdateDataProviderQuorumToZero() public {
-        vm.startPrank(feedOwner);
+        vm.startPrank(topicOwner);
 
         vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2InvalidDataProviderQuorum()"));
         oracle.updateDataProviderQuorum(1, 0);
     }
 
     function test_ownerCanUpdateDataProviderQuorum() public {
-        vm.startPrank(feedOwner);
+        vm.startPrank(topicOwner);
 
-        assertEq(oracle.getFeed(1).config.dataProviderQuorum, 1);
+        assertEq(oracle.getTopic(1).config.dataProviderQuorum, 1);
 
         oracle.updateDataProviderQuorum(1, 2);
-        assertEq(oracle.getFeed(1).config.dataProviderQuorum, 2);
+        assertEq(oracle.getTopic(1).config.dataProviderQuorum, 2);
     }
 
     // ***************************************************************
@@ -108,24 +108,24 @@ contract OracleAdmin is Test {
     function test_imposterCantUpdateDataValiditySeconds() public {
         vm.startPrank(imposter);
 
-        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2OnlyFeedOwner()"));
+        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2OnlyTopicOwner()"));
         oracle.updateDataValiditySeconds(1, 10 minutes);
     }
 
     function test_ownerCantUpdateDataValiditySecondsToZero() public {
-        vm.startPrank(feedOwner);
+        vm.startPrank(topicOwner);
 
         vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2InvalidDataValiditySeconds()"));
         oracle.updateDataValiditySeconds(1, 0);
     }
 
     function test_ownerCanUpdateDataValiditySeconds() public {
-        vm.startPrank(feedOwner);
+        vm.startPrank(topicOwner);
 
-        assertEq(oracle.getFeed(1).config.dataValiditySeconds, 5 minutes);
+        assertEq(oracle.getTopic(1).config.dataValiditySeconds, 5 minutes);
 
         oracle.updateDataValiditySeconds(1, 10 minutes);
-        assertEq(oracle.getFeed(1).config.dataValiditySeconds, 10 minutes);
+        assertEq(oracle.getTopic(1).config.dataValiditySeconds, 10 minutes);
     }
 
     // ***************************************************************
@@ -135,17 +135,17 @@ contract OracleAdmin is Test {
     function test_imposterCantAddDataProvider() public {
         vm.startPrank(imposter);
 
-        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2OnlyFeedOwner()"));
+        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2OnlyTopicOwner()"));
         oracle.addDataProvider(1, imposter);
     }
 
     function test_ownerCanAddDataProvider() public {
-        vm.startPrank(feedOwner);
+        vm.startPrank(topicOwner);
 
-        assertEq(_contains(newDataProvider, oracle.getFeed(1).validDataProviders), false);
+        assertEq(_contains(newDataProvider, oracle.getTopic(1).validDataProviders), false);
 
         oracle.addDataProvider(1, newDataProvider);
-        assertEq(_contains(newDataProvider, oracle.getFeed(1).validDataProviders), true);
+        assertEq(_contains(newDataProvider, oracle.getTopic(1).validDataProviders), true);
     }
 
     // ***************************************************************
@@ -155,74 +155,74 @@ contract OracleAdmin is Test {
     function test_imposterCantRemoveDataProvider() public {
         vm.startPrank(imposter);
 
-        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2OnlyFeedOwner()"));
+        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2OnlyTopicOwner()"));
         oracle.removeDataProvider(1, imposter);
     }
 
     function test_ownerCanRemoveDataProvider() public {
-        vm.startPrank(feedOwner);
+        vm.startPrank(topicOwner);
         oracle.addDataProvider(1, newDataProvider);
 
-        assertEq(_contains(newDataProvider, oracle.getFeed(1).validDataProviders), true);
+        assertEq(_contains(newDataProvider, oracle.getTopic(1).validDataProviders), true);
 
         oracle.removeDataProvider(1, newDataProvider);
-        assertEq(_contains(newDataProvider, oracle.getFeed(1).validDataProviders), false);
+        assertEq(_contains(newDataProvider, oracle.getTopic(1).validDataProviders), false);
     }
 
     // ***************************************************************
     // * ======================= ADD FEED ========================== *
     // ***************************************************************
-    function test_ownerCantAddFeedWithEmptyTitle() public {
+    function test_ownerCantAddTopicWithEmptyTitle() public {
         vm.startPrank(admin);
 
-        FeedView memory feedView = _getBasicFeedView();
-        feedView.config.title = '';
-        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2InvalidFeedTitle()"));
-        oracle.addFeed(feedView);
+        TopicView memory topicView = _getBasicTopicView();
+        topicView.config.title = '';
+        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2InvalidTopicTitle()"));
+        oracle.addTopic(topicView);
     }
 
-    function test_addingFeedWithValueSetIsIgnored() public {
+    function test_addingTopicWithValueSetIsIgnored() public {
         vm.startPrank(admin);
 
-        FeedView memory feedView = _getBasicFeedView();
-        feedView.config.recentValue = 1;
-        feedView.config.recentValueTime = 2;
+        TopicView memory topicView = _getBasicTopicView();
+        topicView.config.recentValue = 1;
+        topicView.config.recentValueTime = 2;
 
-        uint256 feedId = oracle.addFeed(feedView);
+        uint256 topicId = oracle.addTopic(topicView);
 
-        assertEq(oracle.getFeed(feedId).config.recentValue, 0);
-        assertEq(oracle.getFeed(feedId).config.recentValueTime, 0);
+        assertEq(oracle.getTopic(topicId).config.recentValue, 0);
+        assertEq(oracle.getTopic(topicId).config.recentValueTime, 0);
 
     }
 
-    function test_ownerCanAddFeed() public {
+    function test_ownerCanAddTopic() public {
         vm.startPrank(admin);
 
-        assertEq(oracle.getFeed(2).config.dataProviderQuorum, 0);
+        assertEq(oracle.getTopic(2).config.dataProviderQuorum, 0);
 
-        oracle.addFeed(_getBasicFeedView());
+        oracle.addTopic(_getBasicTopicView());
 
-        assertEq(oracle.getFeed(2).config.dataProviderQuorum, 1);
+        assertEq(oracle.getTopic(2).config.dataProviderQuorum, 1);
     }
 
-    function test_addingFeedGivesProperId() public {
+    function test_addingTopicGivesProperId() public {
         vm.startPrank(admin);
-        uint256 secondFeedId = oracle.addFeed(_getBasicFeedView());
-        uint256 thirdFeedId = oracle.addFeed(_getBasicFeedView());
+        uint256 secondTopicId = oracle.addTopic(_getBasicTopicView());
+        uint256 thirdTopicId = oracle.addTopic(_getBasicTopicView());
 
-        assertEq(secondFeedId, 2);
-        assertEq(thirdFeedId, 3);
+        assertEq(secondTopicId, 2);
+        assertEq(thirdTopicId, 3);
     }
 
-    function test_addingFeedGivesAllCorrectData() public {
+    function test_addingTopicGivesAllCorrectData() public {
         vm.startPrank(admin);
 
-        assertEq(oracle.getFeed(2).config.dataProviderQuorum, 0);
+        assertEq(oracle.getTopic(2).config.dataProviderQuorum, 0);
 
-        FeedView memory secondFeed = FeedView({
-            config: FeedConfig({
-                title: 'secondary feed',
-                owner: feedOwner2,
+        TopicView memory secondTopic = TopicView({
+            config: TopicConfig({
+                title: 'secondary topic',
+                owner: topicOwner2,
                 totalFee: 0.001 ether,
                 recentValueTime: 0,
                 recentValue: 0,
@@ -236,28 +236,28 @@ contract OracleAdmin is Test {
             validDataProviders: threeValidProviders
         });
 
-        uint256 secondFeedId = oracle.addFeed(secondFeed);
-        assertEq(secondFeedId, 2);
+        uint256 secondTopicId = oracle.addTopic(secondTopic);
+        assertEq(secondTopicId, 2);
 
-        FeedView memory addedFeed = oracle.getFeed(secondFeedId);
+        TopicView memory addedTopic = oracle.getTopic(secondTopicId);
 
-        assertEq(addedFeed.config.title, secondFeed.config.title);
-        assertEq(addedFeed.config.owner, secondFeed.config.owner);
-        assertEq(addedFeed.config.totalFee, secondFeed.config.totalFee);
-        assertEq(addedFeed.config.dataProviderQuorum, secondFeed.config.dataProviderQuorum);
-        assertEq(addedFeed.config.dataValiditySeconds, secondFeed.config.dataValiditySeconds);
-        assertEq(address(addedFeed.config.aggregator), address(secondFeed.config.aggregator));
-        assertTrue(address(secondFeed.config.aggregator) != address(0));
-        assertEq(addedFeed.config.ownerSwitchedOn, secondFeed.config.ownerSwitchedOn);
-        assertEq(addedFeed.config.adminSwitchedOn, secondFeed.config.adminSwitchedOn);
-        assertEq(address(addedFeed.config.feeHandler), address(secondFeed.config.feeHandler));
-        assertTrue(address(addedFeed.config.feeHandler) != address(0));
-        assertEq(secondFeed.validDataProviders.length, 3);
-        assertEq(addedFeed.validDataProviders.length, 3);
+        assertEq(addedTopic.config.title, secondTopic.config.title);
+        assertEq(addedTopic.config.owner, secondTopic.config.owner);
+        assertEq(addedTopic.config.totalFee, secondTopic.config.totalFee);
+        assertEq(addedTopic.config.dataProviderQuorum, secondTopic.config.dataProviderQuorum);
+        assertEq(addedTopic.config.dataValiditySeconds, secondTopic.config.dataValiditySeconds);
+        assertEq(address(addedTopic.config.aggregator), address(secondTopic.config.aggregator));
+        assertTrue(address(secondTopic.config.aggregator) != address(0));
+        assertEq(addedTopic.config.ownerSwitchedOn, secondTopic.config.ownerSwitchedOn);
+        assertEq(addedTopic.config.adminSwitchedOn, secondTopic.config.adminSwitchedOn);
+        assertEq(address(addedTopic.config.feeHandler), address(secondTopic.config.feeHandler));
+        assertTrue(address(addedTopic.config.feeHandler) != address(0));
+        assertEq(secondTopic.validDataProviders.length, 3);
+        assertEq(addedTopic.validDataProviders.length, 3);
 
         for (uint256 i = 0; i < 3; i++) {
-            assertTrue(address(addedFeed.validDataProviders[i]) != address(0));
-            assertEq(addedFeed.validDataProviders[i], secondFeed.validDataProviders[i]);
+            assertTrue(address(addedTopic.validDataProviders[i]) != address(0));
+            assertEq(addedTopic.validDataProviders[i], secondTopic.validDataProviders[i]);
         }
     }
 
@@ -265,88 +265,88 @@ contract OracleAdmin is Test {
     // * ================ OWNER TURN OFF FEED ====================== *
     // ***************************************************************
 
-    function test_imposterCantTurnOffFeed() public {
+    function test_imposterCantTurnOffTopic() public {
         vm.startPrank(imposter);
 
-        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2OnlyFeedOwner()"));
-        oracle.turnOffFeed(1);
+        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2OnlyTopicOwner()"));
+        oracle.turnOffTopic(1);
     }
 
-    function test_ownerCanTurnOffFeed() public {
-        vm.startPrank(oracle.getFeed(1).config.owner);
+    function test_ownerCanTurnOffTopic() public {
+        vm.startPrank(oracle.getTopic(1).config.owner);
 
-        assertEq(oracle.getFeed(1).config.ownerSwitchedOn, true);
+        assertEq(oracle.getTopic(1).config.ownerSwitchedOn, true);
 
-        oracle.turnOffFeed(1);
+        oracle.turnOffTopic(1);
 
-        assertEq(oracle.getFeed(1).config.ownerSwitchedOn, false);
+        assertEq(oracle.getTopic(1).config.ownerSwitchedOn, false);
     }
 
     // ***************************************************************
     // * ================ OWNER TURN ON FEED ======================= *
     // ***************************************************************
 
-    function test_imposterCantTurnOnFeed() public {
+    function test_imposterCantTurnOnTopic() public {
         vm.startPrank(imposter);
 
-        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2OnlyFeedOwner()"));
-        oracle.turnOnFeed(1);
+        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2OnlyTopicOwner()"));
+        oracle.turnOnTopic(1);
     }
 
-    function test_ownerCanTurnOnFeed() public {
-        vm.startPrank(oracle.getFeed(1).config.owner);
+    function test_ownerCanTurnOnTopic() public {
+        vm.startPrank(oracle.getTopic(1).config.owner);
 
-        oracle.turnOffFeed(1);
+        oracle.turnOffTopic(1);
 
-        assertEq(oracle.getFeed(1).config.ownerSwitchedOn, false);
+        assertEq(oracle.getTopic(1).config.ownerSwitchedOn, false);
 
-        oracle.turnOnFeed(1);
+        oracle.turnOnTopic(1);
 
-        assertEq(oracle.getFeed(1).config.ownerSwitchedOn, true);
+        assertEq(oracle.getTopic(1).config.ownerSwitchedOn, true);
     }
 
     // ***************************************************************
     // * ================ ADMIN TURN OFF FEED ====================== *
     // ***************************************************************
 
-    function test_adminImposterCantTurnOffFeed() public {
+    function test_adminImposterCantTurnOffTopic() public {
         vm.startPrank(imposter);
 
         vm.expectRevert('Ownable: caller is not the owner');
-        oracle.adminTurnOffFeed(1);
+        oracle.adminTurnOffTopic(1);
     }
 
-    function test_adminCanTurnOffFeed() public {
+    function test_adminCanTurnOffTopic() public {
         vm.startPrank(admin);
 
-        assertEq(oracle.getFeed(1).config.adminSwitchedOn, true);
+        assertEq(oracle.getTopic(1).config.adminSwitchedOn, true);
 
-        oracle.adminTurnOffFeed(1);
+        oracle.adminTurnOffTopic(1);
 
-        assertEq(oracle.getFeed(1).config.adminSwitchedOn, false);
+        assertEq(oracle.getTopic(1).config.adminSwitchedOn, false);
     }
 
     // ***************************************************************
     // * ================= ADMIN TURN ON FEED ====================== *
     // ***************************************************************
 
-    function test_adminImposterCantTurnOnFeed() public {
+    function test_adminImposterCantTurnOnTopic() public {
         vm.startPrank(imposter);
 
         vm.expectRevert('Ownable: caller is not the owner');
-        oracle.adminTurnOnFeed(1);
+        oracle.adminTurnOnTopic(1);
     }
 
-    function test_adminCanTurnOnFeed() public {
+    function test_adminCanTurnOnTopic() public {
         vm.startPrank(admin);
 
-        oracle.adminTurnOffFeed(1);
+        oracle.adminTurnOffTopic(1);
 
-        assertEq(oracle.getFeed(1).config.adminSwitchedOn, false);
+        assertEq(oracle.getTopic(1).config.adminSwitchedOn, false);
 
-        oracle.adminTurnOnFeed(1);
+        oracle.adminTurnOnTopic(1);
 
-        assertEq(oracle.getFeed(1).config.adminSwitchedOn, true);
+        assertEq(oracle.getTopic(1).config.adminSwitchedOn, true);
     }
 
     // ***************************************************************
@@ -356,27 +356,27 @@ contract OracleAdmin is Test {
     function test_imposterCantUpdateAggregator() public {
         vm.startPrank(imposter);
 
-        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2OnlyFeedOwner()"));
+        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2OnlyTopicOwner()"));
         oracle.updateAggregator(1, dummyAggregator);
     }
 
     function test_ownerCantUpdateAggregatorToZeroAddress() public {
-        vm.startPrank(feedOwner);
+        vm.startPrank(topicOwner);
 
         vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2InvalidAggregator()"));
         oracle.updateAggregator(1, IAggregator(address(0)));
     }
 
     function test_ownerCanUpdateAggregator() public {
-        vm.startPrank(feedOwner);
+        vm.startPrank(topicOwner);
 
         MedianAggregator medianAggregator = new MedianAggregator();
 
-        assertEq(address(oracle.getFeed(1).config.aggregator), address(aggregator));
+        assertEq(address(oracle.getTopic(1).config.aggregator), address(aggregator));
 
         oracle.updateAggregator(1, medianAggregator);
 
-        assertEq(address(oracle.getFeed(1).config.aggregator), address(medianAggregator));
+        assertEq(address(oracle.getTopic(1).config.aggregator), address(medianAggregator));
     }
 
     // ***************************************************************
@@ -386,19 +386,19 @@ contract OracleAdmin is Test {
     function test_imposterCantUpdateFeeHandler() public {
         vm.startPrank(imposter);
 
-        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2OnlyFeedOwner()"));
+        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2OnlyTopicOwner()"));
         oracle.updateFeeHandler(1, dummyFeeHandler);
     }
 
     function test_ownerCantUpdateFeeHandlerToZeroAddress() public {
-        vm.startPrank(feedOwner);
+        vm.startPrank(topicOwner);
 
         vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2InvalidFeeHandler()"));
         oracle.updateFeeHandler(1, IFeeHandler(address(0)));
     }
 
     function test_ownerCanUpdateFeeHandler() public {
-        vm.startPrank(feedOwner);
+        vm.startPrank(topicOwner);
 
         EvenFeeHandler newFeeHandler = new EvenFeeHandler(EvenFeeHandlerConstructorArgs({
             admin: admin
@@ -406,11 +406,11 @@ contract OracleAdmin is Test {
 
         assertTrue(address(feeHandler) != address(newFeeHandler));
 
-        assertEq(address(oracle.getFeed(1).config.feeHandler), address(feeHandler));
+        assertEq(address(oracle.getTopic(1).config.feeHandler), address(feeHandler));
 
         oracle.updateFeeHandler(1, newFeeHandler);
 
-        assertEq(address(oracle.getFeed(1).config.feeHandler), address(newFeeHandler));
+        assertEq(address(oracle.getTopic(1).config.feeHandler), address(newFeeHandler));
     }
 
     // ***************************************************************
@@ -420,56 +420,56 @@ contract OracleAdmin is Test {
     function test_imposterCantUpdateTotalFee() public {
         vm.startPrank(imposter);
 
-        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2OnlyFeedOwner()"));
+        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2OnlyTopicOwner()"));
         oracle.updateTotalFee(1, 1 ether);
     }
 
     function test_ownerCantUpdateTotalFeeToLessThan1000() public {
-        vm.startPrank(feedOwner);
+        vm.startPrank(topicOwner);
 
         vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2InvalidTotalFee()"));
         oracle.updateTotalFee(1, 999);
     }
 
     function test_ownerCanUpdateTotalFeeToZero() public {
-        vm.startPrank(feedOwner);
+        vm.startPrank(topicOwner);
 
-        assertEq(oracle.getFeed(1).config.totalFee, 0.001 ether);
+        assertEq(oracle.getTopic(1).config.totalFee, 0.001 ether);
 
         oracle.updateTotalFee(1, 0);
 
-        assertEq(oracle.getFeed(1).config.totalFee, 0);
+        assertEq(oracle.getTopic(1).config.totalFee, 0);
     }
 
     function test_ownerCanUpdateTotalFee() public {
-        vm.startPrank(feedOwner);
+        vm.startPrank(topicOwner);
 
-        assertEq(oracle.getFeed(1).config.totalFee, 0.001 ether);
+        assertEq(oracle.getTopic(1).config.totalFee, 0.001 ether);
 
         oracle.updateTotalFee(1, 1 ether);
 
-        assertEq(oracle.getFeed(1).config.totalFee, 1 ether);
+        assertEq(oracle.getTopic(1).config.totalFee, 1 ether);
     }
 
     // ***************************************************************
     // * ================== UPDATE FEED OWNER ====================== *
     // ***************************************************************
 
-    function test_imposterCantUpdateFeedOwner() public {
+    function test_imposterCantUpdateTopicOwner() public {
         vm.startPrank(imposter);
 
-        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2OnlyFeedOwner()"));
-        oracle.updateFeedOwner(1, feedOwner2);
+        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2OnlyTopicOwner()"));
+        oracle.updateTopicOwner(1, topicOwner2);
     }
 
-    function test_ownerCanUpdateFeedOwner() public {
-        vm.startPrank(feedOwner);
+    function test_ownerCanUpdateTopicOwner() public {
+        vm.startPrank(topicOwner);
 
-        assertEq(oracle.getFeed(1).config.owner, feedOwner);
+        assertEq(oracle.getTopic(1).config.owner, topicOwner);
 
-        oracle.updateFeedOwner(1, feedOwner2);
+        oracle.updateTopicOwner(1, topicOwner2);
 
-        assertEq(oracle.getFeed(1).config.owner, feedOwner2);
+        assertEq(oracle.getTopic(1).config.owner, topicOwner2);
     }
 
     // ***************************************************************
@@ -586,11 +586,11 @@ contract OracleAdmin is Test {
         return false;
     }
 
-    function _getBasicFeedView() internal view returns (FeedView memory feedView) {
-        return FeedView({
-            config: FeedConfig({
-                title: 'Initial feed',
-                owner: feedOwner,
+    function _getBasicTopicView() internal view returns (TopicView memory topicView) {
+        return TopicView({
+            config: TopicConfig({
+                title: 'Initial topic',
+                owner: topicOwner,
                 totalFee: 0.001 ether,
                 recentValueTime: 0,
                 recentValue: 0,

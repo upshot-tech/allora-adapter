@@ -7,8 +7,8 @@ import { Oracle, OracleConstructorArgs } from "../src/Oracle.sol";
 import { 
     SignedNumericData, 
     NumericData, 
-    FeedView, 
-    FeedConfig, 
+    TopicView, 
+    TopicConfig, 
     UpshotOracleNumericData
 } from "../src/interface/IOracle.sol";
 import { EvenFeeHandler, EvenFeeHandlerConstructorArgs } from "../src/feeHandler/EvenFeeHandler.sol";
@@ -26,7 +26,7 @@ contract OracleTest is Test {
 
     address admin = address(100);
     address protocolFeeReceiver = address(101);
-    address feedOwner = address(102);
+    address topicOwner = address(102);
 
     uint256 signer0pk = 0x1000;
     uint256 signer1pk = 0x1001;
@@ -87,14 +87,14 @@ contract OracleTest is Test {
 
     function test_cantCallVerifyDataWithoutFee() public {
         vm.startPrank(admin);
-        oracle.addFeed(_getBasicFeedView());
+        oracle.addTopic(_getBasicTopicView());
         vm.stopPrank();
 
         SignedNumericData[] memory numericData = new SignedNumericData[](1);
 
         numericData[0] = _signNumericData(
             NumericData({
-                feedId: 1,
+                topicId: 1,
                 timestamp: uint64(block.timestamp - 1 minutes),
                 numericValue: 1 ether,
                 extraData: ''
@@ -115,16 +115,16 @@ contract OracleTest is Test {
 
     function test_cantCallVerifyDAtaWithLessThanThresholdData() public {
         vm.startPrank(admin);
-        FeedView memory feedView = _getBasicFeedView();
-        feedView.config.dataProviderQuorum = 2;
-        oracle.addFeed(feedView);
+        TopicView memory topicView = _getBasicTopicView();
+        topicView.config.dataProviderQuorum = 2;
+        oracle.addTopic(topicView);
         vm.stopPrank();
 
         SignedNumericData[] memory numericData = new SignedNumericData[](1);
 
         numericData[0] = _signNumericData(
             NumericData({
-                feedId: 1,
+                topicId: 1,
                 timestamp: uint64(block.timestamp - 1 minutes),
                 numericValue: 1 ether,
                 extraData: ''
@@ -138,14 +138,14 @@ contract OracleTest is Test {
 
     function test_canCallVerifyDataWithValidSignature() public {
         vm.startPrank(admin);
-        oracle.addFeed(_getBasicFeedView());
+        oracle.addTopic(_getBasicTopicView());
         vm.stopPrank();
 
         SignedNumericData[] memory numericData = new SignedNumericData[](1);
 
         numericData[0] = _signNumericData(
             NumericData({
-                feedId: 1,
+                topicId: 1,
                 timestamp: uint64(block.timestamp - 1 minutes),
                 numericValue: 1 ether,
                 extraData: ''
@@ -158,7 +158,7 @@ contract OracleTest is Test {
 
     function test_canValueIsSavedWhenCallingVerifyDataWithValidSignature() public {
         vm.startPrank(admin);
-        oracle.addFeed(_getBasicFeedView());
+        oracle.addTopic(_getBasicTopicView());
         vm.stopPrank();
 
         SignedNumericData[] memory numericData = new SignedNumericData[](1);
@@ -166,12 +166,12 @@ contract OracleTest is Test {
         uint48 timestamp = 1672527600;
         vm.warp(timestamp);
 
-        uint48 recentValueTime0 = oracle.getFeed(1).config.recentValueTime;
-        uint256 recentValue0 = oracle.getFeed(1).config.recentValue;
+        uint48 recentValueTime0 = oracle.getTopic(1).config.recentValueTime;
+        uint256 recentValue0 = oracle.getTopic(1).config.recentValue;
 
         numericData[0] = _signNumericData(
             NumericData({
-                feedId: 1,
+                topicId: 1,
                 timestamp: uint64(block.timestamp - 1 minutes),
                 numericValue: 1 ether,
                 extraData: ''
@@ -181,8 +181,8 @@ contract OracleTest is Test {
 
         oracle.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
 
-        uint48 recentValueTime1 = oracle.getFeed(1).config.recentValueTime;
-        uint256 recentValue1 = oracle.getFeed(1).config.recentValue;
+        uint48 recentValueTime1 = oracle.getTopic(1).config.recentValueTime;
+        uint256 recentValue1 = oracle.getTopic(1).config.recentValue;
 
         assertEq(recentValueTime0, 0);
         assertEq(recentValueTime1, timestamp);
@@ -191,12 +191,12 @@ contract OracleTest is Test {
         assertEq(recentValue1, 1 ether);
     }
 
-    function test_cantCallVerifyDataWithoutValidFeedId() public {
+    function test_cantCallVerifyDataWithoutValidTopicId() public {
         SignedNumericData[] memory numericData = new SignedNumericData[](1);
 
         numericData[0] = _signNumericData(
             NumericData({
-                feedId: 1,
+                topicId: 1,
                 timestamp: uint64(block.timestamp - 1 minutes),
                 numericValue: 1 ether,
                 extraData: ''
@@ -204,21 +204,21 @@ contract OracleTest is Test {
             signer0pk
         );
 
-        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2OwnerTurnedFeedOff()"));
+        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2OwnerTurnedTopicOff()"));
         oracle.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
     }
 
-    function test_cantCallVerifyDataWhenFeedIsTurnedOffByOwner() public {
-        vm.startPrank(feedOwner);
-        uint feedId = oracle.addFeed(_getBasicFeedView());
-        oracle.turnOffFeed(feedId);
+    function test_cantCallVerifyDataWhenTopicIsTurnedOffByOwner() public {
+        vm.startPrank(topicOwner);
+        uint topicId = oracle.addTopic(_getBasicTopicView());
+        oracle.turnOffTopic(topicId);
         vm.stopPrank();
 
         SignedNumericData[] memory numericData = new SignedNumericData[](1);
 
         numericData[0] = _signNumericData(
             NumericData({
-                feedId: uint64(feedId),
+                topicId: uint64(topicId),
                 timestamp: uint64(block.timestamp - 1 minutes),
                 numericValue: 1 ether,
                 extraData: ''
@@ -226,24 +226,24 @@ contract OracleTest is Test {
             signer0pk
         );
 
-        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2OwnerTurnedFeedOff()"));
+        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2OwnerTurnedTopicOff()"));
         oracle.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
     }
 
-    function test_cantCallVerifyDataWhenFeedIsTurnedOffByAdmin() public {
-        vm.startPrank(feedOwner);
-        uint feedId = oracle.addFeed(_getBasicFeedView());
+    function test_cantCallVerifyDataWhenTopicIsTurnedOffByAdmin() public {
+        vm.startPrank(topicOwner);
+        uint topicId = oracle.addTopic(_getBasicTopicView());
         vm.stopPrank();
 
         vm.startPrank(admin);
-        oracle.adminTurnOffFeed(feedId);
+        oracle.adminTurnOffTopic(topicId);
         vm.stopPrank();
 
         SignedNumericData[] memory numericData = new SignedNumericData[](1);
 
         numericData[0] = _signNumericData(
             NumericData({
-                feedId: uint64(feedId),
+                topicId: uint64(topicId),
                 timestamp: uint64(block.timestamp - 1 minutes),
                 numericValue: 1 ether,
                 extraData: ''
@@ -251,20 +251,20 @@ contract OracleTest is Test {
             signer0pk
         );
 
-        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2AdminTurnedFeedOff()"));
+        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2AdminTurnedTopicOff()"));
         oracle.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
     }
 
-    function test_cantCallVerifyDataWithMismatchedFeeds() public {
+    function test_cantCallVerifyDataWithMismatchedTopics() public {
         vm.startPrank(admin);
-        oracle.addFeed(_getBasicFeedView());
+        oracle.addTopic(_getBasicTopicView());
         vm.stopPrank();
 
         SignedNumericData[] memory numericData = new SignedNumericData[](2);
 
         numericData[0] = _signNumericData(
             NumericData({
-                feedId: 1,
+                topicId: 1,
                 timestamp: uint64(block.timestamp - 1 minutes),
                 numericValue: 1 ether,
                 extraData: ''
@@ -274,7 +274,7 @@ contract OracleTest is Test {
 
         numericData[1] = _signNumericData(
             NumericData({
-                feedId: 2,
+                topicId: 2,
                 timestamp: uint64(block.timestamp - 1 minutes),
                 numericValue: 1 ether,
                 extraData: ''
@@ -282,21 +282,21 @@ contract OracleTest is Test {
             signer0pk
         );
 
-        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2FeedMismatch()"));
+        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2TopicMismatch()"));
 
         oracle.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
     }
 
     function test_cantCallVerifyDataWithFutureTime() public {
         vm.startPrank(admin);
-        oracle.addFeed(_getBasicFeedView());
+        oracle.addTopic(_getBasicTopicView());
         vm.stopPrank();
 
         SignedNumericData[] memory numericData = new SignedNumericData[](1);
 
         numericData[0] = _signNumericData(
             NumericData({
-                feedId: 1,
+                topicId: 1,
                 timestamp: uint64(block.timestamp + 1),
                 numericValue: 1 ether,
                 extraData: ''
@@ -310,15 +310,15 @@ contract OracleTest is Test {
 
     function test_cantCallVerifyDataWithExpiredTime() public {
         vm.startPrank(admin);
-        oracle.addFeed(_getBasicFeedView());
+        oracle.addTopic(_getBasicTopicView());
         vm.stopPrank();
 
         SignedNumericData[] memory numericData = new SignedNumericData[](1);
 
         numericData[0] = _signNumericData(
             NumericData({
-                feedId: 1,
-                timestamp: uint64((block.timestamp - oracle.getFeed(1).config.dataValiditySeconds) - 1),
+                topicId: 1,
+                timestamp: uint64((block.timestamp - oracle.getTopic(1).config.dataValiditySeconds) - 1),
                 numericValue: 1 ether,
                 extraData: ''
             }),
@@ -331,14 +331,14 @@ contract OracleTest is Test {
 
     function test_cantCallVerifyDataWithInvalidDataProvider() public {
         vm.startPrank(admin);
-        oracle.addFeed(_getBasicFeedViewNoDataProviders());
+        oracle.addTopic(_getBasicTopicViewNoDataProviders());
         vm.stopPrank();
 
         SignedNumericData[] memory numericData = new SignedNumericData[](1);
 
         numericData[0] = _signNumericData(
             NumericData({
-                feedId: 1,
+                topicId: 1,
                 timestamp: uint64(block.timestamp - 1 minutes),
                 numericValue: 1 ether,
                 extraData: ''
@@ -352,14 +352,14 @@ contract OracleTest is Test {
 
     function test_cantCallVerifyDataWithDuplicateDataProvider() public {
         vm.startPrank(admin);
-        oracle.addFeed(_getBasicFeedView());
+        oracle.addTopic(_getBasicTopicView());
         vm.stopPrank();
 
         SignedNumericData[] memory numericData = new SignedNumericData[](2);
 
         numericData[0] = _signNumericData(
             NumericData({
-                feedId: 1,
+                topicId: 1,
                 timestamp: uint64(block.timestamp - 1 minutes),
                 numericValue: 1 ether,
                 extraData: ''
@@ -369,7 +369,7 @@ contract OracleTest is Test {
 
         numericData[1] = _signNumericData(
             NumericData({
-                feedId: 1,
+                topicId: 1,
                 timestamp: uint64(block.timestamp - 1 minutes),
                 numericValue: 1 ether,
                 extraData: ''
@@ -383,14 +383,14 @@ contract OracleTest is Test {
 
     function test_dataAverageAggregationWorksCorrectly() public {
         vm.startPrank(admin);
-        oracle.addFeed(_getBasicFeedViewTwoDataProviders());
+        oracle.addTopic(_getBasicTopicViewTwoDataProviders());
         vm.stopPrank();
 
         SignedNumericData[] memory numericData = new SignedNumericData[](2);
 
         numericData[0] = _signNumericData(
             NumericData({
-                feedId: 1,
+                topicId: 1,
                 timestamp: uint64(block.timestamp - 1 minutes),
                 numericValue: 1 ether,
                 extraData: ''
@@ -400,7 +400,7 @@ contract OracleTest is Test {
 
         numericData[1] = _signNumericData(
             NumericData({
-                feedId: 1,
+                topicId: 1,
                 timestamp: uint64(block.timestamp - 1 minutes),
                 numericValue: 3 ether,
                 extraData: ''
@@ -414,17 +414,17 @@ contract OracleTest is Test {
 
     function test_valueIsSavedWhenCallingVerifyDataWithMultipleValidSignatures() public {
         vm.startPrank(admin);
-        oracle.addFeed(_getBasicFeedViewTwoDataProviders());
+        oracle.addTopic(_getBasicTopicViewTwoDataProviders());
         vm.stopPrank();
 
         SignedNumericData[] memory numericData = new SignedNumericData[](2);
 
 
-        uint256 recentValue0 = oracle.getFeed(1).config.recentValue;
+        uint256 recentValue0 = oracle.getTopic(1).config.recentValue;
 
         numericData[0] = _signNumericData(
             NumericData({
-                feedId: 1,
+                topicId: 1,
                 timestamp: uint64(block.timestamp - 1 minutes),
                 numericValue: 1 ether,
                 extraData: ''
@@ -434,7 +434,7 @@ contract OracleTest is Test {
 
         numericData[1] = _signNumericData(
             NumericData({
-                feedId: 1,
+                topicId: 1,
                 timestamp: uint64(block.timestamp - 1 minutes),
                 numericValue: 3 ether,
                 extraData: ''
@@ -444,7 +444,7 @@ contract OracleTest is Test {
 
         oracle.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
 
-        uint256 recentValue1 = oracle.getFeed(1).config.recentValue;
+        uint256 recentValue1 = oracle.getTopic(1).config.recentValue;
 
         assertEq(recentValue0, 0);
         assertEq(recentValue1, 2 ether);
@@ -455,16 +455,16 @@ contract OracleTest is Test {
         MedianAggregator medianAggregator = new MedianAggregator();
 
         vm.startPrank(admin);
-        FeedView memory feedView = _getBasicFeedViewTwoDataProviders();
-        feedView.config.aggregator = medianAggregator;
-        oracle.addFeed(feedView);
+        TopicView memory topicView = _getBasicTopicViewTwoDataProviders();
+        topicView.config.aggregator = medianAggregator;
+        oracle.addTopic(topicView);
         vm.stopPrank();
 
         SignedNumericData[] memory numericData = new SignedNumericData[](2);
 
         numericData[0] = _signNumericData(
             NumericData({
-                feedId: 1,
+                topicId: 1,
                 timestamp: uint64(block.timestamp - 1 minutes),
                 numericValue: 1 ether,
                 extraData: ''
@@ -474,7 +474,7 @@ contract OracleTest is Test {
 
         numericData[1] = _signNumericData(
             NumericData({
-                feedId: 1,
+                topicId: 1,
                 timestamp: uint64(block.timestamp - 1 minutes),
                 numericValue: 3 ether,
                 extraData: ''
@@ -491,16 +491,16 @@ contract OracleTest is Test {
 
         vm.startPrank(admin);
 
-        FeedView memory feedView = _getBasicFeedViewThreeDataProviders();
-        feedView.config.aggregator = medianAggregator;
-        oracle.addFeed(feedView);
+        TopicView memory topicView = _getBasicTopicViewThreeDataProviders();
+        topicView.config.aggregator = medianAggregator;
+        oracle.addTopic(topicView);
         vm.stopPrank();
 
         SignedNumericData[] memory numericData = new SignedNumericData[](3);
 
         numericData[0] = _signNumericData(
             NumericData({
-                feedId: 1,
+                topicId: 1,
                 timestamp: uint64(block.timestamp - 1 minutes),
                 numericValue: 1 ether,
                 extraData: ''
@@ -510,7 +510,7 @@ contract OracleTest is Test {
 
         numericData[1] = _signNumericData(
             NumericData({
-                feedId: 1,
+                topicId: 1,
                 timestamp: uint64(block.timestamp - 1 minutes),
                 numericValue: 2 ether,
                 extraData: ''
@@ -520,7 +520,7 @@ contract OracleTest is Test {
 
         numericData[2] = _signNumericData(
             NumericData({
-                feedId: 1,
+                topicId: 1,
                 timestamp: uint64(block.timestamp - 1 minutes),
                 numericValue: 5 ether,
                 extraData: ''
@@ -533,26 +533,26 @@ contract OracleTest is Test {
     }
 
     function test_dataAggregationWorksCorrectlyAfterUpdatingAggregator() public {
-        uint256 feedId = oracle.addFeed(_getBasicFeedViewThreeDataProviders());
+        uint256 topicId = oracle.addTopic(_getBasicTopicViewThreeDataProviders());
 
         SignedNumericData[] memory numericData = new SignedNumericData[](3);
 
         NumericData memory rawNumericData0 = NumericData({
-            feedId: uint64(1),
+            topicId: uint64(1),
             timestamp: uint64(block.timestamp - 1 minutes),
             numericValue: 1 ether,
             extraData: ''
         });
 
         NumericData memory rawNumericData1 = NumericData({
-            feedId: uint64(1),
+            topicId: uint64(1),
             timestamp: uint64(block.timestamp - 1 minutes),
             numericValue: 2 ether,
             extraData: ''
         });
 
         NumericData memory rawNumericData2 = NumericData({
-            feedId: uint64(1),
+            topicId: uint64(1),
             timestamp: uint64(block.timestamp - 1 minutes),
             numericValue: 6 ether,
             extraData: ''
@@ -567,8 +567,8 @@ contract OracleTest is Test {
 
         MedianAggregator medianAggregator = new MedianAggregator();
 
-        vm.startPrank(feedOwner);
-        oracle.updateAggregator(feedId, medianAggregator);
+        vm.startPrank(topicOwner);
+        oracle.updateAggregator(topicId, medianAggregator);
         vm.stopPrank();
 
         numericData[0] = _signNumericData(rawNumericData0, signer0pk);
@@ -580,15 +580,15 @@ contract OracleTest is Test {
     }
 
     function test_dataFeesSplitCorrectly() public {
-        vm.startPrank(feedOwner);
-        oracle.addFeed(_getBasicFeedViewTwoDataProviders());
+        vm.startPrank(topicOwner);
+        oracle.addTopic(_getBasicTopicViewTwoDataProviders());
         vm.stopPrank();
 
         SignedNumericData[] memory numericData = new SignedNumericData[](2);
 
         numericData[0] = _signNumericData(
             NumericData({
-                feedId: 1,
+                topicId: 1,
                 timestamp: uint64(block.timestamp - 1 minutes),
                 numericValue: 1 ether,
                 extraData: ''
@@ -598,7 +598,7 @@ contract OracleTest is Test {
 
         numericData[1] = _signNumericData(
             NumericData({
-                feedId: 1,
+                topicId: 1,
                 timestamp: uint64(block.timestamp - 1 minutes),
                 numericValue: 3 ether,
                 extraData: ''
@@ -608,7 +608,7 @@ contract OracleTest is Test {
 
         oracle.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
 
-        assertEq(evenFeeHandler.feesAccrued(feedOwner), 0.2 ether);
+        assertEq(evenFeeHandler.feesAccrued(topicOwner), 0.2 ether);
 
         assertEq(evenFeeHandler.feesAccrued(signer0), 0.4 ether);
         assertEq(evenFeeHandler.feesAccrued(signer1), 0.4 ether);
@@ -616,8 +616,8 @@ contract OracleTest is Test {
     }
 
     function test_dataFeesSplitCorrectlyWithProtocol() public {
-        vm.startPrank(feedOwner);
-        oracle.addFeed(_getBasicFeedViewTwoDataProviders());
+        vm.startPrank(topicOwner);
+        oracle.addTopic(_getBasicTopicViewTwoDataProviders());
         vm.stopPrank();
 
         vm.startPrank(admin);
@@ -628,7 +628,7 @@ contract OracleTest is Test {
 
         numericData[0] = _signNumericData(
             NumericData({
-                feedId: 1,
+                topicId: 1,
                 timestamp: uint64(block.timestamp - 1 minutes),
                 numericValue: 1 ether,
                 extraData: ''
@@ -638,7 +638,7 @@ contract OracleTest is Test {
 
         numericData[1] = _signNumericData(
             NumericData({
-                feedId: 1,
+                topicId: 1,
                 timestamp: uint64(block.timestamp - 1 minutes),
                 numericValue: 3 ether,
                 extraData: ''
@@ -649,7 +649,7 @@ contract OracleTest is Test {
         oracle.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
 
         assertEq(oracle.protocolFeeReceiver().balance, 0.2 ether);
-        assertEq(evenFeeHandler.feesAccrued(feedOwner), 0.16 ether);
+        assertEq(evenFeeHandler.feesAccrued(topicOwner), 0.16 ether);
 
         assertEq(evenFeeHandler.feesAccrued(signer0), 0.32 ether);
         assertEq(evenFeeHandler.feesAccrued(signer1), 0.32 ether);
@@ -678,11 +678,11 @@ contract OracleTest is Test {
         });
     }
 
-    function _getBasicFeedView() internal view returns (FeedView memory feedView) {
-        return FeedView({
-            config: FeedConfig({
-                title: 'Initial feed',
-                owner: feedOwner,
+    function _getBasicTopicView() internal view returns (TopicView memory topicView) {
+        return TopicView({
+            config: TopicConfig({
+                title: 'Initial topic',
+                owner: topicOwner,
                 totalFee: 0.001 ether,
                 recentValueTime: 0,
                 recentValue: 0,
@@ -697,19 +697,19 @@ contract OracleTest is Test {
         });
     }
 
-    function _getBasicFeedViewNoDataProviders() internal view returns (FeedView memory feedView) {
-        feedView = _getBasicFeedView();
-        feedView.validDataProviders = emptyValidSigners;
+    function _getBasicTopicViewNoDataProviders() internal view returns (TopicView memory topicView) {
+        topicView = _getBasicTopicView();
+        topicView.validDataProviders = emptyValidSigners;
     }
 
-    function _getBasicFeedViewTwoDataProviders() internal view returns (FeedView memory feedView) {
-        feedView = _getBasicFeedView();
-        feedView.validDataProviders = twoValidSigners;
+    function _getBasicTopicViewTwoDataProviders() internal view returns (TopicView memory topicView) {
+        topicView = _getBasicTopicView();
+        topicView.validDataProviders = twoValidSigners;
     }
 
-    function _getBasicFeedViewThreeDataProviders() internal view returns (FeedView memory feedView) {
-        feedView = _getBasicFeedView();
-        feedView.validDataProviders = threeValidSigners;
+    function _getBasicTopicViewThreeDataProviders() internal view returns (TopicView memory topicView) {
+        topicView = _getBasicTopicView();
+        topicView.validDataProviders = threeValidSigners;
     }
 
     function _packageNumericData(

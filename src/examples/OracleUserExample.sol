@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import { IOracle, Feed, FeedView, UpshotOracleNumericData } from '../interface/IOracle.sol';
+import { IOracle, Topic, TopicView, UpshotOracleNumericData } from '../interface/IOracle.sol';
 import { Ownable2Step } from "../../lib/openzeppelin-contracts/contracts/access/Ownable2Step.sol";
 import { EnumerableSet } from "../../lib/openzeppelin-contracts/contracts/utils/structs/EnumerableSet.sol";
 
