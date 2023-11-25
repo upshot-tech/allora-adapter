@@ -4,7 +4,7 @@ pragma solidity ^0.8.13;
 
 import { IAggregator } from './interface/IAggregator.sol';
 import { IFeeHandler } from './interface/IFeeHandler.sol';
-import { UpshotOracleNumericData, NumericData, IOracle, Feed, FeedView } from './interface/IOracle.sol';
+import { UpshotOracleNumericData, NumericData, IOracle, Topic, TopicView } from './interface/IOracle.sol';
 import { ECDSA } from "../lib/openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
 import { Math } from "../lib/openzeppelin-contracts/contracts/utils/math/Math.sol";
 import { Ownable2Step } from "../lib/openzeppelin-contracts/contracts/access/Ownable2Step.sol";
@@ -17,11 +17,11 @@ struct OracleConstructorArgs {
 
 contract Oracle is IOracle, Ownable2Step {
 
-    /// @dev The data for each feed. Call getFeed function for access to structured data
-    mapping(uint256 feedId => Feed) internal feed;
+    /// @dev The data for each topic. Call getTopic function for access to structured data
+    mapping(uint256 topicId => Topic) internal topic;
 
-    /// @dev The next feedId to use
-    uint256 public nextFeedId = 1;
+    /// @dev The next topicId to use
+    uint256 public nextTopicId = 1;
 
     /// @dev Whether the oracle contract is switched on and usable
     bool public switchedOn = true;
@@ -45,26 +45,26 @@ contract Oracle is IOracle, Ownable2Step {
     // ***************************************************************
 
     // main interface events
-    event UpshotOracleV2OracleVerifiedData(uint256 feedId, uint256 numericData, address[] dataProviders);
+    event UpshotOracleV2OracleVerifiedData(uint256 topicId, uint256 numericData, address[] dataProviders);
     
-    // feed owner update events
-    event UpshotOracleV2FeedAdded(FeedView feedView);
-    event UpshotOracleV2OracleFeedOwnerUpdatedDataProviderQuorum(uint256 feedId, uint48 dataProviderQuorum);
-    event UpshotOracleV2OracleFeedOwnerUpdatedDataValiditySeconds(uint256 feedId, uint48 dataValiditySeconds);
-    event UpshotOracleV2OracleFeedOwnerAddedDataProvider(uint256 feedId, address dataProvider);
-    event UpshotOracleV2OracleFeedOwnerRemovedDataProvider(address dataProvider);
-    event UpshotOracleV2OracleFeedOwnerUpdatedAggregator(uint256 feedId, IAggregator aggregator);
-    event UpshotOracleV2OracleFeedOwnerUpdatedFeeHandler(uint256 feedId, IFeeHandler feeHandler);
-    event UpshotOracleV2OracleFeedOwnerUpdatedFee(uint128 totalFee);
-    event UpshotOracleV2OracleFeedOwnerUpdatedOwner(uint256 feedId, address newOwner);
-    event UpshotOracleV2OracleFeedOwnerFeedTurnedOff(uint256 feedId);
-    event UpshotOracleV2OracleFeedOwnerFeedTurnedOn(uint256 feedId);
+    // topic owner update events
+    event UpshotOracleV2TopicAdded(TopicView topicView);
+    event UpshotOracleV2OracleTopicOwnerUpdatedDataProviderQuorum(uint256 topicId, uint48 dataProviderQuorum);
+    event UpshotOracleV2OracleTopicOwnerUpdatedDataValiditySeconds(uint256 topicId, uint48 dataValiditySeconds);
+    event UpshotOracleV2OracleTopicOwnerAddedDataProvider(uint256 topicId, address dataProvider);
+    event UpshotOracleV2OracleTopicOwnerRemovedDataProvider(address dataProvider);
+    event UpshotOracleV2OracleTopicOwnerUpdatedAggregator(uint256 topicId, IAggregator aggregator);
+    event UpshotOracleV2OracleTopicOwnerUpdatedFeeHandler(uint256 topicId, IFeeHandler feeHandler);
+    event UpshotOracleV2OracleTopicOwnerUpdatedFee(uint128 totalFee);
+    event UpshotOracleV2OracleTopicOwnerUpdatedOwner(uint256 topicId, address newOwner);
+    event UpshotOracleV2OracleTopicOwnerTopicTurnedOff(uint256 topicId);
+    event UpshotOracleV2OracleTopicOwnerTopicTurnedOn(uint256 topicId);
 
     // oracle admin updates
     event UpshotOracleV2OracleAdminUpdatedProtocolFee(uint256 newProtocolFee);
     event UpshotOracleV2OracleAdminUpdatedProtocolFeeReceiver(address protocolFeeReceiver);
-    event UpshotOracleV2OracleAdminFeedTurnedOff(uint256 feedId);
-    event UpshotOracleV2OracleAdminFeedTurnedOn(uint256 feedId);
+    event UpshotOracleV2OracleAdminTopicTurnedOff(uint256 topicId);
+    event UpshotOracleV2OracleAdminTopicTurnedOn(uint256 topicId);
     event UpshotOracleV2OracleAdminOracleTurnedOff();
     event UpshotOracleV2OracleAdminOracleTurnedOn();
 
@@ -75,19 +75,19 @@ contract Oracle is IOracle, Ownable2Step {
     // verification errors
     error UpshotOracleV2NotSwitchedOn();
     error UpshotOracleV2NoDataProvided();
-    error UpshotOracleV2OwnerTurnedFeedOff();
-    error UpshotOracleV2AdminTurnedFeedOff();
+    error UpshotOracleV2OwnerTurnedTopicOff();
+    error UpshotOracleV2AdminTurnedTopicOff();
     error UpshotOracleV2InsufficientPayment();
     error UpshotOracleV2NotEnoughData();
-    error UpshotOracleV2FeedMismatch();
+    error UpshotOracleV2TopicMismatch();
     error UpshotOracleV2InvalidDataTime();
     error UpshotOracleV2InvalidDataProvider();
     error UpshotOracleV2DuplicateDataProvider();
     error UpshotOracleV2EthTransferFailed();
 
     // parameter update errors
-    error UpshotOracleV2InvalidFeedTitle();
-    error UpshotOracleV2OnlyFeedOwner();
+    error UpshotOracleV2InvalidTopicTitle();
+    error UpshotOracleV2OnlyTopicOwner();
     error UpshotOracleV2InvalidTotalFee();
     error UpshotOracleV2InvalidFeeHandler();
     error UpshotOracleV2InvalidAggregator();
@@ -113,24 +113,24 @@ contract Oracle is IOracle, Ownable2Step {
             revert UpshotOracleV2NoDataProvided();
         }
 
-        uint256 feedId = nd.signedNumericData[0].numericData.feedId;
+        uint256 topicId = nd.signedNumericData[0].numericData.topicId;
 
-        if (!feed[feedId].config.ownerSwitchedOn) {
-            revert UpshotOracleV2OwnerTurnedFeedOff();
+        if (!topic[topicId].config.ownerSwitchedOn) {
+            revert UpshotOracleV2OwnerTurnedTopicOff();
         }
 
-        if (!feed[feedId].config.adminSwitchedOn) {
-            revert UpshotOracleV2AdminTurnedFeedOff();
+        if (!topic[topicId].config.adminSwitchedOn) {
+            revert UpshotOracleV2AdminTurnedTopicOff();
         }
 
         // load once to save gas
         uint256 _protocolFee = protocolFee;
 
-        if (msg.value < feed[feedId].config.totalFee + _protocolFee) {
+        if (msg.value < topic[topicId].config.totalFee + _protocolFee) {
             revert UpshotOracleV2InsufficientPayment();
         }
 
-        if (dataCount < feed[feedId].config.dataProviderQuorum) {
+        if (dataCount < topic[topicId].config.dataProviderQuorum) {
             revert UpshotOracleV2NotEnoughData();
         }
 
@@ -141,13 +141,13 @@ contract Oracle is IOracle, Ownable2Step {
         for(uint256 i = 0; i < dataCount;) {
             numericData = nd.signedNumericData[i].numericData;
 
-            if (numericData.feedId != feedId) {
-                revert UpshotOracleV2FeedMismatch();
+            if (numericData.topicId != topicId) {
+                revert UpshotOracleV2TopicMismatch();
             }
 
             if (
                 block.timestamp < numericData.timestamp ||
-                numericData.timestamp + feed[feedId].config.dataValiditySeconds < block.timestamp
+                numericData.timestamp + topic[topicId].config.dataValiditySeconds < block.timestamp
             ) {
                 revert UpshotOracleV2InvalidDataTime();
             }
@@ -158,7 +158,7 @@ contract Oracle is IOracle, Ownable2Step {
                     nd.signedNumericData[i].signature
                 );
 
-            if (!EnumerableSet.contains(feed[feedId].validDataProviders, dataProvider)) {
+            if (!EnumerableSet.contains(topic[topicId].validDataProviders, dataProvider)) {
                 revert UpshotOracleV2InvalidDataProvider();
             }
 
@@ -181,22 +181,22 @@ contract Oracle is IOracle, Ownable2Step {
             }
         }
 
-        numericValue = feed[feedId].config.aggregator.aggregate(dataList, nd.extraData);
+        numericValue = topic[topicId].config.aggregator.aggregate(dataList, nd.extraData);
 
-        feed[feedId].config.recentValue = numericValue;
-        feed[feedId].config.recentValueTime = uint48(block.timestamp);
+        topic[topicId].config.recentValue = numericValue;
+        topic[topicId].config.recentValueTime = uint48(block.timestamp);
 
         if (_protocolFee != 0) {
             _safeTransferETH(protocolFeeReceiver, _protocolFee);
         }
 
-        feed[feedId].config.feeHandler.handleFees{value: msg.value - _protocolFee}(
-            feed[feedId].config.owner,
+        topic[topicId].config.feeHandler.handleFees{value: msg.value - _protocolFee}(
+            topic[topicId].config.owner,
             dataProviders, 
             nd.extraData
         );
 
-        emit UpshotOracleV2OracleVerifiedData(feedId, numericValue, dataProviders);
+        emit UpshotOracleV2OracleVerifiedData(topicId, numericValue, dataProviders);
     }
 
     // ***************************************************************
@@ -213,7 +213,7 @@ contract Oracle is IOracle, Ownable2Step {
     ) public view returns (bytes32) {
         return keccak256(abi.encodePacked(
             block.chainid, 
-            numericData.feedId,
+            numericData.topicId,
             numericData.timestamp,
             numericData.numericValue, 
             numericData.extraData
@@ -221,15 +221,15 @@ contract Oracle is IOracle, Ownable2Step {
     }
 
     /**
-     * @notice Get the feed data for a given feedId
+     * @notice Get the topic data for a given topicId
      * 
-     * @param feedId The feedId to get the feed data for
-     * @return feedView The feed data
+     * @param topicId The topicId to get the topic data for
+     * @return topicView The topic data
      */
-    function getFeed(uint256 feedId) external view returns (FeedView memory feedView) {
-        feedView = FeedView({
-            config: feed[feedId].config,
-            validDataProviders: EnumerableSet.values(feed[feedId].validDataProviders)
+    function getTopic(uint256 topicId) external view returns (TopicView memory topicView) {
+        topicView = TopicView({
+            config: topic[topicId].config,
+            validDataProviders: EnumerableSet.values(topic[topicId].validDataProviders)
         });
     }
 
@@ -237,13 +237,13 @@ contract Oracle is IOracle, Ownable2Step {
     // * ==================== INTERNAL HELPERS ===================== *
     // ***************************************************************
     /**
-     * @dev Modifier to check that the caller is the owner of the feed
+     * @dev Modifier to check that the caller is the owner of the topic
      * 
-     * @param feedId The feedId to validate the owner for
+     * @param topicId The topicId to validate the owner for
      */
-    modifier onlyFeedOwner(uint256 feedId) {
-        if (msg.sender != feed[feedId].config.owner) {
-            revert UpshotOracleV2OnlyFeedOwner();
+    modifier onlyTopicOwner(uint256 topicId) {
+        if (msg.sender != topic[topicId].config.owner) {
+            revert UpshotOracleV2OnlyTopicOwner();
         }
         _;
     }
@@ -281,172 +281,172 @@ contract Oracle is IOracle, Ownable2Step {
     // * ====================== FEED UPDATES ======================= *
     // ***************************************************************
     /**
-     * @notice Function to add a new feed, can be called by anyone
+     * @notice Function to add a new topic, can be called by anyone
      * 
-     * @param feedView The feed data to add
+     * @param topicView The topic data to add
      */
-    function addFeed(
-        FeedView calldata feedView
-    ) external returns (uint256 newFeedId) {
-        if (bytes(feedView.config.title).length == 0) {
-            revert UpshotOracleV2InvalidFeedTitle();
+    function addTopic(
+        TopicView calldata topicView
+    ) external returns (uint256 newTopicId) {
+        if (bytes(topicView.config.title).length == 0) {
+            revert UpshotOracleV2InvalidTopicTitle();
         }
-        newFeedId = nextFeedId++;
+        newTopicId = nextTopicId++;
 
-        feed[newFeedId].config = feedView.config;
-        feed[newFeedId].config.recentValue = 0;
-        feed[newFeedId].config.recentValueTime = 0;
+        topic[newTopicId].config = topicView.config;
+        topic[newTopicId].config.recentValue = 0;
+        topic[newTopicId].config.recentValueTime = 0;
 
-        for (uint256 i = 0; i < feedView.validDataProviders.length;) {
-            EnumerableSet.add(feed[newFeedId].validDataProviders, feedView.validDataProviders[i]);
+        for (uint256 i = 0; i < topicView.validDataProviders.length;) {
+            EnumerableSet.add(topic[newTopicId].validDataProviders, topicView.validDataProviders[i]);
 
             unchecked { ++i; }
         }
 
-        emit UpshotOracleV2FeedAdded(feedView);
+        emit UpshotOracleV2TopicAdded(topicView);
     }
 
     /**
-     * @notice Feed owner function to update the minimum number of data providers needed to verify data
+     * @notice Topic owner function to update the minimum number of data providers needed to verify data
      * 
-     * @param feedId The feedId to update the minimum number of data providers required
+     * @param topicId The topicId to update the minimum number of data providers required
      * @param dataProviderQuorum The minimum number of data providers required
      */
     function updateDataProviderQuorum(
-        uint256 feedId, 
+        uint256 topicId, 
         uint48 dataProviderQuorum
-    ) external onlyFeedOwner(feedId) {
+    ) external onlyTopicOwner(topicId) {
         if (dataProviderQuorum == 0) {
             revert UpshotOracleV2InvalidDataProviderQuorum();
         }
 
-        feed[feedId].config.dataProviderQuorum = dataProviderQuorum;
+        topic[topicId].config.dataProviderQuorum = dataProviderQuorum;
 
-        emit UpshotOracleV2OracleFeedOwnerUpdatedDataProviderQuorum(feedId, dataProviderQuorum);
+        emit UpshotOracleV2OracleTopicOwnerUpdatedDataProviderQuorum(topicId, dataProviderQuorum);
     }
 
     /**
-     * @notice Feed owner function to update the number of seconds data is valid for
+     * @notice Topic owner function to update the number of seconds data is valid for
      * 
-     * @param feedId The feedId to update the number of seconds data is valid for
+     * @param topicId The topicId to update the number of seconds data is valid for
      * @param dataValiditySeconds The number of seconds data is valid for
      */
     function updateDataValiditySeconds(
-        uint256 feedId, 
+        uint256 topicId, 
         uint48 dataValiditySeconds
-    ) external onlyFeedOwner(feedId) {
+    ) external onlyTopicOwner(topicId) {
         if (dataValiditySeconds == 0) { 
             revert UpshotOracleV2InvalidDataValiditySeconds();
         }
 
-        feed[feedId].config.dataValiditySeconds = dataValiditySeconds;
+        topic[topicId].config.dataValiditySeconds = dataValiditySeconds;
 
-        emit UpshotOracleV2OracleFeedOwnerUpdatedDataValiditySeconds(feedId, dataValiditySeconds);
+        emit UpshotOracleV2OracleTopicOwnerUpdatedDataValiditySeconds(topicId, dataValiditySeconds);
     }
 
     /**
-     * @notice Feed owner function to update the total fee
+     * @notice Topic owner function to update the total fee
      * 
-     * @param feedId The feedId to update the total fee for
+     * @param topicId The topicId to update the total fee for
      * @param totalFee The total fee to be paid per piece of data
      */
-    function updateTotalFee(uint256 feedId, uint128 totalFee) external onlyFeedOwner(feedId) {
+    function updateTotalFee(uint256 topicId, uint128 totalFee) external onlyTopicOwner(topicId) {
         if (0 < totalFee && totalFee < 1_000) {
             revert UpshotOracleV2InvalidTotalFee();
         }
-        feed[feedId].config.totalFee = totalFee;
+        topic[topicId].config.totalFee = totalFee;
 
-        emit UpshotOracleV2OracleFeedOwnerUpdatedFee(totalFee);
+        emit UpshotOracleV2OracleTopicOwnerUpdatedFee(totalFee);
     }
 
   /**
-     * @notice Feed owner function to add a data provider
+     * @notice Topic owner function to add a data provider
      * 
-     * @param feedId The feedId to add the data provider to
+     * @param topicId The topicId to add the data provider to
      * @param dataProvider The data provider to add
      */
-    function addDataProvider(uint256 feedId, address dataProvider) external onlyFeedOwner(feedId) {
-        EnumerableSet.add(feed[feedId].validDataProviders, dataProvider);
+    function addDataProvider(uint256 topicId, address dataProvider) external onlyTopicOwner(topicId) {
+        EnumerableSet.add(topic[topicId].validDataProviders, dataProvider);
 
-        emit UpshotOracleV2OracleFeedOwnerAddedDataProvider(feedId, dataProvider);
+        emit UpshotOracleV2OracleTopicOwnerAddedDataProvider(topicId, dataProvider);
     }
 
     /**
-     * @notice Feed owner function to remove a data provider
+     * @notice Topic owner function to remove a data provider
      * 
-     * @param feedId The feedId to remove the data provider from
+     * @param topicId The topicId to remove the data provider from
      * @param dataProvider the data provider to remove
      */
-    function removeDataProvider(uint256 feedId, address dataProvider) external onlyFeedOwner(feedId) {
-        EnumerableSet.remove(feed[feedId].validDataProviders, dataProvider);
+    function removeDataProvider(uint256 topicId, address dataProvider) external onlyTopicOwner(topicId) {
+        EnumerableSet.remove(topic[topicId].validDataProviders, dataProvider);
 
-        emit UpshotOracleV2OracleFeedOwnerRemovedDataProvider(dataProvider);
+        emit UpshotOracleV2OracleTopicOwnerRemovedDataProvider(dataProvider);
     }
 
     /**
-     * @notice Feed owner function to turn off a feed
+     * @notice Topic owner function to turn off a topic
      * 
-     * @param feedId The feedId of the feed to turn off
+     * @param topicId The topicId of the topic to turn off
      */
-    function turnOffFeed(uint256 feedId) external onlyFeedOwner(feedId) {
-        feed[feedId].config.ownerSwitchedOn = false;
+    function turnOffTopic(uint256 topicId) external onlyTopicOwner(topicId) {
+        topic[topicId].config.ownerSwitchedOn = false;
         
-        emit UpshotOracleV2OracleFeedOwnerFeedTurnedOff(feedId);
+        emit UpshotOracleV2OracleTopicOwnerTopicTurnedOff(topicId);
     }
 
     /**
-     * @notice Feed owner function to turn on a feed
+     * @notice Topic owner function to turn on a topic
      * 
-     * @param feedId The feedId of the feed to turn on
+     * @param topicId The topicId of the topic to turn on
      */
-    function turnOnFeed(uint256 feedId) external onlyFeedOwner(feedId) {
-        feed[feedId].config.ownerSwitchedOn = true;
+    function turnOnTopic(uint256 topicId) external onlyTopicOwner(topicId) {
+        topic[topicId].config.ownerSwitchedOn = true;
         
-        emit UpshotOracleV2OracleFeedOwnerFeedTurnedOn(feedId);
+        emit UpshotOracleV2OracleTopicOwnerTopicTurnedOn(topicId);
     }
 
     /**
-     * @notice Feed owner function to update the aggregator to use for aggregating numeric data
+     * @notice Topic owner function to update the aggregator to use for aggregating numeric data
      * 
-     * @param feedId The feedId to update the aggregator for
+     * @param topicId The topicId to update the aggregator for
      * @param aggregator The aggregator to use for aggregating numeric data
      */
-    function updateAggregator(uint256 feedId, IAggregator aggregator) external onlyFeedOwner(feedId) {
+    function updateAggregator(uint256 topicId, IAggregator aggregator) external onlyTopicOwner(topicId) {
         if (address(aggregator) == address(0)) {
             revert UpshotOracleV2InvalidAggregator();
         }
 
-        feed[feedId].config.aggregator = aggregator;
+        topic[topicId].config.aggregator = aggregator;
 
-        emit UpshotOracleV2OracleFeedOwnerUpdatedAggregator(feedId, aggregator);
+        emit UpshotOracleV2OracleTopicOwnerUpdatedAggregator(topicId, aggregator);
     }
 
     /**
-     * @notice Feed owner function to update the fee handler to use for handling fees
+     * @notice Topic owner function to update the fee handler to use for handling fees
      * 
-     * @param feedId The feedId to update the fee handler for
+     * @param topicId The topicId to update the fee handler for
      * @param feeHandler The fee handler to use for handling fees
      */
-    function updateFeeHandler(uint256 feedId, IFeeHandler feeHandler) external onlyFeedOwner(feedId) {
+    function updateFeeHandler(uint256 topicId, IFeeHandler feeHandler) external onlyTopicOwner(topicId) {
         if (address(feeHandler) == address(0)) {
             revert UpshotOracleV2InvalidFeeHandler();
         }
 
-        feed[feedId].config.feeHandler = feeHandler;
+        topic[topicId].config.feeHandler = feeHandler;
 
-        emit UpshotOracleV2OracleFeedOwnerUpdatedFeeHandler(feedId, feeHandler);
+        emit UpshotOracleV2OracleTopicOwnerUpdatedFeeHandler(topicId, feeHandler);
     } 
 
     /**
-     * @notice Feed owner function to update the owner of the feed 
+     * @notice Topic owner function to update the owner of the topic 
      * 
-     * @param feedId The feedId to update the fee handler for
-     * @param owner_ The new owner of the feed
+     * @param topicId The topicId to update the fee handler for
+     * @param owner_ The new owner of the topic
      */
-    function updateFeedOwner(uint256 feedId, address owner_) external onlyFeedOwner(feedId) {
-        feed[feedId].config.owner = owner_;
+    function updateTopicOwner(uint256 topicId, address owner_) external onlyTopicOwner(topicId) {
+        topic[topicId].config.owner = owner_;
 
-        emit UpshotOracleV2OracleFeedOwnerUpdatedOwner(feedId, owner_);
+        emit UpshotOracleV2OracleTopicOwnerUpdatedOwner(topicId, owner_);
     } 
 
     // ***************************************************************
@@ -471,25 +471,25 @@ contract Oracle is IOracle, Ownable2Step {
     }
     
     /**
-     * @notice Admin function to turn off a feed
+     * @notice Admin function to turn off a topic
      * 
-     * @param feedId The feedId of the feed to turn off
+     * @param topicId The topicId of the topic to turn off
      */
-    function adminTurnOffFeed(uint256 feedId) external onlyOwner {
-        feed[feedId].config.adminSwitchedOn = false;
+    function adminTurnOffTopic(uint256 topicId) external onlyOwner {
+        topic[topicId].config.adminSwitchedOn = false;
         
-        emit UpshotOracleV2OracleAdminFeedTurnedOff(feedId);
+        emit UpshotOracleV2OracleAdminTopicTurnedOff(topicId);
     }
 
     /**
-     * @notice Admin function to turn on a feed
+     * @notice Admin function to turn on a topic
      * 
-     * @param feedId The feedId of the feed to turn on
+     * @param topicId The topicId of the topic to turn on
      */
-    function adminTurnOnFeed(uint256 feedId) external onlyOwner {
-        feed[feedId].config.adminSwitchedOn = true;
+    function adminTurnOnTopic(uint256 topicId) external onlyOwner {
+        topic[topicId].config.adminSwitchedOn = true;
         
-        emit UpshotOracleV2OracleAdminFeedTurnedOn(feedId);
+        emit UpshotOracleV2OracleAdminTopicTurnedOn(topicId);
     }
 
     /**

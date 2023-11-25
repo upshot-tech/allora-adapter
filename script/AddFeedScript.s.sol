@@ -4,7 +4,7 @@ pragma solidity 0.8.21;
 import '../lib/forge-std/src/Script.sol';
 
 import { Oracle } from '../src/Oracle.sol';
-import { FeedConfig, FeedView } from '../src/interface/IOracle.sol';
+import { TopicConfig, TopicView } from '../src/interface/IOracle.sol';
 import { IAggregator } from '../src/interface/IAggregator.sol';
 import { IFeeHandler } from '../src/interface/IFeeHandler.sol';
 import { NumericData } from '../src/interface/IOracle.sol';
@@ -12,10 +12,10 @@ import { ECDSA } from '../lib/openzeppelin-contracts/contracts/utils/cryptograph
 
 
 // run with 
-// forge script ./script/AddFeedScript.s.sol:AddFeedScript --rpc-url <rpc url> --broadcast --verify -vvvv
+// forge script ./script/AddTopicScript.s.sol:AddTopicScript --rpc-url <rpc url> --broadcast --verify -vvvv
 
 
-contract AddFeedScript is Script {
+contract AddTopicScript is Script {
     function run() public virtual {
         uint256 scriptRunnerPrivateKey = vm.envUint('SCRIPT_RUNNER_PRIVATE_KEY');
         address scriptRunner = vm.addr(scriptRunnerPrivateKey);
@@ -24,7 +24,7 @@ contract AddFeedScript is Script {
         vm.startBroadcast(scriptRunnerPrivateKey);
         console.log('Broadcast started by %s', scriptRunner);
 
-        FeedConfig memory feedConfig = FeedConfig({
+        TopicConfig memory topicConfig = TopicConfig({
             title: 'HACKER FEED',
             owner: scriptRunner,
             totalFee: 0.01 ether,
@@ -41,12 +41,12 @@ contract AddFeedScript is Script {
         address[] memory validDataProviders = new address[](1);
         validDataProviders[0] = address(0xe3ceD0F62F7EB2856D37bEd128D2B195712d2644);
 
-        FeedView memory feedView = FeedView({
-            config: feedConfig,
+        TopicView memory topicView = TopicView({
+            config: topicConfig,
             validDataProviders: validDataProviders
         });
 
-        oracle.addFeed(feedView);
+        oracle.addTopic(topicView);
 
         vm.stopBroadcast();
     }
