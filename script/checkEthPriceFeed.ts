@@ -5,7 +5,7 @@ import { UpshotAdapter } from '../types/UpshotAdapter'
 import { ethers } from 'ethers';
 import * as dotenv from 'dotenv';
 
-const UPSHOT_ADAPTER_ADDRESS = '0x091Db6CB55773F6D60Eaffd0060bd79021A5F6A2'
+const UPSHOT_ADAPTER_ADDRESS = '0xdD3C703221c7F00Fe0E2d8cdb5403ca7760CDd4c'
 const ETH_PRICE_FEED_TOPIC = 2
 const DUMMY_PRIVATE_KEY = '0x0123456789012345678901234567890123456789012345678901234567890123'
 

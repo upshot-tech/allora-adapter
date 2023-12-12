@@ -19,7 +19,7 @@ contract AddTopicScript is Script {
     function run() public virtual {
         uint256 scriptRunnerPrivateKey = vm.envUint('SCRIPT_RUNNER_PRIVATE_KEY');
         address scriptRunner = vm.addr(scriptRunnerPrivateKey);
-        UpshotAdapter upshotAdapter = UpshotAdapter(0x091Db6CB55773F6D60Eaffd0060bd79021A5F6A2);
+        UpshotAdapter upshotAdapter = UpshotAdapter(0xdD3C703221c7F00Fe0E2d8cdb5403ca7760CDd4c);
 
         vm.startBroadcast(scriptRunnerPrivateKey);
         console.log('Broadcast started by %s', scriptRunner);

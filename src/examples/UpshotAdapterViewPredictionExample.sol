@@ -2,7 +2,6 @@
 pragma solidity ^0.8.13;
 
 import { IUpshotAdapter, Topic, TopicView, TopicConfig, UpshotAdapterNumericData } from '../interface/IUpshotAdapter.sol';
-import { UpshotAdapter } from '../UpshotAdapter.sol';
 import { Ownable2Step } from "../../lib/openzeppelin-contracts/contracts/access/Ownable2Step.sol";
 import { EnumerableSet } from "../../lib/openzeppelin-contracts/contracts/utils/structs/EnumerableSet.sol";
 
@@ -14,7 +13,7 @@ import { EnumerableSet } from "../../lib/openzeppelin-contracts/contracts/utils/
 contract UpshotAdapterViewPredictionExample is Ownable2Step {
 
     // Sepolia adapter Address
-    UpshotAdapter public upshotAdapter = UpshotAdapter(0x091Db6CB55773F6D60Eaffd0060bd79021A5F6A2);
+    IUpshotAdapter public upshotAdapter = IUpshotAdapter(0xdD3C703221c7F00Fe0E2d8cdb5403ca7760CDd4c);
 
     constructor () {
         _transferOwnership(msg.sender);
@@ -48,7 +47,7 @@ contract UpshotAdapterViewPredictionExample is Ownable2Step {
      * 
      * @param upshotAdapter_ The UpshotAdapter contract address
      */
-    function setUpshotAdapterContract(UpshotAdapter upshotAdapter_) external onlyOwner {
+    function setUpshotAdapterContract(IUpshotAdapter upshotAdapter_) external onlyOwner {
         upshotAdapter = upshotAdapter_;
     }
 }

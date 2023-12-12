@@ -70,4 +70,13 @@ interface IUpshotAdapter {
      * @param pd The numeric data to aggregate
      */
     function verifyData(UpshotAdapterNumericData calldata pd) external payable returns (uint256 numericValue);
+
+    /**
+     * @notice Get the topic data for a given topicId
+     * 
+     * @param topicId The topicId to get the topic data for
+     * @return topicView The topic data
+     */
+    function getTopic(uint256 topicId) external view returns (TopicView memory topicView);
+
 }

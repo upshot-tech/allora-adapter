@@ -13,7 +13,7 @@ import { EnumerableSet } from "../../lib/openzeppelin-contracts/contracts/utils/
 contract UpshotAdapterBringPredictionOnChainExample is Ownable2Step {
 
     // Sepolia adapter Address
-    IUpshotAdapter public upshotAdapter = IUpshotAdapter(0x091Db6CB55773F6D60Eaffd0060bd79021A5F6A2);
+    IUpshotAdapter public upshotAdapter = IUpshotAdapter(0xdD3C703221c7F00Fe0E2d8cdb5403ca7760CDd4c);
 
     constructor () {
         _transferOwnership(msg.sender);

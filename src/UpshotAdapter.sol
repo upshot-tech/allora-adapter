@@ -226,7 +226,7 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step {
      * @param topicId The topicId to get the topic data for
      * @return topicView The topic data
      */
-    function getTopic(uint256 topicId) external view returns (TopicView memory topicView) {
+    function getTopic(uint256 topicId) external view override returns (TopicView memory topicView) {
         topicView = TopicView({
             config: topic[topicId].config,
             validDataProviders: EnumerableSet.values(topic[topicId].validDataProviders)
