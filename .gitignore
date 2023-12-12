@@ -1,7 +1,6 @@
 # Compiler files
 cache/
 out/
-types/
 node_modules/
 
 # Gas snapshot
