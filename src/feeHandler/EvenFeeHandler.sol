@@ -21,17 +21,17 @@ contract EvenFeeHandler is IFeeHandler, Ownable2Step {
     // * ========================= EVENTS ========================== *
     // ***************************************************************
 
-    event UpshotOracleV2EvenFeeHandlerFeesHandled(uint256 fee, address[] feeReceivers);
-    event UpshotOracleV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortion(uint256 feedOwnerPortion);
-    event UpshotOracleV2EvenFeeHandlerFeesClaimed(address claimer, uint256 fees);
+    event UpshotAdapterV2EvenFeeHandlerFeesHandled(uint256 fee, address[] feeReceivers);
+    event UpshotAdapterV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortion(uint256 feedOwnerPortion);
+    event UpshotAdapterV2EvenFeeHandlerFeesClaimed(address claimer, uint256 fees);
 
     // ***************************************************************
     // * ========================= ERRORS ========================== *
     // ***************************************************************
 
-    error UpshotOracleV2EvenFeeHandlerEthTransferFailed();
-    error UpshotOracleV2EvenFeeHandlerFeeTooLow();
-    error UpshotOracleV2EvenFeeHandlerInvalidFeedOwnerFeePortion();
+    error UpshotAdapterV2EvenFeeHandlerEthTransferFailed();
+    error UpshotAdapterV2EvenFeeHandlerFeeTooLow();
+    error UpshotAdapterV2EvenFeeHandlerInvalidFeedOwnerFeePortion();
 
     constructor(
         EvenFeeHandlerConstructorArgs memory args
@@ -52,7 +52,7 @@ contract EvenFeeHandler is IFeeHandler, Ownable2Step {
         }
 
         if (fee < 1_000) {
-            revert UpshotOracleV2EvenFeeHandlerFeeTooLow();
+            revert UpshotAdapterV2EvenFeeHandlerFeeTooLow();
         }
 
         // load once to save gas
@@ -71,7 +71,7 @@ contract EvenFeeHandler is IFeeHandler, Ownable2Step {
             }
         }
 
-        emit UpshotOracleV2EvenFeeHandlerFeesHandled(fee, feeReceivers);
+        emit UpshotAdapterV2EvenFeeHandlerFeesHandled(fee, feeReceivers);
     }
 
     /**
@@ -83,7 +83,7 @@ contract EvenFeeHandler is IFeeHandler, Ownable2Step {
 
         _safeTransferETH(msg.sender, feesOwed);
 
-        emit UpshotOracleV2EvenFeeHandlerFeesClaimed(msg.sender, feesOwed);
+        emit UpshotAdapterV2EvenFeeHandlerFeesClaimed(msg.sender, feesOwed);
     }
 
     
@@ -99,7 +99,7 @@ contract EvenFeeHandler is IFeeHandler, Ownable2Step {
     function _safeTransferETH(address to, uint256 value) internal {
         (bool success, ) = to.call{value: value}(new bytes(0));
         if (!success) {
-            revert UpshotOracleV2EvenFeeHandlerEthTransferFailed();
+            revert UpshotAdapterV2EvenFeeHandlerEthTransferFailed();
         }
     }
 
@@ -114,11 +114,11 @@ contract EvenFeeHandler is IFeeHandler, Ownable2Step {
      */
     function updateFeedOwnerPortion(uint256 feedOwnerPortion_) external onlyOwner {
         if (feedOwnerPortion_ > 1 ether) {
-            revert UpshotOracleV2EvenFeeHandlerInvalidFeedOwnerFeePortion();
+            revert UpshotAdapterV2EvenFeeHandlerInvalidFeedOwnerFeePortion();
         }
 
         feedOwnerPortion = feedOwnerPortion_;
 
-        emit UpshotOracleV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortion(feedOwnerPortion_);
+        emit UpshotAdapterV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortion(feedOwnerPortion_);
     }
 }

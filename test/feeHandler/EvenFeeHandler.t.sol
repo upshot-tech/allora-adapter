@@ -95,7 +95,7 @@ contract EvenFeeHandlerTest is Test {
         feeReceivers[2] = address(3);
         feeReceivers[3] = address(4);
 
-        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2EvenFeeHandlerFeeTooLow()"));
+        vm.expectRevert(abi.encodeWithSignature("UpshotAdapterV2EvenFeeHandlerFeeTooLow()"));
         evenFeeHandler.handleFees{value: 50}(feedOwner, feeReceivers, "");
     }
 
@@ -130,7 +130,7 @@ contract EvenFeeHandlerTest is Test {
     function test_ownerCantUpdateFeedOwnerFeePortionToInvalidValue() public {
         vm.startPrank(admin);
 
-        vm.expectRevert(abi.encodeWithSignature("UpshotOracleV2EvenFeeHandlerInvalidFeedOwnerFeePortion()"));
+        vm.expectRevert(abi.encodeWithSignature("UpshotAdapterV2EvenFeeHandlerInvalidFeedOwnerFeePortion()"));
         evenFeeHandler.updateFeedOwnerPortion(1.1 ether);
     }
 

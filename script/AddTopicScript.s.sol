@@ -3,11 +3,11 @@ pragma solidity 0.8.21;
 
 import '../lib/forge-std/src/Script.sol';
 
-import { Oracle } from '../src/Oracle.sol';
-import { TopicConfig, TopicView } from '../src/interface/IOracle.sol';
+import { UpshotAdapter } from '../src/UpshotAdapter.sol';
+import { TopicConfig, TopicView } from '../src/interface/IUpshotAdapter.sol';
 import { IAggregator } from '../src/interface/IAggregator.sol';
 import { IFeeHandler } from '../src/interface/IFeeHandler.sol';
-import { NumericData } from '../src/interface/IOracle.sol';
+import { NumericData } from '../src/interface/IUpshotAdapter.sol';
 import { ECDSA } from '../lib/openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol';
 
 
@@ -19,7 +19,7 @@ contract AddTopicScript is Script {
     function run() public virtual {
         uint256 scriptRunnerPrivateKey = vm.envUint('SCRIPT_RUNNER_PRIVATE_KEY');
         address scriptRunner = vm.addr(scriptRunnerPrivateKey);
-        Oracle oracle = Oracle(0x091Db6CB55773F6D60Eaffd0060bd79021A5F6A2);
+        UpshotAdapter upshotAdapter = UpshotAdapter(0x091Db6CB55773F6D60Eaffd0060bd79021A5F6A2);
 
         vm.startBroadcast(scriptRunnerPrivateKey);
         console.log('Broadcast started by %s', scriptRunner);
@@ -46,7 +46,7 @@ contract AddTopicScript is Script {
             validDataProviders: validDataProviders
         });
 
-        oracle.addTopic(topicView);
+        upshotAdapter.addTopic(topicView);
 
         vm.stopBroadcast();
     }

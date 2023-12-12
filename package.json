@@ -1,7 +1,7 @@
 {
-  "name": "upshot-oracle-v2",
+  "name": "upshot-adapter-v2",
   "version": "0.0.1",
-  "description": "Upshot Oracle V2",
+  "description": "Upshot Adapter V2",
   "main": "index.js",
   "repository": "https://github.com/upshot-tech/upshot-oracle-v2.git",
   "author": "br4e <milesminton@gmail.com>",

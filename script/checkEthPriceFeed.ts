@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: BUSL-1.1
 
-import { Oracle__factory } from '../types/factories/Oracle__factory'
-import { Oracle } from '../types/Oracle'
+import { UpshotAdapter__factory } from '../types/factories/UpshotAdapter__factory'
+import { UpshotAdapter } from '../types/UpshotAdapter'
 import { ethers } from 'ethers';
 import * as dotenv from 'dotenv';
 
-const ORACLE_ADDRESS = '0x091Db6CB55773F6D60Eaffd0060bd79021A5F6A2'
+const UPSHOT_ADAPTER_ADDRESS = '0x091Db6CB55773F6D60Eaffd0060bd79021A5F6A2'
 const ETH_PRICE_FEED_TOPIC = 2
 const DUMMY_PRIVATE_KEY = '0x0123456789012345678901234567890123456789012345678901234567890123'
 
@@ -15,8 +15,8 @@ const run = async () => {
   const provider = new ethers.JsonRpcProvider(getEnvVariable('rpcUrl'))
   const wallet = new ethers.Wallet(DUMMY_PRIVATE_KEY, provider)
 
-  const oracle = (new Oracle__factory()).attach(ORACLE_ADDRESS).connect(wallet) as Oracle
-  const result = await oracle.getTopic(ETH_PRICE_FEED_TOPIC)
+  const upshotAdapter = (new UpshotAdapter__factory()).attach(UPSHOT_ADAPTER_ADDRESS).connect(wallet) as UpshotAdapter
+  const result = await upshotAdapter.getTopic(ETH_PRICE_FEED_TOPIC)
   console.info({
     value: result.config.recentValue,
     timestamp: result.config.recentValueTime,

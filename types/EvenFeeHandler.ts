@@ -48,9 +48,9 @@ export interface EvenFeeHandlerInterface extends Interface {
     nameOrSignatureOrTopic:
       | "OwnershipTransferStarted"
       | "OwnershipTransferred"
-      | "UpshotOracleV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortion"
-      | "UpshotOracleV2EvenFeeHandlerFeesClaimed"
-      | "UpshotOracleV2EvenFeeHandlerFeesHandled"
+      | "UpshotAdapterV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortion"
+      | "UpshotAdapterV2EvenFeeHandlerFeesClaimed"
+      | "UpshotAdapterV2EvenFeeHandlerFeesHandled"
   ): EventFragment;
 
   encodeFunctionData(
@@ -147,7 +147,7 @@ export namespace OwnershipTransferredEvent {
   export type LogDescription = TypedLogDescription<Event>;
 }
 
-export namespace UpshotOracleV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortionEvent {
+export namespace UpshotAdapterV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortionEvent {
   export type InputTuple = [feedOwnerPortion: BigNumberish];
   export type OutputTuple = [feedOwnerPortion: bigint];
   export interface OutputObject {
@@ -159,7 +159,7 @@ export namespace UpshotOracleV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortionEven
   export type LogDescription = TypedLogDescription<Event>;
 }
 
-export namespace UpshotOracleV2EvenFeeHandlerFeesClaimedEvent {
+export namespace UpshotAdapterV2EvenFeeHandlerFeesClaimedEvent {
   export type InputTuple = [claimer: AddressLike, fees: BigNumberish];
   export type OutputTuple = [claimer: string, fees: bigint];
   export interface OutputObject {
@@ -172,7 +172,7 @@ export namespace UpshotOracleV2EvenFeeHandlerFeesClaimedEvent {
   export type LogDescription = TypedLogDescription<Event>;
 }
 
-export namespace UpshotOracleV2EvenFeeHandlerFeesHandledEvent {
+export namespace UpshotAdapterV2EvenFeeHandlerFeesHandledEvent {
   export type InputTuple = [fee: BigNumberish, feeReceivers: AddressLike[]];
   export type OutputTuple = [fee: bigint, feeReceivers: string[]];
   export interface OutputObject {
@@ -322,25 +322,25 @@ export interface EvenFeeHandler extends BaseContract {
     OwnershipTransferredEvent.OutputObject
   >;
   getEvent(
-    key: "UpshotOracleV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortion"
+    key: "UpshotAdapterV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortion"
   ): TypedContractEvent<
-    UpshotOracleV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortionEvent.InputTuple,
-    UpshotOracleV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortionEvent.OutputTuple,
-    UpshotOracleV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortionEvent.OutputObject
+    UpshotAdapterV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortionEvent.InputTuple,
+    UpshotAdapterV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortionEvent.OutputTuple,
+    UpshotAdapterV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortionEvent.OutputObject
   >;
   getEvent(
-    key: "UpshotOracleV2EvenFeeHandlerFeesClaimed"
+    key: "UpshotAdapterV2EvenFeeHandlerFeesClaimed"
   ): TypedContractEvent<
-    UpshotOracleV2EvenFeeHandlerFeesClaimedEvent.InputTuple,
-    UpshotOracleV2EvenFeeHandlerFeesClaimedEvent.OutputTuple,
-    UpshotOracleV2EvenFeeHandlerFeesClaimedEvent.OutputObject
+    UpshotAdapterV2EvenFeeHandlerFeesClaimedEvent.InputTuple,
+    UpshotAdapterV2EvenFeeHandlerFeesClaimedEvent.OutputTuple,
+    UpshotAdapterV2EvenFeeHandlerFeesClaimedEvent.OutputObject
   >;
   getEvent(
-    key: "UpshotOracleV2EvenFeeHandlerFeesHandled"
+    key: "UpshotAdapterV2EvenFeeHandlerFeesHandled"
   ): TypedContractEvent<
-    UpshotOracleV2EvenFeeHandlerFeesHandledEvent.InputTuple,
-    UpshotOracleV2EvenFeeHandlerFeesHandledEvent.OutputTuple,
-    UpshotOracleV2EvenFeeHandlerFeesHandledEvent.OutputObject
+    UpshotAdapterV2EvenFeeHandlerFeesHandledEvent.InputTuple,
+    UpshotAdapterV2EvenFeeHandlerFeesHandledEvent.OutputTuple,
+    UpshotAdapterV2EvenFeeHandlerFeesHandledEvent.OutputObject
   >;
 
   filters: {
@@ -366,37 +366,37 @@ export interface EvenFeeHandler extends BaseContract {
       OwnershipTransferredEvent.OutputObject
     >;
 
-    "UpshotOracleV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortion(uint256)": TypedContractEvent<
-      UpshotOracleV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortionEvent.InputTuple,
-      UpshotOracleV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortionEvent.OutputTuple,
-      UpshotOracleV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortionEvent.OutputObject
+    "UpshotAdapterV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortion(uint256)": TypedContractEvent<
+      UpshotAdapterV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortionEvent.InputTuple,
+      UpshotAdapterV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortionEvent.OutputTuple,
+      UpshotAdapterV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortionEvent.OutputObject
     >;
-    UpshotOracleV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortion: TypedContractEvent<
-      UpshotOracleV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortionEvent.InputTuple,
-      UpshotOracleV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortionEvent.OutputTuple,
-      UpshotOracleV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortionEvent.OutputObject
-    >;
-
-    "UpshotOracleV2EvenFeeHandlerFeesClaimed(address,uint256)": TypedContractEvent<
-      UpshotOracleV2EvenFeeHandlerFeesClaimedEvent.InputTuple,
-      UpshotOracleV2EvenFeeHandlerFeesClaimedEvent.OutputTuple,
-      UpshotOracleV2EvenFeeHandlerFeesClaimedEvent.OutputObject
-    >;
-    UpshotOracleV2EvenFeeHandlerFeesClaimed: TypedContractEvent<
-      UpshotOracleV2EvenFeeHandlerFeesClaimedEvent.InputTuple,
-      UpshotOracleV2EvenFeeHandlerFeesClaimedEvent.OutputTuple,
-      UpshotOracleV2EvenFeeHandlerFeesClaimedEvent.OutputObject
+    UpshotAdapterV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortion: TypedContractEvent<
+      UpshotAdapterV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortionEvent.InputTuple,
+      UpshotAdapterV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortionEvent.OutputTuple,
+      UpshotAdapterV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortionEvent.OutputObject
     >;
 
-    "UpshotOracleV2EvenFeeHandlerFeesHandled(uint256,address[])": TypedContractEvent<
-      UpshotOracleV2EvenFeeHandlerFeesHandledEvent.InputTuple,
-      UpshotOracleV2EvenFeeHandlerFeesHandledEvent.OutputTuple,
-      UpshotOracleV2EvenFeeHandlerFeesHandledEvent.OutputObject
+    "UpshotAdapterV2EvenFeeHandlerFeesClaimed(address,uint256)": TypedContractEvent<
+      UpshotAdapterV2EvenFeeHandlerFeesClaimedEvent.InputTuple,
+      UpshotAdapterV2EvenFeeHandlerFeesClaimedEvent.OutputTuple,
+      UpshotAdapterV2EvenFeeHandlerFeesClaimedEvent.OutputObject
     >;
-    UpshotOracleV2EvenFeeHandlerFeesHandled: TypedContractEvent<
-      UpshotOracleV2EvenFeeHandlerFeesHandledEvent.InputTuple,
-      UpshotOracleV2EvenFeeHandlerFeesHandledEvent.OutputTuple,
-      UpshotOracleV2EvenFeeHandlerFeesHandledEvent.OutputObject
+    UpshotAdapterV2EvenFeeHandlerFeesClaimed: TypedContractEvent<
+      UpshotAdapterV2EvenFeeHandlerFeesClaimedEvent.InputTuple,
+      UpshotAdapterV2EvenFeeHandlerFeesClaimedEvent.OutputTuple,
+      UpshotAdapterV2EvenFeeHandlerFeesClaimedEvent.OutputObject
+    >;
+
+    "UpshotAdapterV2EvenFeeHandlerFeesHandled(uint256,address[])": TypedContractEvent<
+      UpshotAdapterV2EvenFeeHandlerFeesHandledEvent.InputTuple,
+      UpshotAdapterV2EvenFeeHandlerFeesHandledEvent.OutputTuple,
+      UpshotAdapterV2EvenFeeHandlerFeesHandledEvent.OutputObject
+    >;
+    UpshotAdapterV2EvenFeeHandlerFeesHandled: TypedContractEvent<
+      UpshotAdapterV2EvenFeeHandlerFeesHandledEvent.InputTuple,
+      UpshotAdapterV2EvenFeeHandlerFeesHandledEvent.OutputTuple,
+      UpshotAdapterV2EvenFeeHandlerFeesHandledEvent.OutputObject
     >;
   };
 }

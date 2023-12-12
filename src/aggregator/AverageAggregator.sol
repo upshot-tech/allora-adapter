@@ -13,7 +13,7 @@ contract AverageAggregator is IAggregator {
     // * ========================= ERRORS ========================== *
     // ***************************************************************
 
-    error UpshotOracleV2AverageAggregatorNoValuesToAggregate();
+    error UpshotAdapterV2AverageAggregatorNoValuesToAggregate();
 
     // ***************************************************************
     // * ===================== USER INTERFACE ====================== *
@@ -26,7 +26,7 @@ contract AverageAggregator is IAggregator {
     ) external pure returns (uint256 value) {
         uint256 countValues = values.length;
         if (countValues == 0) {
-            revert UpshotOracleV2AverageAggregatorNoValuesToAggregate();
+            revert UpshotAdapterV2AverageAggregatorNoValuesToAggregate();
         }
 
         uint256 sum = 0;

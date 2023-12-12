@@ -762,9 +762,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"upshot-oracle-v2@workspace:.":
+"upshot-adapter-v2@workspace:.":
   version: 0.0.0-use.local
-  resolution: "upshot-oracle-v2@workspace:."
+  resolution: "upshot-adapter-v2@workspace:."
   dependencies:
     "@typechain/ethers-v6": ^0.5.0
     axios: ^1.6.0
