@@ -30,10 +30,10 @@ contract AddTopicScript is Script {
             totalFee: 0 ether,
             recentValueTime: 0,
             recentValue: 0,
-            aggregator: IAggregator(0xd7DbA19fEa80d79d647eA92C3B6B011A6Ef6FDf6),
+            aggregator: IAggregator(0xBaCEc2F23E0155a8393d75b1be0669Da2Fb66150),
             ownerSwitchedOn: true,
             adminSwitchedOn: true,
-            feeHandler: IFeeHandler(0xA9D209191Ef18ab7EA51766ed1C6dd0EB06520C5),
+            feeHandler: IFeeHandler(0x438f0B559297a95395F6B76f76f5575d30a87878),
             dataProviderQuorum: 1,
             dataValiditySeconds: 1 hours
         });
