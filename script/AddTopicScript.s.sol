@@ -10,9 +10,8 @@ import { IFeeHandler } from '../src/interface/IFeeHandler.sol';
 import { NumericData } from '../src/interface/IUpshotAdapter.sol';
 import { ECDSA } from '../lib/openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol';
 
-
 // run with 
-// forge script ./script/AddTopicScript.s.sol:AddTopicScript --rpc-url <rpc url> --broadcast --verify -vvvv
+// forge script ./script/AddTopicScript.s.sol:AddTopicScript --rpc-url <rpc url> --etherscan-api-key <etherscan api key> --broadcast --verify -vvvv
 
 
 contract AddTopicScript is Script {
@@ -46,7 +45,8 @@ contract AddTopicScript is Script {
             validDataProviders: validDataProviders
         });
 
-        upshotAdapter.addTopic(topicView);
+        uint256 topicId = upshotAdapter.addTopic(topicView);
+        console.log('Topic generated with id %s', topicId);
 
         vm.stopBroadcast();
     }
