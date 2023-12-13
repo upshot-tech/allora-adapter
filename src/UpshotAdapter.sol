@@ -8,6 +8,7 @@ import { UpshotAdapterNumericData, NumericData, IUpshotAdapter, Topic, TopicView
 import { ECDSA } from "../lib/openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
 import { Math } from "../lib/openzeppelin-contracts/contracts/utils/math/Math.sol";
 import { Ownable2Step } from "../lib/openzeppelin-contracts/contracts/access/Ownable2Step.sol";
+import { EIP712 } from "../lib/openzeppelin-contracts/contracts/utils/cryptography/EIP712.sol";
 import { EnumerableSet } from "../lib/openzeppelin-contracts/contracts/utils/structs/EnumerableSet.sol";
 
 struct UpshotAdapterConstructorArgs {
@@ -15,7 +16,7 @@ struct UpshotAdapterConstructorArgs {
     address protocolFeeReceiver;
 }
 
-contract UpshotAdapter is IUpshotAdapter, Ownable2Step {
+contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
 
     /// @dev The data for each topic. Call getTopic function for access to structured data
     mapping(uint256 topicId => Topic) internal topic;
@@ -32,9 +33,13 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step {
     /// @dev the address that receives the protocol fee
     address public protocolFeeReceiver;
 
-    constructor(
-        UpshotAdapterConstructorArgs memory args
-    ) {
+    bytes32 public constant NUMERIC_DATA_TYPEHASH = keccak256(
+        "NumericData(uint256 topicId,uint256 timestamp,uint256 numericValue,bytes extraData)"
+    );
+
+    constructor(UpshotAdapterConstructorArgs memory args) 
+        EIP712("UpshotAdapter", "1") 
+    {
         _transferOwnership(args.admin);
 
         _setProtocolFeeReceiver(args.protocolFeeReceiver);
@@ -152,11 +157,10 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step {
                 revert UpshotAdapterV2InvalidDataTime();
             }
 
-            address dataProvider =
-                ECDSA.recover(
-                    ECDSA.toEthSignedMessageHash(getMessage(numericData)),
-                    nd.signedNumericData[i].signature
-                );
+            address dataProvider = ECDSA.recover(
+                getMessage(numericData), 
+                nd.signedNumericData[i].signature
+            );
 
             if (!EnumerableSet.contains(topic[topicId].validDataProviders, dataProvider)) {
                 revert UpshotAdapterV2InvalidDataProvider();
@@ -211,13 +215,13 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step {
     function getMessage(
         NumericData calldata numericData
     ) public view returns (bytes32) {
-        return keccak256(abi.encodePacked(
-            block.chainid, 
+        return _hashTypedDataV4(keccak256(abi.encode(
+            NUMERIC_DATA_TYPEHASH,
             numericData.topicId,
             numericData.timestamp,
-            numericData.numericValue, 
+            numericData.numericValue,
             numericData.extraData
-        ));
+        )));
     }
 
     /**
