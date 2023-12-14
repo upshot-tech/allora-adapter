@@ -12,8 +12,8 @@ pragma solidity ^0.8.0;
 // ***************************************************************
 
 struct NumericData {
-    uint64 topicId;
-    uint64 timestamp;
+    uint256 topicId;
+    uint256 timestamp;
     uint256 numericValue; 
     bytes extraData;
 }

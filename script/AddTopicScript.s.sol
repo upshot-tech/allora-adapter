@@ -18,21 +18,21 @@ contract AddTopicScript is Script {
     function run() public virtual {
         uint256 scriptRunnerPrivateKey = vm.envUint('SCRIPT_RUNNER_PRIVATE_KEY');
         address scriptRunner = vm.addr(scriptRunnerPrivateKey);
-        UpshotAdapter upshotAdapter = UpshotAdapter(0xdD3C703221c7F00Fe0E2d8cdb5403ca7760CDd4c);
+        UpshotAdapter upshotAdapter = UpshotAdapter(0x766662c5078515A9D22A71ab695206aCD18dD44C);
 
         vm.startBroadcast(scriptRunnerPrivateKey);
         console.log('Broadcast started by %s', scriptRunner);
 
         TopicConfig memory topicConfig = TopicConfig({
-            title: 'Eth/USD Price feed',
+            title: 'Eth/USD Price feed, 18 decimals',
             owner: scriptRunner,
             totalFee: 0 ether,
             recentValueTime: 0,
             recentValue: 0,
-            aggregator: IAggregator(0xBaCEc2F23E0155a8393d75b1be0669Da2Fb66150),
+            aggregator: IAggregator(0xdC31B5eA06389A124ff3cFBD71fdC35DA5A64f47),
             ownerSwitchedOn: true,
             adminSwitchedOn: true,
-            feeHandler: IFeeHandler(0x438f0B559297a95395F6B76f76f5575d30a87878),
+            feeHandler: IFeeHandler(0xeD3b6e434eBd994Ff42Bc1088fB062f8faa4f893),
             dataProviderQuorum: 1,
             dataValiditySeconds: 1 hours
         });

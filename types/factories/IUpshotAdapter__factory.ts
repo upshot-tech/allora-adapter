@@ -10,69 +10,157 @@ import type {
 
 const _abi = [
   {
+    type: "function",
+    name: "getTopic",
     inputs: [
       {
-        components: [
-          {
-            components: [
-              {
-                internalType: "bytes",
-                name: "signature",
-                type: "bytes",
-              },
-              {
-                components: [
-                  {
-                    internalType: "uint64",
-                    name: "topicId",
-                    type: "uint64",
-                  },
-                  {
-                    internalType: "uint64",
-                    name: "timestamp",
-                    type: "uint64",
-                  },
-                  {
-                    internalType: "uint256",
-                    name: "numericValue",
-                    type: "uint256",
-                  },
-                  {
-                    internalType: "bytes",
-                    name: "extraData",
-                    type: "bytes",
-                  },
-                ],
-                internalType: "struct NumericData",
-                name: "numericData",
-                type: "tuple",
-              },
-            ],
-            internalType: "struct SignedNumericData[]",
-            name: "signedNumericData",
-            type: "tuple[]",
-          },
-          {
-            internalType: "bytes",
-            name: "extraData",
-            type: "bytes",
-          },
-        ],
-        internalType: "struct UpshotAdapterNumericData",
-        name: "pd",
-        type: "tuple",
+        name: "topicId",
+        type: "uint256",
+        internalType: "uint256",
       },
     ],
-    name: "verifyData",
     outputs: [
       {
-        internalType: "uint256",
+        name: "topicView",
+        type: "tuple",
+        internalType: "struct TopicView",
+        components: [
+          {
+            name: "config",
+            type: "tuple",
+            internalType: "struct TopicConfig",
+            components: [
+              {
+                name: "title",
+                type: "string",
+                internalType: "string",
+              },
+              {
+                name: "owner",
+                type: "address",
+                internalType: "address",
+              },
+              {
+                name: "recentValueTime",
+                type: "uint48",
+                internalType: "uint48",
+              },
+              {
+                name: "recentValue",
+                type: "uint256",
+                internalType: "uint256",
+              },
+              {
+                name: "totalFee",
+                type: "uint256",
+                internalType: "uint256",
+              },
+              {
+                name: "aggregator",
+                type: "address",
+                internalType: "contract IAggregator",
+              },
+              {
+                name: "ownerSwitchedOn",
+                type: "bool",
+                internalType: "bool",
+              },
+              {
+                name: "adminSwitchedOn",
+                type: "bool",
+                internalType: "bool",
+              },
+              {
+                name: "feeHandler",
+                type: "address",
+                internalType: "contract IFeeHandler",
+              },
+              {
+                name: "dataProviderQuorum",
+                type: "uint48",
+                internalType: "uint48",
+              },
+              {
+                name: "dataValiditySeconds",
+                type: "uint48",
+                internalType: "uint48",
+              },
+            ],
+          },
+          {
+            name: "validDataProviders",
+            type: "address[]",
+            internalType: "address[]",
+          },
+        ],
+      },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "verifyData",
+    inputs: [
+      {
+        name: "pd",
+        type: "tuple",
+        internalType: "struct UpshotAdapterNumericData",
+        components: [
+          {
+            name: "signedNumericData",
+            type: "tuple[]",
+            internalType: "struct SignedNumericData[]",
+            components: [
+              {
+                name: "signature",
+                type: "bytes",
+                internalType: "bytes",
+              },
+              {
+                name: "numericData",
+                type: "tuple",
+                internalType: "struct NumericData",
+                components: [
+                  {
+                    name: "topicId",
+                    type: "uint256",
+                    internalType: "uint256",
+                  },
+                  {
+                    name: "timestamp",
+                    type: "uint256",
+                    internalType: "uint256",
+                  },
+                  {
+                    name: "numericValue",
+                    type: "uint256",
+                    internalType: "uint256",
+                  },
+                  {
+                    name: "extraData",
+                    type: "bytes",
+                    internalType: "bytes",
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            name: "extraData",
+            type: "bytes",
+            internalType: "bytes",
+          },
+        ],
+      },
+    ],
+    outputs: [
+      {
         name: "numericValue",
         type: "uint256",
+        internalType: "uint256",
       },
     ],
     stateMutability: "payable",
-    type: "function",
   },
 ] as const;
 

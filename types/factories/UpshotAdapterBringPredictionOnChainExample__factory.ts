@@ -16,195 +16,195 @@ import type {
 
 const _abi = [
   {
+    type: "constructor",
     inputs: [],
     stateMutability: "nonpayable",
-    type: "constructor",
   },
   {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: "address",
-        name: "previousOwner",
-        type: "address",
-      },
-      {
-        indexed: true,
-        internalType: "address",
-        name: "newOwner",
-        type: "address",
-      },
-    ],
-    name: "OwnershipTransferStarted",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: "address",
-        name: "previousOwner",
-        type: "address",
-      },
-      {
-        indexed: true,
-        internalType: "address",
-        name: "newOwner",
-        type: "address",
-      },
-    ],
-    name: "OwnershipTransferred",
-    type: "event",
-  },
-  {
-    inputs: [],
+    type: "function",
     name: "acceptOwnership",
+    inputs: [],
     outputs: [],
     stateMutability: "nonpayable",
-    type: "function",
   },
   {
+    type: "function",
+    name: "callProtocolFunctionWithUpshotAdapterPrice",
     inputs: [
       {
-        internalType: "uint256",
         name: "protocolFunctionArgument",
         type: "uint256",
+        internalType: "uint256",
       },
       {
-        components: [
-          {
-            components: [
-              {
-                internalType: "bytes",
-                name: "signature",
-                type: "bytes",
-              },
-              {
-                components: [
-                  {
-                    internalType: "uint64",
-                    name: "topicId",
-                    type: "uint64",
-                  },
-                  {
-                    internalType: "uint64",
-                    name: "timestamp",
-                    type: "uint64",
-                  },
-                  {
-                    internalType: "uint256",
-                    name: "numericValue",
-                    type: "uint256",
-                  },
-                  {
-                    internalType: "bytes",
-                    name: "extraData",
-                    type: "bytes",
-                  },
-                ],
-                internalType: "struct NumericData",
-                name: "numericData",
-                type: "tuple",
-              },
-            ],
-            internalType: "struct SignedNumericData[]",
-            name: "signedNumericData",
-            type: "tuple[]",
-          },
-          {
-            internalType: "bytes",
-            name: "extraData",
-            type: "bytes",
-          },
-        ],
-        internalType: "struct UpshotAdapterNumericData",
         name: "upshotAdapterData",
         type: "tuple",
+        internalType: "struct UpshotAdapterNumericData",
+        components: [
+          {
+            name: "signedNumericData",
+            type: "tuple[]",
+            internalType: "struct SignedNumericData[]",
+            components: [
+              {
+                name: "signature",
+                type: "bytes",
+                internalType: "bytes",
+              },
+              {
+                name: "numericData",
+                type: "tuple",
+                internalType: "struct NumericData",
+                components: [
+                  {
+                    name: "topicId",
+                    type: "uint256",
+                    internalType: "uint256",
+                  },
+                  {
+                    name: "timestamp",
+                    type: "uint256",
+                    internalType: "uint256",
+                  },
+                  {
+                    name: "numericValue",
+                    type: "uint256",
+                    internalType: "uint256",
+                  },
+                  {
+                    name: "extraData",
+                    type: "bytes",
+                    internalType: "bytes",
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            name: "extraData",
+            type: "bytes",
+            internalType: "bytes",
+          },
+        ],
       },
     ],
-    name: "callProtocolFunctionWithUpshotAdapterPrice",
     outputs: [],
     stateMutability: "payable",
-    type: "function",
   },
   {
-    inputs: [],
+    type: "function",
     name: "owner",
+    inputs: [],
     outputs: [
       {
-        internalType: "address",
         name: "",
         type: "address",
+        internalType: "address",
       },
     ],
     stateMutability: "view",
-    type: "function",
   },
   {
-    inputs: [],
+    type: "function",
     name: "pendingOwner",
+    inputs: [],
     outputs: [
       {
-        internalType: "address",
         name: "",
         type: "address",
+        internalType: "address",
       },
     ],
     stateMutability: "view",
-    type: "function",
   },
   {
-    inputs: [],
+    type: "function",
     name: "renounceOwnership",
+    inputs: [],
     outputs: [],
     stateMutability: "nonpayable",
-    type: "function",
   },
   {
+    type: "function",
+    name: "setUpshotAdapterContract",
     inputs: [
       {
-        internalType: "contract IUpshotAdapter",
         name: "upshotAdapter_",
         type: "address",
+        internalType: "contract IUpshotAdapter",
       },
     ],
-    name: "setUpshotAdapterContract",
     outputs: [],
     stateMutability: "nonpayable",
-    type: "function",
   },
   {
+    type: "function",
+    name: "transferOwnership",
     inputs: [
       {
-        internalType: "address",
         name: "newOwner",
         type: "address",
+        internalType: "address",
       },
     ],
-    name: "transferOwnership",
     outputs: [],
     stateMutability: "nonpayable",
-    type: "function",
   },
   {
-    inputs: [],
+    type: "function",
     name: "upshotAdapter",
+    inputs: [],
     outputs: [
       {
-        internalType: "contract IUpshotAdapter",
         name: "",
         type: "address",
+        internalType: "contract IUpshotAdapter",
       },
     ],
     stateMutability: "view",
-    type: "function",
+  },
+  {
+    type: "event",
+    name: "OwnershipTransferStarted",
+    inputs: [
+      {
+        name: "previousOwner",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+      {
+        name: "newOwner",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "OwnershipTransferred",
+    inputs: [
+      {
+        name: "previousOwner",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+      {
+        name: "newOwner",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+    ],
+    anonymous: false,
   },
 ] as const;
 
 const _bytecode =
-  "0x6080604052600280546001600160a01b03191673091db6cb55773f6d60eaffd0060bd79021a5f6a217905534801561003657600080fd5b506100403361004e565b6100493361004e565b6100ba565b600180546001600160a01b03191690556100678161006a565b50565b600080546001600160a01b038381166001600160a01b0319831681178455604051919092169283917f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e09190a35050565b6106ba806100c96000396000f3fe60806040526004361061007b5760003560e01c8063b065be401161004e578063b065be40146100f5578063e30c397814610115578063e90d437814610133578063f2fde38b1461015357600080fd5b806336ece92f14610080578063715018a61461009557806379ba5097146100aa5780638da5cb5b146100bf575b600080fd5b61009361008e3660046103db565b610173565b005b3480156100a157600080fd5b506100936101ef565b3480156100b657600080fd5b50610093610203565b3480156100cb57600080fd5b506000546001600160a01b03165b6040516001600160a01b03909116815260200160405180910390f35b34801561010157600080fd5b5061009361011036600461043e565b610282565b34801561012157600080fd5b506001546001600160a01b03166100d9565b34801561013f57600080fd5b506002546100d9906001600160a01b031681565b34801561015f57600080fd5b5061009361016e36600461043e565b6102ac565b600254604051630bae389760e11b81526000916001600160a01b03169063175c712e9034906101a69086906004016104f5565b60206040518083038185885af11580156101c4573d6000803e3d6000fd5b50505050506040513d601f19601f820116820180604052508101906101e9919061066b565b50505050565b6101f761031d565b6102016000610377565b565b60015433906001600160a01b031681146102765760405162461bcd60e51b815260206004820152602960248201527f4f776e61626c6532537465703a2063616c6c6572206973206e6f7420746865206044820152683732bb9037bbb732b960b91b60648201526084015b60405180910390fd5b61027f81610377565b50565b61028a61031d565b600280546001600160a01b0319166001600160a01b0392909216919091179055565b6102b461031d565b600180546001600160a01b0383166001600160a01b031990911681179091556102e56000546001600160a01b031690565b6001600160a01b03167f38d16b8cac22d99fc7c124b9cd0de2d3fa1faef420bfe791d8c362d765e2270060405160405180910390a350565b6000546001600160a01b031633146102015760405162461bcd60e51b815260206004820181905260248201527f4f776e61626c653a2063616c6c6572206973206e6f7420746865206f776e6572604482015260640161026d565b600180546001600160a01b031916905561027f81600080546001600160a01b038381166001600160a01b0319831681178455604051919092169283917f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e09190a35050565b600080604083850312156103ee57600080fd5b82359150602083013567ffffffffffffffff81111561040c57600080fd5b83016040818603121561041e57600080fd5b809150509250929050565b6001600160a01b038116811461027f57600080fd5b60006020828403121561045057600080fd5b813561045b81610429565b9392505050565b6000808335601e1984360301811261047957600080fd5b830160208101925035905067ffffffffffffffff81111561049957600080fd5b8036038213156104a857600080fd5b9250929050565b81835281816020850137506000828201602090810191909152601f909101601f19169091010190565b803567ffffffffffffffff811681146104f057600080fd5b919050565b6000602080835260608084018535601e1987360301811261051557600080fd5b8601803584820167ffffffffffffffff8083111561053257600080fd5b8260051b80360383131561054557600080fd5b60408a890181905295849052608095908a01860190868b01600036889003605e19015b87821015610632578d8503607f19018352863581811261058757600080fd5b89018c81016105968180610462565b91508688526105a887890183836104af565b91505085820135609e198336030181126105c157600080fd5b8281019250508d82018782038f890152886105db826104d8565b168252886105ea8885016104d8565b168f8301528d830135878301526106038d840182610462565b935090508c8e8301526106198d830184836104af565b998f019997505050928c01925060019190910190610568565b505050610641898d018d610462565b99509750601f198b830301818c01525061065c8189896104af565b9b9a5050505050505050505050565b60006020828403121561067d57600080fd5b505191905056fea264697066735822122033d085a586a951e83c17348905994b456d439826a5aba000fa38160982aca11564736f6c63430008150033";
+  "0x6080604052600280546001600160a01b03191673dd3c703221c7f00fe0e2d8cdb5403ca7760cdd4c17905534801561003657600080fd5b506100403361004e565b6100493361004e565b6100ba565b600180546001600160a01b03191690556100678161006a565b50565b600080546001600160a01b038381166001600160a01b0319831681178455604051919092169283917f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e09190a35050565b610689806100c96000396000f3fe60806040526004361061007b5760003560e01c8063b065be401161004e578063b065be40146100f5578063e30c397814610115578063e90d437814610133578063f2fde38b1461015357600080fd5b80632ec4167f14610080578063715018a61461009557806379ba5097146100aa5780638da5cb5b146100bf575b600080fd5b61009361008e3660046103db565b610173565b005b3480156100a157600080fd5b506100936101ef565b3480156100b657600080fd5b50610093610203565b3480156100cb57600080fd5b506000546001600160a01b03165b6040516001600160a01b03909116815260200160405180910390f35b34801561010157600080fd5b5061009361011036600461043e565b610282565b34801561012157600080fd5b506001546001600160a01b03166100d9565b34801561013f57600080fd5b506002546100d9906001600160a01b031681565b34801561015f57600080fd5b5061009361016e36600461043e565b6102ac565b600254604051636214bda160e01b81526000916001600160a01b031690636214bda19034906101a69086906004016104d8565b60206040518083038185885af11580156101c4573d6000803e3d6000fd5b50505050506040513d601f19601f820116820180604052508101906101e9919061063a565b50505050565b6101f761031d565b6102016000610377565b565b60015433906001600160a01b031681146102765760405162461bcd60e51b815260206004820152602960248201527f4f776e61626c6532537465703a2063616c6c6572206973206e6f7420746865206044820152683732bb9037bbb732b960b91b60648201526084015b60405180910390fd5b61027f81610377565b50565b61028a61031d565b600280546001600160a01b0319166001600160a01b0392909216919091179055565b6102b461031d565b600180546001600160a01b0383166001600160a01b031990911681179091556102e56000546001600160a01b031690565b6001600160a01b03167f38d16b8cac22d99fc7c124b9cd0de2d3fa1faef420bfe791d8c362d765e2270060405160405180910390a350565b6000546001600160a01b031633146102015760405162461bcd60e51b815260206004820181905260248201527f4f776e61626c653a2063616c6c6572206973206e6f7420746865206f776e6572604482015260640161026d565b600180546001600160a01b031916905561027f81600080546001600160a01b038381166001600160a01b0319831681178455604051919092169283917f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e09190a35050565b600080604083850312156103ee57600080fd5b82359150602083013567ffffffffffffffff81111561040c57600080fd5b83016040818603121561041e57600080fd5b809150509250929050565b6001600160a01b038116811461027f57600080fd5b60006020828403121561045057600080fd5b813561045b81610429565b9392505050565b6000808335601e1984360301811261047957600080fd5b830160208101925035905067ffffffffffffffff81111561049957600080fd5b8036038213156104a857600080fd5b9250929050565b81835281816020850137506000828201602090810191909152601f909101601f19169091010190565b6000602080835260608084018535601e198736030181126104f857600080fd5b8601803584820167ffffffffffffffff82111561051457600080fd5b8160051b80360382131561052757600080fd5b604089880181905294839052608094908901850190858a01600036879003605e19015b86821015610602578c8503607f19018352853581811261056957600080fd5b88018b81016105788180610462565b915086885261058a87890183836104af565b91505085820135609e198336030181126105a357600080fd5b8281019250508c82018782038e89015280358252868301358e8301528c830135878301526105d38c840182610462565b935090508b8d8301526105e98c830184836104af565b988e019897505050928b0192506001919091019061054a565b505050610611888c018c610462565b98509650601f198a830301818b01525061062c8188886104af565b9a9950505050505050505050565b60006020828403121561064c57600080fd5b505191905056fea26469706673582212204583f39f5750c48518179a195b3c302d91384e15038180aa7905882b39fa359c64736f6c63430008150033";
 
 type UpshotAdapterBringPredictionOnChainExampleConstructorParams =
   | [signer?: Signer]

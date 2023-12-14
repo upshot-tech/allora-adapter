@@ -125,6 +125,7 @@ export type UpshotAdapterNumericDataStructOutput = [
 export interface UpshotAdapterInterface extends Interface {
   getFunction(
     nameOrSignature:
+      | "NUMERIC_DATA_TYPEHASH"
       | "acceptOwnership"
       | "addDataProvider"
       | "addTopic"
@@ -134,6 +135,7 @@ export interface UpshotAdapterInterface extends Interface {
       | "adminTurnOffTopic"
       | "adminTurnOnAdapter"
       | "adminTurnOnTopic"
+      | "eip712Domain"
       | "getMessage"
       | "getTopic"
       | "nextTopicId"
@@ -158,6 +160,7 @@ export interface UpshotAdapterInterface extends Interface {
 
   getEvent(
     nameOrSignatureOrTopic:
+      | "EIP712DomainChanged"
       | "OwnershipTransferStarted"
       | "OwnershipTransferred"
       | "UpshotAdapterV2AdapterAdminTopicTurnedOff"
@@ -180,6 +183,10 @@ export interface UpshotAdapterInterface extends Interface {
       | "UpshotAdapterV2TopicAdded"
   ): EventFragment;
 
+  encodeFunctionData(
+    functionFragment: "NUMERIC_DATA_TYPEHASH",
+    values?: undefined
+  ): string;
   encodeFunctionData(
     functionFragment: "acceptOwnership",
     values?: undefined
@@ -215,6 +222,10 @@ export interface UpshotAdapterInterface extends Interface {
   encodeFunctionData(
     functionFragment: "adminTurnOnTopic",
     values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "eip712Domain",
+    values?: undefined
   ): string;
   encodeFunctionData(
     functionFragment: "getMessage",
@@ -295,6 +306,10 @@ export interface UpshotAdapterInterface extends Interface {
   ): string;
 
   decodeFunctionResult(
+    functionFragment: "NUMERIC_DATA_TYPEHASH",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "acceptOwnership",
     data: BytesLike
   ): Result;
@@ -325,6 +340,10 @@ export interface UpshotAdapterInterface extends Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "adminTurnOnTopic",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "eip712Domain",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "getMessage", data: BytesLike): Result;
@@ -392,6 +411,16 @@ export interface UpshotAdapterInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "verifyData", data: BytesLike): Result;
+}
+
+export namespace EIP712DomainChangedEvent {
+  export type InputTuple = [];
+  export type OutputTuple = [];
+  export interface OutputObject {}
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
 
 export namespace OwnershipTransferStartedEvent {
@@ -697,6 +726,8 @@ export interface UpshotAdapter extends BaseContract {
     event?: TCEvent
   ): Promise<this>;
 
+  NUMERIC_DATA_TYPEHASH: TypedContractMethod<[], [string], "view">;
+
   acceptOwnership: TypedContractMethod<[], [void], "nonpayable">;
 
   addDataProvider: TypedContractMethod<
@@ -737,6 +768,22 @@ export interface UpshotAdapter extends BaseContract {
     [topicId: BigNumberish],
     [void],
     "nonpayable"
+  >;
+
+  eip712Domain: TypedContractMethod<
+    [],
+    [
+      [string, string, string, bigint, string, string, bigint[]] & {
+        fields: string;
+        name: string;
+        version: string;
+        chainId: bigint;
+        verifyingContract: string;
+        salt: string;
+        extensions: bigint[];
+      }
+    ],
+    "view"
   >;
 
   getMessage: TypedContractMethod<
@@ -836,6 +883,9 @@ export interface UpshotAdapter extends BaseContract {
   ): T;
 
   getFunction(
+    nameOrSignature: "NUMERIC_DATA_TYPEHASH"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
     nameOrSignature: "acceptOwnership"
   ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
@@ -870,6 +920,23 @@ export interface UpshotAdapter extends BaseContract {
   getFunction(
     nameOrSignature: "adminTurnOnTopic"
   ): TypedContractMethod<[topicId: BigNumberish], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "eip712Domain"
+  ): TypedContractMethod<
+    [],
+    [
+      [string, string, string, bigint, string, string, bigint[]] & {
+        fields: string;
+        name: string;
+        version: string;
+        chainId: bigint;
+        verifyingContract: string;
+        salt: string;
+        extensions: bigint[];
+      }
+    ],
+    "view"
+  >;
   getFunction(
     nameOrSignature: "getMessage"
   ): TypedContractMethod<[numericData: NumericDataStruct], [string], "view">;
@@ -967,6 +1034,13 @@ export interface UpshotAdapter extends BaseContract {
     "payable"
   >;
 
+  getEvent(
+    key: "EIP712DomainChanged"
+  ): TypedContractEvent<
+    EIP712DomainChangedEvent.InputTuple,
+    EIP712DomainChangedEvent.OutputTuple,
+    EIP712DomainChangedEvent.OutputObject
+  >;
   getEvent(
     key: "OwnershipTransferStarted"
   ): TypedContractEvent<
@@ -1109,6 +1183,17 @@ export interface UpshotAdapter extends BaseContract {
   >;
 
   filters: {
+    "EIP712DomainChanged()": TypedContractEvent<
+      EIP712DomainChangedEvent.InputTuple,
+      EIP712DomainChangedEvent.OutputTuple,
+      EIP712DomainChangedEvent.OutputObject
+    >;
+    EIP712DomainChanged: TypedContractEvent<
+      EIP712DomainChangedEvent.InputTuple,
+      EIP712DomainChangedEvent.OutputTuple,
+      EIP712DomainChangedEvent.OutputObject
+    >;
+
     "OwnershipTransferStarted(address,address)": TypedContractEvent<
       OwnershipTransferStartedEvent.InputTuple,
       OwnershipTransferStartedEvent.OutputTuple,
