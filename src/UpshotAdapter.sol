@@ -34,7 +34,7 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
     address public protocolFeeReceiver;
 
     bytes32 public constant NUMERIC_DATA_TYPEHASH = keccak256(
-        "NumericData(uint256 topicId,uint256 timestamp,uint256 numericValue,bytes extraData)"
+        "NumericData(uint64 topicId,uint64 timestamp,uint256 numericValue,bytes extraData)"
     );
 
     constructor(UpshotAdapterConstructorArgs memory args) 
