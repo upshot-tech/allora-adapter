@@ -666,7 +666,10 @@ contract UpshotAdapterTest is Test {
     ) internal view returns (SignedNumericData memory) {
         bytes32 message = upshotAdapter.getMessage(numericData);
 
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerPk, message);
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(
+            signerPk, 
+            ECDSA.toEthSignedMessageHash(message)
+        );
         bytes memory signature = abi.encodePacked(r, s, v);
 
         return SignedNumericData({

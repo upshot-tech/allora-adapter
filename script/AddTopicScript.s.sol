@@ -18,7 +18,7 @@ contract AddTopicScript is Script {
     function run() public virtual {
         uint256 scriptRunnerPrivateKey = vm.envUint('SCRIPT_RUNNER_PRIVATE_KEY');
         address scriptRunner = vm.addr(scriptRunnerPrivateKey);
-        UpshotAdapter upshotAdapter = UpshotAdapter(0x766662c5078515A9D22A71ab695206aCD18dD44C);
+        UpshotAdapter upshotAdapter = UpshotAdapter(0x4Bb814869573de58F3789FA1F1ed60A0Ad3c1A2e);
 
         vm.startBroadcast(scriptRunnerPrivateKey);
         console.log('Broadcast started by %s', scriptRunner);
@@ -29,10 +29,10 @@ contract AddTopicScript is Script {
             totalFee: 0 ether,
             recentValueTime: 0,
             recentValue: 0,
-            aggregator: IAggregator(0xdC31B5eA06389A124ff3cFBD71fdC35DA5A64f47),
+            aggregator: IAggregator(0xaCcb297D48D19142d30B9de5F1086a8700ae60aB),
             ownerSwitchedOn: true,
             adminSwitchedOn: true,
-            feeHandler: IFeeHandler(0xeD3b6e434eBd994Ff42Bc1088fB062f8faa4f893),
+            feeHandler: IFeeHandler(0x3FdB3336D8a0A5Ed56e297fCFdf63e95a1567d7C),
             dataProviderQuorum: 1,
             dataValiditySeconds: 1 hours
         });

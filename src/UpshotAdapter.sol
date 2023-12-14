@@ -158,7 +158,7 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
             }
 
             address dataProvider = ECDSA.recover(
-                getMessage(numericData), 
+                ECDSA.toEthSignedMessageHash(getMessage(numericData)), 
                 nd.signedNumericData[i].signature
             );
 
