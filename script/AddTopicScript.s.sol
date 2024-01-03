@@ -23,14 +23,14 @@ contract AddTopicScript is Script {
         vm.startBroadcast(scriptRunnerPrivateKey);
         console.log('Broadcast started by %s', scriptRunner);
 
-        string[] memory indices = new string[](6);
-        // indices[0] = 'Art Blocks Curated Index';
-        indices[0] = 'Yuga Index';
-        indices[1] = 'PFP Index';
-        indices[2] = 'Top 30 Liquid Collections Index';
-        indices[3] = 'Yuga Index - Grails';
-        indices[4] = 'Art Blocks Curated Index - Grails';
-        indices[5] = 'PFP Index - Grails';
+        string[] memory indices = new string[](7);
+        indices[0] = 'Art Blocks Curated Index';
+        indices[1] = 'Yuga Index';
+        indices[2] = 'PFP Index';
+        indices[3] = 'Top 30 Liquid Collections Index';
+        indices[4] = 'Yuga Index - Grails';
+        indices[5] = 'Art Blocks Curated Index - Grails';
+        indices[6] = 'PFP Index - Grails';
 
         for (uint256 i = 0; i < indices.length; i++) {
             TopicConfig memory topicConfig = TopicConfig({
