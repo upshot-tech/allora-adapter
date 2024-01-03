@@ -7,27 +7,27 @@ import type { IFeeHandler, IFeeHandlerInterface } from "../IFeeHandler";
 
 const _abi = [
   {
+    type: "function",
+    name: "handleFees",
     inputs: [
       {
-        internalType: "address",
         name: "feedOwner",
         type: "address",
+        internalType: "address",
       },
       {
-        internalType: "address[]",
         name: "feeReceivers",
         type: "address[]",
+        internalType: "address[]",
       },
       {
-        internalType: "bytes",
         name: "extraData",
         type: "bytes",
+        internalType: "bytes",
       },
     ],
-    name: "handleFees",
     outputs: [],
     stateMutability: "payable",
-    type: "function",
   },
 ] as const;
 

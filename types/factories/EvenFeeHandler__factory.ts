@@ -17,254 +17,254 @@ import type {
 
 const _abi = [
   {
+    type: "constructor",
     inputs: [
       {
-        components: [
-          {
-            internalType: "address",
-            name: "admin",
-            type: "address",
-          },
-        ],
-        internalType: "struct EvenFeeHandlerConstructorArgs",
         name: "args",
         type: "tuple",
+        internalType: "struct EvenFeeHandlerConstructorArgs",
+        components: [
+          {
+            name: "admin",
+            type: "address",
+            internalType: "address",
+          },
+        ],
       },
     ],
     stateMutability: "nonpayable",
-    type: "constructor",
   },
   {
-    inputs: [],
-    name: "UpshotAdapterV2EvenFeeHandlerEthTransferFailed",
-    type: "error",
-  },
-  {
-    inputs: [],
-    name: "UpshotAdapterV2EvenFeeHandlerFeeTooLow",
-    type: "error",
-  },
-  {
-    inputs: [],
-    name: "UpshotAdapterV2EvenFeeHandlerInvalidFeedOwnerFeePortion",
-    type: "error",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: "address",
-        name: "previousOwner",
-        type: "address",
-      },
-      {
-        indexed: true,
-        internalType: "address",
-        name: "newOwner",
-        type: "address",
-      },
-    ],
-    name: "OwnershipTransferStarted",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: "address",
-        name: "previousOwner",
-        type: "address",
-      },
-      {
-        indexed: true,
-        internalType: "address",
-        name: "newOwner",
-        type: "address",
-      },
-    ],
-    name: "OwnershipTransferred",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "feedOwnerPortion",
-        type: "uint256",
-      },
-    ],
-    name: "UpshotAdapterV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortion",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: false,
-        internalType: "address",
-        name: "claimer",
-        type: "address",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "fees",
-        type: "uint256",
-      },
-    ],
-    name: "UpshotAdapterV2EvenFeeHandlerFeesClaimed",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "fee",
-        type: "uint256",
-      },
-      {
-        indexed: false,
-        internalType: "address[]",
-        name: "feeReceivers",
-        type: "address[]",
-      },
-    ],
-    name: "UpshotAdapterV2EvenFeeHandlerFeesHandled",
-    type: "event",
-  },
-  {
-    inputs: [],
+    type: "function",
     name: "acceptOwnership",
+    inputs: [],
     outputs: [],
     stateMutability: "nonpayable",
-    type: "function",
   },
   {
-    inputs: [],
+    type: "function",
     name: "claimFees",
+    inputs: [],
     outputs: [],
     stateMutability: "nonpayable",
-    type: "function",
   },
   {
-    inputs: [],
+    type: "function",
     name: "feedOwnerPortion",
+    inputs: [],
     outputs: [
       {
-        internalType: "uint256",
         name: "",
         type: "uint256",
+        internalType: "uint256",
       },
     ],
     stateMutability: "view",
-    type: "function",
   },
   {
+    type: "function",
+    name: "feesAccrued",
     inputs: [
       {
-        internalType: "address",
         name: "feeReciever",
         type: "address",
+        internalType: "address",
       },
     ],
-    name: "feesAccrued",
     outputs: [
       {
-        internalType: "uint256",
         name: "feesAccrued",
         type: "uint256",
+        internalType: "uint256",
       },
     ],
     stateMutability: "view",
-    type: "function",
   },
   {
+    type: "function",
+    name: "handleFees",
     inputs: [
       {
-        internalType: "address",
         name: "feedOwner",
         type: "address",
+        internalType: "address",
       },
       {
-        internalType: "address[]",
         name: "feeReceivers",
         type: "address[]",
+        internalType: "address[]",
       },
       {
-        internalType: "bytes",
         name: "",
         type: "bytes",
+        internalType: "bytes",
       },
     ],
-    name: "handleFees",
     outputs: [],
     stateMutability: "payable",
-    type: "function",
   },
   {
-    inputs: [],
+    type: "function",
     name: "owner",
+    inputs: [],
     outputs: [
       {
-        internalType: "address",
         name: "",
         type: "address",
+        internalType: "address",
       },
     ],
     stateMutability: "view",
-    type: "function",
   },
   {
-    inputs: [],
+    type: "function",
     name: "pendingOwner",
+    inputs: [],
     outputs: [
       {
-        internalType: "address",
         name: "",
         type: "address",
+        internalType: "address",
       },
     ],
     stateMutability: "view",
-    type: "function",
   },
   {
-    inputs: [],
+    type: "function",
     name: "renounceOwnership",
+    inputs: [],
     outputs: [],
     stateMutability: "nonpayable",
-    type: "function",
   },
   {
+    type: "function",
+    name: "transferOwnership",
     inputs: [
       {
-        internalType: "address",
         name: "newOwner",
         type: "address",
+        internalType: "address",
       },
     ],
-    name: "transferOwnership",
     outputs: [],
     stateMutability: "nonpayable",
-    type: "function",
   },
   {
+    type: "function",
+    name: "updateFeedOwnerPortion",
     inputs: [
       {
-        internalType: "uint256",
         name: "feedOwnerPortion_",
         type: "uint256",
+        internalType: "uint256",
       },
     ],
-    name: "updateFeedOwnerPortion",
     outputs: [],
     stateMutability: "nonpayable",
-    type: "function",
+  },
+  {
+    type: "event",
+    name: "OwnershipTransferStarted",
+    inputs: [
+      {
+        name: "previousOwner",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+      {
+        name: "newOwner",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "OwnershipTransferred",
+    inputs: [
+      {
+        name: "previousOwner",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+      {
+        name: "newOwner",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "UpshotAdapterV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortion",
+    inputs: [
+      {
+        name: "feedOwnerPortion",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "UpshotAdapterV2EvenFeeHandlerFeesClaimed",
+    inputs: [
+      {
+        name: "claimer",
+        type: "address",
+        indexed: false,
+        internalType: "address",
+      },
+      {
+        name: "fees",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "UpshotAdapterV2EvenFeeHandlerFeesHandled",
+    inputs: [
+      {
+        name: "fee",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+      {
+        name: "feeReceivers",
+        type: "address[]",
+        indexed: false,
+        internalType: "address[]",
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "error",
+    name: "UpshotAdapterV2EvenFeeHandlerEthTransferFailed",
+    inputs: [],
+  },
+  {
+    type: "error",
+    name: "UpshotAdapterV2EvenFeeHandlerFeeTooLow",
+    inputs: [],
+  },
+  {
+    type: "error",
+    name: "UpshotAdapterV2EvenFeeHandlerInvalidFeedOwnerFeePortion",
+    inputs: [],
   },
 ] as const;
 

@@ -7,28 +7,28 @@ import type { IAggregator, IAggregatorInterface } from "../IAggregator";
 
 const _abi = [
   {
+    type: "function",
+    name: "aggregate",
     inputs: [
       {
-        internalType: "uint256[]",
         name: "values",
         type: "uint256[]",
+        internalType: "uint256[]",
       },
       {
-        internalType: "bytes",
         name: "extraData",
         type: "bytes",
+        internalType: "bytes",
       },
     ],
-    name: "aggregate",
     outputs: [
       {
-        internalType: "uint256",
         name: "value",
         type: "uint256",
+        internalType: "uint256",
       },
     ],
     stateMutability: "view",
-    type: "function",
   },
 ] as const;
 

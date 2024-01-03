@@ -16,33 +16,33 @@ import type {
 
 const _abi = [
   {
-    inputs: [],
-    name: "UpshotAdapterV2AverageAggregatorNoValuesToAggregate",
-    type: "error",
-  },
-  {
+    type: "function",
+    name: "aggregate",
     inputs: [
       {
-        internalType: "uint256[]",
         name: "values",
         type: "uint256[]",
+        internalType: "uint256[]",
       },
       {
-        internalType: "bytes",
         name: "",
         type: "bytes",
+        internalType: "bytes",
       },
     ],
-    name: "aggregate",
     outputs: [
       {
-        internalType: "uint256",
         name: "value",
         type: "uint256",
+        internalType: "uint256",
       },
     ],
     stateMutability: "pure",
-    type: "function",
+  },
+  {
+    type: "error",
+    name: "UpshotAdapterV2AverageAggregatorNoValuesToAggregate",
+    inputs: [],
   },
 ] as const;
 

@@ -16,54 +16,54 @@ import type {
 
 const _abi = [
   {
-    anonymous: false,
+    type: "event",
+    name: "SlotFound",
     inputs: [
       {
-        indexed: false,
-        internalType: "address",
         name: "who",
         type: "address",
+        indexed: false,
+        internalType: "address",
       },
       {
-        indexed: false,
-        internalType: "bytes4",
         name: "fsig",
         type: "bytes4",
+        indexed: false,
+        internalType: "bytes4",
       },
       {
-        indexed: false,
-        internalType: "bytes32",
         name: "keysHash",
         type: "bytes32",
+        indexed: false,
+        internalType: "bytes32",
       },
       {
-        indexed: false,
-        internalType: "uint256",
         name: "slot",
         type: "uint256",
+        indexed: false,
+        internalType: "uint256",
       },
     ],
-    name: "SlotFound",
-    type: "event",
+    anonymous: false,
   },
   {
-    anonymous: false,
+    type: "event",
+    name: "WARNING_UninitedSlot",
     inputs: [
       {
-        indexed: false,
-        internalType: "address",
         name: "who",
         type: "address",
+        indexed: false,
+        internalType: "address",
       },
       {
-        indexed: false,
-        internalType: "uint256",
         name: "slot",
         type: "uint256",
+        indexed: false,
+        internalType: "uint256",
       },
     ],
-    name: "WARNING_UninitedSlot",
-    type: "event",
+    anonymous: false,
   },
 ] as const;
 

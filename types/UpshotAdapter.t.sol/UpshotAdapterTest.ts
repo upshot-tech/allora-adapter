@@ -67,6 +67,8 @@ export interface UpshotAdapterTestInterface extends Interface {
       | "test_cantCallVerifyDataWithExpiredTime"
       | "test_cantCallVerifyDataWithFutureTime"
       | "test_cantCallVerifyDataWithInvalidDataProvider"
+      | "test_cantCallVerifyDataWithMismatchedExtraData"
+      | "test_cantCallVerifyDataWithMismatchedExtraData2"
       | "test_cantCallVerifyDataWithMismatchedTopics"
       | "test_cantCallVerifyDataWithNoData"
       | "test_cantCallVerifyDataWithoutFee"
@@ -183,6 +185,14 @@ export interface UpshotAdapterTestInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "test_cantCallVerifyDataWithInvalidDataProvider",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "test_cantCallVerifyDataWithMismatchedExtraData",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "test_cantCallVerifyDataWithMismatchedExtraData2",
     values?: undefined
   ): string;
   encodeFunctionData(
@@ -307,6 +317,14 @@ export interface UpshotAdapterTestInterface extends Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "test_cantCallVerifyDataWithInvalidDataProvider",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "test_cantCallVerifyDataWithMismatchedExtraData",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "test_cantCallVerifyDataWithMismatchedExtraData2",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -779,6 +797,18 @@ export interface UpshotAdapterTest extends BaseContract {
     "nonpayable"
   >;
 
+  test_cantCallVerifyDataWithMismatchedExtraData: TypedContractMethod<
+    [],
+    [void],
+    "nonpayable"
+  >;
+
+  test_cantCallVerifyDataWithMismatchedExtraData2: TypedContractMethod<
+    [],
+    [void],
+    "nonpayable"
+  >;
+
   test_cantCallVerifyDataWithMismatchedTopics: TypedContractMethod<
     [],
     [void],
@@ -914,6 +944,12 @@ export interface UpshotAdapterTest extends BaseContract {
   ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "test_cantCallVerifyDataWithInvalidDataProvider"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "test_cantCallVerifyDataWithMismatchedExtraData"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "test_cantCallVerifyDataWithMismatchedExtraData2"
   ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "test_cantCallVerifyDataWithMismatchedTopics"
