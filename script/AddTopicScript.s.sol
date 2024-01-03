@@ -18,21 +18,58 @@ contract AddTopicScript is Script {
     function run() public virtual {
         uint256 scriptRunnerPrivateKey = vm.envUint('SCRIPT_RUNNER_PRIVATE_KEY');
         address scriptRunner = vm.addr(scriptRunnerPrivateKey);
-        UpshotAdapter upshotAdapter = UpshotAdapter(0x4Bb814869573de58F3789FA1F1ed60A0Ad3c1A2e);
+        UpshotAdapter upshotAdapter = UpshotAdapter(0x238D0abD53fC68fAfa0CCD860446e381b400b5Be);
 
         vm.startBroadcast(scriptRunnerPrivateKey);
         console.log('Broadcast started by %s', scriptRunner);
 
+        string[] memory indices = new string[](6);
+        // indices[0] = 'Art Blocks Curated Index';
+        indices[0] = 'Yuga Index';
+        indices[1] = 'PFP Index';
+        indices[2] = 'Top 30 Liquid Collections Index';
+        indices[3] = 'Yuga Index - Grails';
+        indices[4] = 'Art Blocks Curated Index - Grails';
+        indices[5] = 'PFP Index - Grails';
+
+        for (uint256 i = 0; i < indices.length; i++) {
+            TopicConfig memory topicConfig = TopicConfig({
+                title: indices[i],
+                owner: scriptRunner,
+                totalFee: 0 ether,
+                recentValueTime: 0,
+                recentValue: 0,
+                aggregator: IAggregator(0x180A7132C54Eb5e88fbda5b764580B8cBa4c7958),
+                ownerSwitchedOn: true,
+                adminSwitchedOn: true,
+                feeHandler: IFeeHandler(0x594F9D4d09E6daEe8C35b30bCB5c3a1269d2B712),
+                dataProviderQuorum: 1,
+                dataValiditySeconds: 1 hours
+            });
+
+            address[] memory validDataProviders = new address[](1);
+            validDataProviders[0] = address(0xA459c3A3b7769e18E702a3B5e2dEcDD495655791);
+
+            TopicView memory topicView = TopicView({
+                config: topicConfig,
+                validDataProviders: validDataProviders
+            });
+
+            uint256 topicId = upshotAdapter.addTopic(topicView);
+            console.log('Topic generated with id %s', topicId);
+        }
+
+/*
         TopicConfig memory topicConfig = TopicConfig({
-            title: 'Eth/USD Price feed, 18 decimals',
+            title: 'Art Blocks Curated Index',
             owner: scriptRunner,
             totalFee: 0 ether,
             recentValueTime: 0,
             recentValue: 0,
-            aggregator: IAggregator(0xaCcb297D48D19142d30B9de5F1086a8700ae60aB),
+            aggregator: IAggregator(0x180A7132C54Eb5e88fbda5b764580B8cBa4c7958),
             ownerSwitchedOn: true,
             adminSwitchedOn: true,
-            feeHandler: IFeeHandler(0x3FdB3336D8a0A5Ed56e297fCFdf63e95a1567d7C),
+            feeHandler: IFeeHandler(0x594F9D4d09E6daEe8C35b30bCB5c3a1269d2B712),
             dataProviderQuorum: 1,
             dataValiditySeconds: 1 hours
         });
@@ -47,6 +84,7 @@ contract AddTopicScript is Script {
 
         uint256 topicId = upshotAdapter.addTopic(topicView);
         console.log('Topic generated with id %s', topicId);
+*/
 
         vm.stopBroadcast();
     }

@@ -22,16 +22,19 @@ contract AddEthPrice is Script {
         vm.startBroadcast(scriptRunnerPrivateKey);
         console.log('Broadcast started by %s', scriptRunner);
 
-        UpshotAdapter upshotAdapter = UpshotAdapter(0x4Bb814869573de58F3789FA1F1ed60A0Ad3c1A2e);
+        UpshotAdapter upshotAdapter = UpshotAdapter(0x238D0abD53fC68fAfa0CCD860446e381b400b5Be);
 
         NumericData memory numericData = NumericData({
             topicId: 1,
-            timestamp: 1702577000,
-            numericValue: 2e18,
+            timestamp: 1704318000,
+            numericValue: 123456789012345678,
             extraData: ''
         });
 
         bytes32 message = upshotAdapter.getMessage(numericData);
+
+        console.log('Message: %s', _bytes32ToHexString(message));
+        console.log('scriptRunnerPrivateKey: %s', _bytes32ToHexString(bytes32(uint256(scriptRunnerPrivateKey))));
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(
             scriptRunnerPrivateKey, 
@@ -39,6 +42,8 @@ contract AddEthPrice is Script {
         );
 
         bytes memory signature = abi.encodePacked(r, s, v);
+
+        console.log('Signature: %s', _bytesToHexString(signature));
 
         SignedNumericData[] memory signedNumericData = new SignedNumericData[](1);
 
@@ -54,4 +59,42 @@ contract AddEthPrice is Script {
 
         vm.stopBroadcast();
     }
+
+    function _bytes32ToString(bytes32 _bytes32) internal pure returns (string memory) {
+        bytes memory bytesArray = new bytes(32);
+        for (uint256 i; i < 32; i++) {
+            bytesArray[i] = _bytes32[i];
+        }
+        return string(bytesArray);
+    }
+
+    function _bytes32ToHexString(bytes32 _bytes32) internal pure returns (string memory) {
+        bytes memory hexChars = "0123456789abcdef";
+        bytes memory hexString = new bytes(66); // 2 characters per byte + '0x' prefix
+        hexString[0] = '0';
+        hexString[1] = 'x';
+
+        for (uint i = 0; i < 32; i++) {
+            hexString[2+i*2] = hexChars[uint8(_bytes32[i] >> 4)];
+            hexString[3+i*2] = hexChars[uint8(_bytes32[i] & 0x0f)];
+        }
+
+        return string(hexString);
+
+    }
+
+    function _bytesToHexString(bytes memory data) internal pure returns (string memory) {
+        bytes memory hexChars = "0123456789abcdef";
+        bytes memory hexString = new bytes(2 * data.length + 2); // 2 characters per byte + '0x' prefix
+        hexString[0] = '0';
+        hexString[1] = 'x';
+
+        for (uint i = 0; i < data.length; i++) {
+            hexString[2+i*2] = hexChars[uint8(data[i] >> 4)];
+            hexString[2+i*2 + 1] = hexChars[uint8(data[i] & 0x0f)];
+        }
+
+        return string(hexString);
+    }
+
 }

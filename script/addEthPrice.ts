@@ -5,7 +5,7 @@ import { NumericDataStruct, UpshotAdapter } from '../types/UpshotAdapter'
 import { ethers } from 'ethers';
 import * as dotenv from 'dotenv';
 
-const UPSHOT_ADAPTER_ADDRESS = '0x766662c5078515A9D22A71ab695206aCD18dD44C'
+const UPSHOT_ADAPTER_ADDRESS = '0x238D0abD53fC68fAfa0CCD860446e381b400b5Be'
 
 const run = async () => {
   dotenv.config()
@@ -26,21 +26,28 @@ const run = async () => {
 
   const numericData: NumericDataStruct = {
     topicId: 1,
-    timestamp: Math.floor(Date.now() / 1000) - (60 * 5),
+    timestamp: 1704318000, // Math.floor(Date.now() / 1000) - (60 * 5),
     numericValue: '123456789012345678',
-    extraData: '0x',
+    extraData: ethers.toUtf8Bytes(''),
   }
 
   const message = await upshotAdapter.getMessage(numericData)
 
+  const hexString = message.substring(2);
+  const chunkedArray: string[] = []
+  for (let i = 0; i < hexString.length; i += 2) {
+    chunkedArray.push(hexString.substring(i, i + 2));
+  }
+  const bytesOfMessage = chunkedArray.map(chunk => parseInt(chunk, 16));
+  const byteArray = new Uint8Array(bytesOfMessage);
+
   // sign the message with the private key
-  const signature = await wallet.signMessage(message)
+  const signature = await wallet.signMessage(byteArray)
+  console.log({message, bytesOfMessage, hexString, byteArray, signature})
 
   await upshotAdapter.verifyData({
     signedNumericData:[{ signature, numericData }],
-    extraData: '0x',
-  }, {
-    gasLimit: 1e16
+    extraData: ethers.toUtf8Bytes(''),
   })
 }
 
