@@ -287,6 +287,70 @@ contract UpshotAdapterTest is Test {
         upshotAdapter.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
     }
 
+    function test_cantCallVerifyDataWithMismatchedExtraData() public {
+        vm.startPrank(admin);
+        upshotAdapter.addTopic(_getBasicTopicView());
+        vm.stopPrank();
+
+        SignedNumericData[] memory numericData = new SignedNumericData[](2);
+
+        numericData[0] = _signNumericData(
+            NumericData({
+                topicId: 1,
+                timestamp: uint64(block.timestamp - 1 minutes),
+                numericValue: 1 ether,
+                extraData: ''
+            }),
+            signer0pk
+        );
+
+        numericData[1] = _signNumericData(
+            NumericData({
+                topicId: 1,
+                timestamp: uint64(block.timestamp - 1 minutes),
+                numericValue: 1 ether,
+                extraData: '2'
+            }),
+            signer0pk
+        );
+
+        vm.expectRevert(abi.encodeWithSignature("UpshotAdapterV2ExtraDataMismatch()"));
+
+        upshotAdapter.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
+    }
+
+    function test_cantCallVerifyDataWithMismatchedExtraData2() public {
+        vm.startPrank(admin);
+        upshotAdapter.addTopic(_getBasicTopicView());
+        vm.stopPrank();
+
+        SignedNumericData[] memory numericData = new SignedNumericData[](2);
+
+        numericData[0] = _signNumericData(
+            NumericData({
+                topicId: 1,
+                timestamp: uint64(block.timestamp - 1 minutes),
+                numericValue: 1 ether,
+                extraData: '1'
+            }),
+            signer0pk
+        );
+
+        numericData[1] = _signNumericData(
+            NumericData({
+                topicId: 1,
+                timestamp: uint64(block.timestamp - 1 minutes),
+                numericValue: 1 ether,
+                extraData: '2'
+            }),
+            signer0pk
+        );
+
+        vm.expectRevert(abi.encodeWithSignature("UpshotAdapterV2ExtraDataMismatch()"));
+
+        upshotAdapter.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
+    }
+
     function test_cantCallVerifyDataWithFutureTime() public {
         vm.startPrank(admin);
         upshotAdapter.addTopic(_getBasicTopicView());

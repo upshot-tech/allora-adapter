@@ -85,6 +85,7 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
     error UpshotAdapterV2InsufficientPayment();
     error UpshotAdapterV2NotEnoughData();
     error UpshotAdapterV2TopicMismatch();
+    error UpshotAdapterV2ExtraDataMismatch();
     error UpshotAdapterV2InvalidDataTime();
     error UpshotAdapterV2InvalidDataProvider();
     error UpshotAdapterV2DuplicateDataProvider();
@@ -119,6 +120,7 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
         }
 
         uint256 topicId = nd.signedNumericData[0].numericData.topicId;
+        bytes calldata extraData = nd.signedNumericData[0].numericData.extraData;
 
         if (!topic[topicId].config.ownerSwitchedOn) {
             revert UpshotAdapterV2OwnerTurnedTopicOff();
@@ -148,6 +150,10 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
 
             if (numericData.topicId != topicId) {
                 revert UpshotAdapterV2TopicMismatch();
+            }
+
+            if (!_equalBytes(numericData.extraData, extraData)) {
+                revert UpshotAdapterV2ExtraDataMismatch();
             }
 
             if (
@@ -280,6 +286,32 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
 
         emit UpshotAdapterV2AdapterAdminUpdatedProtocolFeeReceiver(protocolFeeReceiver_);
     }
+
+    /**
+     * @notice Check if two bytes calldata are equal
+     * 
+     * @param a The first bytes calldata
+     * @param b The second bytes calldata
+     * @return Whether the bytes calldata are equal
+     */
+    function _equalBytes(bytes calldata a, bytes calldata b) internal pure returns (bool) {
+        uint256 aLength = a.length;
+        // Check if their lengths are equal
+        if (aLength != b.length) {
+            return false;
+        }
+
+        // Compare byte-by-byte
+        for (uint i = 0; i < aLength; i++) {
+            if (a[i] != b[i]) {
+                return false;
+            }
+        }
+
+        // Return true if all bytes are equal
+        return true;
+    }
+
 
     // ***************************************************************
     // * ====================== FEED UPDATES ======================= *
