@@ -10,6 +10,7 @@ import * as dotenv from 'dotenv';
 const UPSHOT_ADAPTER_NAME = 'UpshotAdapter'
 const UPSHOT_ADAPTER_VERSION = 1
 const UPSHOT_ADAPTER_ADDRESS = '0x238D0abD53fC68fAfa0CCD860446e381b400b5Be'
+const UPSHOT_ADAPTER_CHAIN_ID = 11155111
 
 type NumericDataStruct = {
   topicId: BigNumberish
@@ -18,7 +19,7 @@ type NumericDataStruct = {
   extraData: BytesLike
 };
 
-const messageStringToByteArray = (message: string) => {
+const hexStringToByteArray = (message: string) => {
   const hexString = message.substring(2);
   const chunkedArray: string[] = []
   for (let i = 0; i < hexString.length; i += 2) {
@@ -28,7 +29,7 @@ const messageStringToByteArray = (message: string) => {
   return new Uint8Array(bytesOfMessage);
 }
 
-const getMessage = async (
+const constructMessageLocally = async (
   numericData: NumericDataStruct, 
   config: {
     chainId: number,
@@ -73,6 +74,29 @@ const getMessage = async (
   )
 }
 
+const signMessageLocally = async (
+  numericData: NumericDataStruct, 
+  config: {
+    chainId: number
+    upshotAdapterAddress: string
+    rpcUrl: string
+    privateKey: string
+  }
+) => {
+  const { chainId, upshotAdapterAddress, rpcUrl, privateKey } = config
+  const provider = new ethers.JsonRpcProvider(rpcUrl)
+  const wallet = new ethers.Wallet(privateKey, provider)
+
+  const messageLocal = await constructMessageLocally(
+    numericData, 
+    { chainId, upshotAdapterAddress }
+  )
+  const messageBytes = hexStringToByteArray(messageLocal)
+
+  return await wallet.signMessage(messageBytes)
+
+}
+
 const run = async () => {
   dotenv.config()
 
@@ -95,23 +119,22 @@ const run = async () => {
   console.info({numericData})
 
   const message = await upshotAdapter.getMessage(numericData)
-  const messageLocal = await getMessage(
-    numericData, 
-    {
-      chainId: 11155111,
-      upshotAdapterAddress: UPSHOT_ADAPTER_ADDRESS,
-    }
-  )
-  if (message !== messageLocal) {
-    throw new Error(`incorrect calculation of message locally`)
-  }
-
-  const messageBytes = messageStringToByteArray(message)
+  const messageBytes = hexStringToByteArray(message)
 
   // sign the message with the private key
   const signature = await wallet.signMessage(messageBytes)
+  const localSignature = await signMessageLocally(numericData, { 
+    chainId: UPSHOT_ADAPTER_CHAIN_ID,
+    upshotAdapterAddress: UPSHOT_ADAPTER_ADDRESS, 
+    rpcUrl, 
+    privateKey 
+  })
 
-  console.log({message, signature})
+  console.log({signature, localSignature})
+
+  if (signature !== localSignature) {
+    throw new Error('local signature does not match remote. Check chainId.')
+  }
 
   await upshotAdapter.verifyData({
     signedNumericData:[{ signature, numericData }],
