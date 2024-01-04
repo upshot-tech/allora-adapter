@@ -5,6 +5,8 @@ import { NumericDataStruct, UpshotAdapter } from '../types/UpshotAdapter'
 import { ethers } from 'ethers';
 import * as dotenv from 'dotenv';
 
+// to run: ts-node script/verifyDataExample.ts
+
 const UPSHOT_ADAPTER_ADDRESS = '0x238D0abD53fC68fAfa0CCD860446e381b400b5Be'
 
 const messageStringToByteArray = (message: string) => {
@@ -35,11 +37,16 @@ const run = async () => {
     extraData: ethers.toUtf8Bytes(''),
   }
 
+  console.info('verifying numericData')
+  console.info({numericData})
+
   const message = await upshotAdapter.getMessage(numericData)
   const messageBytes = messageStringToByteArray(message)
 
   // sign the message with the private key
   const signature = await wallet.signMessage(messageBytes)
+
+  console.log({message, signature})
 
   await upshotAdapter.verifyData({
     signedNumericData:[{ signature, numericData }],
@@ -64,6 +71,7 @@ const main = async () => {
 main()
   .then(() => process.exit(0))
   .catch((error) => {
+    console.error('ERROR')
     console.error(error)
     process.exit(1)
   })
