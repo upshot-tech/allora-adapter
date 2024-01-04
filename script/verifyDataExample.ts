@@ -80,19 +80,17 @@ const signMessageLocally = async (
   config: {
     chainId: number
     upshotAdapterAddress: string
-    rpcUrl: string
     privateKey: string
   }
 ) => {
-  const { chainId, upshotAdapterAddress, rpcUrl, privateKey } = config
-  const provider = new ethers.JsonRpcProvider(rpcUrl)
-  const wallet = new ethers.Wallet(privateKey, provider)
+  const { chainId, upshotAdapterAddress, privateKey } = config
+  const wallet = new ethers.Wallet(privateKey)
 
-  const messageLocal = await constructMessageLocally(
+  const message = await constructMessageLocally(
     numericData, 
     { chainId, upshotAdapterAddress }
   )
-  const messageBytes = hexStringToByteArray(messageLocal)
+  const messageBytes = hexStringToByteArray(message)
 
   return await wallet.signMessage(messageBytes)
 
@@ -127,7 +125,6 @@ const run = async () => {
   const localSignature = await signMessageLocally(numericData, { 
     chainId: UPSHOT_ADAPTER_CHAIN_ID,
     upshotAdapterAddress: UPSHOT_ADAPTER_ADDRESS, 
-    rpcUrl, 
     privateKey 
   })
 
