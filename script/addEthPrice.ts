@@ -7,43 +7,39 @@ import * as dotenv from 'dotenv';
 
 const UPSHOT_ADAPTER_ADDRESS = '0x238D0abD53fC68fAfa0CCD860446e381b400b5Be'
 
-const run = async () => {
-  dotenv.config()
-
-  const privateKey = getEnvVariable('privateKey')
-  const rpcUrl = getEnvVariable('rpcUrl')
-
-  console.log({privateKey, rpcUrl})
-
-  const provider = new ethers.JsonRpcProvider(rpcUrl)
-  const wallet = new ethers.Wallet(privateKey, provider)
-  console.log({walletAddress: wallet.address})
-
-  const upshotAdapter = (new UpshotAdapter__factory()).attach(UPSHOT_ADAPTER_ADDRESS).connect(wallet) as UpshotAdapter
-  const priceFeed = await upshotAdapter.getTopic(1)
-
-  console.log({priceFeed})
-
-  const numericData: NumericDataStruct = {
-    topicId: 1,
-    timestamp: 1704318000, // Math.floor(Date.now() / 1000) - (60 * 5),
-    numericValue: '123456789012345678',
-    extraData: ethers.toUtf8Bytes(''),
-  }
-
-  const message = await upshotAdapter.getMessage(numericData)
-
+const messageStringToByteArray = (message: string) => {
   const hexString = message.substring(2);
   const chunkedArray: string[] = []
   for (let i = 0; i < hexString.length; i += 2) {
     chunkedArray.push(hexString.substring(i, i + 2));
   }
   const bytesOfMessage = chunkedArray.map(chunk => parseInt(chunk, 16));
-  const byteArray = new Uint8Array(bytesOfMessage);
+  return new Uint8Array(bytesOfMessage);
+}
+
+const run = async () => {
+  dotenv.config()
+
+  const privateKey = getEnvVariable('privateKey')
+  const rpcUrl = getEnvVariable('rpcUrl')
+
+  const provider = new ethers.JsonRpcProvider(rpcUrl)
+  const wallet = new ethers.Wallet(privateKey, provider)
+
+  const upshotAdapter = (new UpshotAdapter__factory()).attach(UPSHOT_ADAPTER_ADDRESS).connect(wallet) as UpshotAdapter
+
+  const numericData: NumericDataStruct = {
+    topicId: 1,
+    timestamp: Math.floor(Date.now() / 1000) - (60 * 5),
+    numericValue: '123456789012345678',
+    extraData: ethers.toUtf8Bytes(''),
+  }
+
+  const message = await upshotAdapter.getMessage(numericData)
+  const messageBytes = messageStringToByteArray(message)
 
   // sign the message with the private key
-  const signature = await wallet.signMessage(byteArray)
-  console.log({message, bytesOfMessage, hexString, byteArray, signature})
+  const signature = await wallet.signMessage(messageBytes)
 
   await upshotAdapter.verifyData({
     signedNumericData:[{ signature, numericData }],
@@ -59,7 +55,13 @@ const getEnvVariable = (name: string) => {
   return envVar
 }
 
-run()
+const main = async () => {
+  console.info('STARTING')
+  await run()
+  console.info('COMPLETE')
+}
+
+main()
   .then(() => process.exit(0))
   .catch((error) => {
     console.error(error)
