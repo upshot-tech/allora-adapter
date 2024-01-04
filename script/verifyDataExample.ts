@@ -1,13 +1,22 @@
 // SPDX-License-Identifier: BUSL-1.1
 
 import { UpshotAdapter__factory } from '../types/factories/UpshotAdapter__factory'
-import { NumericDataStruct, UpshotAdapter } from '../types/UpshotAdapter'
-import { ethers } from 'ethers';
+import { UpshotAdapter } from '../types/UpshotAdapter';
+import { ethers, BigNumberish, BytesLike } from 'ethers';
 import * as dotenv from 'dotenv';
 
 // to run: ts-node script/verifyDataExample.ts
 
+const UPSHOT_ADAPTER_NAME = 'UpshotAdapter'
+const UPSHOT_ADAPTER_VERSION = 1
 const UPSHOT_ADAPTER_ADDRESS = '0x238D0abD53fC68fAfa0CCD860446e381b400b5Be'
+
+type NumericDataStruct = {
+  topicId: BigNumberish
+  timestamp: BigNumberish
+  numericValue: BigNumberish
+  extraData: BytesLike
+};
 
 const messageStringToByteArray = (message: string) => {
   const hexString = message.substring(2);
@@ -17,6 +26,51 @@ const messageStringToByteArray = (message: string) => {
   }
   const bytesOfMessage = chunkedArray.map(chunk => parseInt(chunk, 16));
   return new Uint8Array(bytesOfMessage);
+}
+
+const getMessage = async (
+  numericData: NumericDataStruct, 
+  config: {
+    chainId: number,
+    upshotAdapterAddress: string,
+  }
+) => {
+  const keccak = ethers.keccak256
+  const coder = new ethers.AbiCoder()
+  const toBytes = ethers.toUtf8Bytes
+
+  const { chainId, upshotAdapterAddress } = config
+
+  const numericDataTypehash = keccak(toBytes('NumericData(uint256 topicId,uint256 timestamp,uint256 numericValue,bytes extraData)'))
+
+  const domainSeparator = keccak(coder.encode(
+    ['bytes32', 'bytes32', 'bytes32', 'uint256', 'address'],
+    [
+      keccak(toBytes('EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)')),
+      keccak(toBytes(UPSHOT_ADAPTER_NAME)),
+      keccak(toBytes(UPSHOT_ADAPTER_VERSION.toString())),
+      chainId.toString(),
+      upshotAdapterAddress,
+    ]
+  ))
+
+  const intermediateHash = keccak(coder.encode(
+    ['bytes32', 'uint256', 'uint256', 'uint256', 'bytes'],
+    [
+      numericDataTypehash,
+      numericData.topicId, 
+      numericData.timestamp, 
+      numericData.numericValue, 
+      numericData.extraData
+    ]
+  ))
+
+  return keccak(
+    ethers.solidityPacked(
+      ['bytes1', 'bytes1', 'bytes32', 'bytes32'],
+      ['0x19', '0x01', domainSeparator, intermediateHash]
+    )
+  )
 }
 
 const run = async () => {
@@ -41,6 +95,17 @@ const run = async () => {
   console.info({numericData})
 
   const message = await upshotAdapter.getMessage(numericData)
+  const messageLocal = await getMessage(
+    numericData, 
+    {
+      chainId: 11155111,
+      upshotAdapterAddress: UPSHOT_ADAPTER_ADDRESS,
+    }
+  )
+  if (message !== messageLocal) {
+    throw new Error(`incorrect calculation of message locally`)
+  }
+
   const messageBytes = messageStringToByteArray(message)
 
   // sign the message with the private key
