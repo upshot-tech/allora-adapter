@@ -19,8 +19,9 @@ type NumericDataStruct = {
   extraData: BytesLike
 };
 
-const hexStringToByteArray = (message: string) => {
-  const hexString = message.substring(2);
+// hex string of the format '0xf9a0b2c3...'
+const hexStringToByteArray = (rawHexString: string) => {
+  const hexString = rawHexString.substring(2);
   const chunkedArray: string[] = []
   for (let i = 0; i < hexString.length; i += 2) {
     chunkedArray.push(hexString.substring(i, i + 2));
