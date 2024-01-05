@@ -4,9 +4,9 @@ import { UpshotAdapter__factory } from '../types/factories/UpshotAdapter__factor
 import { UpshotAdapter } from '../types/UpshotAdapter'
 import { ethers } from 'ethers';
 import * as dotenv from 'dotenv';
+import sepoliaAddresses from '../deploy/deployments/sepolia.json'
 
-const UPSHOT_ADAPTER_ADDRESS = '0x4Bb814869573de58F3789FA1F1ed60A0Ad3c1A2e'
-const ETH_PRICE_FEED_TOPIC = 1
+const TARGET_TOPIC_ID = 1
 const DUMMY_PRIVATE_KEY = '0x0123456789012345678901234567890123456789012345678901234567890123'
 
 
@@ -16,8 +16,8 @@ const run = async () => {
   const provider = new ethers.JsonRpcProvider(getEnvVariable('rpcUrl'))
   const wallet = new ethers.Wallet(DUMMY_PRIVATE_KEY, provider)
 
-  const upshotAdapter = (new UpshotAdapter__factory()).attach(UPSHOT_ADAPTER_ADDRESS).connect(wallet) as UpshotAdapter
-  const result = await upshotAdapter.getTopic(ETH_PRICE_FEED_TOPIC)
+  const upshotAdapter = (new UpshotAdapter__factory()).attach(sepoliaAddresses.UpshotAdapter).connect(wallet) as UpshotAdapter
+  const result = await upshotAdapter.getTopic(TARGET_TOPIC_ID)
   console.info({
     value: result.config.recentValue,
     timestamp: result.config.recentValueTime,
