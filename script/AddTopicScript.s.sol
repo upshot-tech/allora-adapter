@@ -14,6 +14,10 @@ import { ECDSA } from '../lib/openzeppelin-contracts/contracts/utils/cryptograph
 // forge script ./script/AddTopicScript.s.sol:AddTopicScript --rpc-url <rpc url> --etherscan-api-key <etherscan api key> --broadcast --verify -vvvv
 
 
+/**
+ * @title UpshotAdapterViewPredictionExample
+ * @notice Example contract adding topics to an UpshotAdapter
+ */
 contract AddTopicScript is Script {
     function run() public virtual {
         uint256 scriptRunnerPrivateKey = vm.envUint('SCRIPT_RUNNER_PRIVATE_KEY');
