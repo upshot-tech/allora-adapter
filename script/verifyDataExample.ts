@@ -105,7 +105,8 @@ const run = async () => {
   const provider = new ethers.JsonRpcProvider(rpcUrl)
   const wallet = new ethers.Wallet(privateKey, provider)
 
-  const upshotAdapter = (new UpshotAdapter__factory()).attach(UPSHOT_ADAPTER_ADDRESS).connect(wallet) as UpshotAdapter
+  const upshotAdapterFactory = new UpshotAdapter__factory(wallet);
+  const upshotAdapter = upshotAdapterFactory.attach(UPSHOT_ADAPTER_ADDRESS) as UpshotAdapter;
 
   const numericData: NumericDataStruct = {
     topicId: 1,
@@ -133,6 +134,23 @@ const run = async () => {
   if (signature !== localSignature) {
     throw new Error('local signature does not match remote. Check chainId.')
   }
+
+  const verifyDataArguments = {
+    signedNumericData: [{ signature, numericData }],
+    extraData: ethers.toUtf8Bytes(''),
+  }
+
+  const verifyDataTx = {
+    // Address of the contract
+    to: UPSHOT_ADAPTER_ADDRESS, 
+  
+    // Encoded data for the contract method call
+    data: upshotAdapter.interface.encodeFunctionData('verifyData', [verifyDataArguments])
+  };
+
+  const estimatedGas = await provider.estimateGas(verifyDataTx);
+
+  console.log({estimatedGas})
 
   await upshotAdapter.verifyData({
     signedNumericData:[{ signature, numericData }],

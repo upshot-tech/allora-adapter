@@ -9,13 +9,13 @@
   "private": true,
   "packageManager": "yarn@3.6.3",
   "dependencies": {
-    "@typechain/ethers-v6": "^0.5.0",
+    "@typechain/ethers-v6": "^0.5.1",
     "axios": "^1.6.0",
     "dotenv": "^16.3.1",
-    "ethers": "^6.7.1",
-    "ts-node": "^10.9.1",
-    "typechain": "^8.3.1",
-    "typescript": "^5.2.2"
+    "ethers": "^6.9.2",
+    "ts-node": "^10.9.2",
+    "typechain": "^8.3.2",
+    "typescript": "^5.3.3"
   },
   "scripts": {
     "types": "rm -rf types && yarn typechain --target ethers-v6 --out-dir types ./out/**/*.json",
