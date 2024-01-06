@@ -41,19 +41,9 @@ const _abi = [
                 internalType: "address",
               },
               {
-                name: "recentValueTime",
-                type: "uint48",
-                internalType: "uint48",
-              },
-              {
-                name: "recentValue",
-                type: "uint256",
-                internalType: "uint256",
-              },
-              {
                 name: "totalFee",
-                type: "uint256",
-                internalType: "uint256",
+                type: "uint96",
+                internalType: "uint96",
               },
               {
                 name: "aggregator",
@@ -91,6 +81,42 @@ const _abi = [
             name: "validDataProviders",
             type: "address[]",
             internalType: "address[]",
+          },
+        ],
+      },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "getTopicValue",
+    inputs: [
+      {
+        name: "topicId",
+        type: "uint256",
+        internalType: "uint256",
+      },
+      {
+        name: "extraData",
+        type: "bytes",
+        internalType: "bytes",
+      },
+    ],
+    outputs: [
+      {
+        name: "",
+        type: "tuple",
+        internalType: "struct TopicValue",
+        components: [
+          {
+            name: "recentValue",
+            type: "uint128",
+            internalType: "uint128",
+          },
+          {
+            name: "recentValueTime",
+            type: "uint128",
+            internalType: "uint128",
           },
         ],
       },

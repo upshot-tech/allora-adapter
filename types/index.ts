@@ -11,6 +11,8 @@ import type * as evenFeeHandlerTSol from "./EvenFeeHandler.t.sol";
 export type { evenFeeHandlerTSol };
 import type * as medianAggregatorTSol from "./MedianAggregator.t.sol";
 export type { medianAggregatorTSol };
+import type * as retrieveTopicValueSSol from "./RetrieveTopicValue.s.sol";
+export type { retrieveTopicValueSSol };
 import type * as stdErrorSol from "./StdError.sol";
 export type { stdErrorSol };
 import type * as stdStorageSol from "./StdStorage.sol";
@@ -63,6 +65,8 @@ export type { MedianAggregatorTest } from "./MedianAggregator.t.sol/MedianAggreg
 export { MedianAggregatorTest__factory } from "./factories/MedianAggregator.t.sol/MedianAggregatorTest__factory";
 export { Ownable__factory } from "./factories/Ownable__factory";
 export { Ownable2Step__factory } from "./factories/Ownable2Step__factory";
+export type { RetrieveTopicValue } from "./RetrieveTopicValue.s.sol/RetrieveTopicValue";
+export { RetrieveTopicValue__factory } from "./factories/RetrieveTopicValue.s.sol/RetrieveTopicValue__factory";
 export { Script__factory } from "./factories/Script__factory";
 export { ShortStrings__factory } from "./factories/ShortStrings__factory";
 export { StdAssertions__factory } from "./factories/StdAssertions__factory";

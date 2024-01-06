@@ -166,8 +166,8 @@ contract UpshotAdapterTest is Test {
         uint48 timestamp = 1672527600;
         vm.warp(timestamp);
 
-        uint48 recentValueTime0 = upshotAdapter.getTopic(1).config.recentValueTime;
-        uint256 recentValue0 = upshotAdapter.getTopic(1).config.recentValue;
+        uint256 recentValueTime0 = upshotAdapter.getTopicValue(1, '').recentValueTime;
+        uint256 recentValue0 = upshotAdapter.getTopicValue(1, '').recentValue;
 
         numericData[0] = _signNumericData(
             NumericData({
@@ -181,8 +181,8 @@ contract UpshotAdapterTest is Test {
 
         upshotAdapter.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
 
-        uint48 recentValueTime1 = upshotAdapter.getTopic(1).config.recentValueTime;
-        uint256 recentValue1 = upshotAdapter.getTopic(1).config.recentValue;
+        uint256 recentValueTime1 = upshotAdapter.getTopicValue(1, '').recentValueTime;
+        uint256 recentValue1 = upshotAdapter.getTopicValue(1, '').recentValue;
 
         assertEq(recentValueTime0, 0);
         assertEq(recentValueTime1, timestamp);
@@ -484,7 +484,7 @@ contract UpshotAdapterTest is Test {
         SignedNumericData[] memory numericData = new SignedNumericData[](2);
 
 
-        uint256 recentValue0 = upshotAdapter.getTopic(1).config.recentValue;
+        uint256 recentValue0 = upshotAdapter.getTopicValue(1, '').recentValue;
 
         numericData[0] = _signNumericData(
             NumericData({
@@ -508,8 +508,50 @@ contract UpshotAdapterTest is Test {
 
         upshotAdapter.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
 
-        uint256 recentValue1 = upshotAdapter.getTopic(1).config.recentValue;
+        uint256 recentValue1 = upshotAdapter.getTopicValue(1, '').recentValue;
 
+        assertEq(recentValue0, 0);
+        assertEq(recentValue1, 2 ether);
+    }
+
+    function test_valueIsSavedWhenCallingVerifyDataWithExtraDataSet() public {
+        vm.startPrank(admin);
+        upshotAdapter.addTopic(_getBasicTopicViewTwoDataProviders());
+        vm.stopPrank();
+
+        SignedNumericData[] memory numericData = new SignedNumericData[](2);
+
+
+        uint256 recentValueEmptyExtraData0 = upshotAdapter.getTopicValue(1, '').recentValue;
+        uint256 recentValue0 = upshotAdapter.getTopicValue(1, '123').recentValue;
+
+        numericData[0] = _signNumericData(
+            NumericData({
+                topicId: 1,
+                timestamp: uint64(block.timestamp - 1 minutes),
+                numericValue: 1 ether,
+                extraData: '123'
+            }),
+            signer0pk
+        );
+
+        numericData[1] = _signNumericData(
+            NumericData({
+                topicId: 1,
+                timestamp: uint64(block.timestamp - 1 minutes),
+                numericValue: 3 ether,
+                extraData: '123'
+            }),
+            signer1pk
+        );
+
+        upshotAdapter.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
+
+        uint256 recentValueEmptyExtraData1 = upshotAdapter.getTopicValue(1, '').recentValue;
+        uint256 recentValue1 = upshotAdapter.getTopicValue(1, '123').recentValue;
+
+        assertEq(recentValueEmptyExtraData0, 0);
+        assertEq(recentValueEmptyExtraData1, 0);
         assertEq(recentValue0, 0);
         assertEq(recentValue1, 2 ether);
     }
@@ -748,8 +790,6 @@ contract UpshotAdapterTest is Test {
                 title: 'Initial topic',
                 owner: topicOwner,
                 totalFee: 0.001 ether,
-                recentValueTime: 0,
-                recentValue: 0,
                 aggregator: aggregator,
                 ownerSwitchedOn: true,
                 adminSwitchedOn: true,

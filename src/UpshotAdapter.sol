@@ -4,7 +4,7 @@ pragma solidity ^0.8.13;
 
 import { IAggregator } from './interface/IAggregator.sol';
 import { IFeeHandler } from './interface/IFeeHandler.sol';
-import { UpshotAdapterNumericData, NumericData, IUpshotAdapter, Topic, TopicView } from './interface/IUpshotAdapter.sol';
+import { UpshotAdapterNumericData, NumericData, IUpshotAdapter, Topic, TopicView, TopicValue } from './interface/IUpshotAdapter.sol';
 import { ECDSA } from "../lib/openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
 import { Math } from "../lib/openzeppelin-contracts/contracts/utils/math/Math.sol";
 import { Ownable2Step } from "../lib/openzeppelin-contracts/contracts/access/Ownable2Step.sol";
@@ -20,6 +20,9 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
 
     /// @dev The data for each topic. Call getTopic function for access to structured data
     mapping(uint256 topicId => Topic) internal topic;
+
+    /// @dev The value for each topic
+    mapping(uint256 topicId => mapping(bytes extraData => TopicValue)) public topicValue;
 
     /// @dev The next topicId to use
     uint256 public nextTopicId = 1;
@@ -101,6 +104,9 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
     error UpshotAdapterV2InvalidDataValiditySeconds();
     error UpshotAdapterV2InvalidProtocolFeeReceiver();
     error UpshotAdapterV2ProtocolFeeTooHigh();
+
+    // casting errors
+    error SafeCastOverflowedUintDowncast(uint8 bits, uint256 value);
 
     // ***************************************************************
     // * ================== USER INTERFACE ========================= *
@@ -193,9 +199,9 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
 
         numericValue = topic[topicId].config.aggregator.aggregate(dataList, nd.extraData);
 
-        topic[topicId].config.recentValue = numericValue;
-        topic[topicId].config.recentValueTime = uint48(block.timestamp);
-
+        topicValue[topicId][extraData].recentValue = _toUint128(numericValue);
+        topicValue[topicId][extraData].recentValueTime = _toUint128(block.timestamp);
+        
         if (_protocolFee != 0) {
             _safeTransferETH(protocolFeeReceiver, _protocolFee);
         }
@@ -241,6 +247,20 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
             config: topic[topicId].config,
             validDataProviders: EnumerableSet.values(topic[topicId].validDataProviders)
         });
+    }
+
+    /**
+     * @notice Get the topic data for a given topicId
+     * 
+     * @param topicId The topicId to get the topic data for
+     * @param extraData The extraData to get the topic data for
+     * @return topicValue The topic data
+     */
+    function getTopicValue(
+        uint256 topicId, 
+        bytes calldata extraData
+    ) external view override returns (TopicValue memory) {
+        return topicValue[topicId][extraData];
     }
 
     // ***************************************************************
@@ -312,6 +332,17 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
         return true;
     }
 
+    /**
+     * @notice Downcast a uint256 to a uint128
+     * 
+     * @param value The value to downcast
+     */
+    function _toUint128(uint256 value) internal pure returns (uint128) {
+        if (value > type(uint128).max) {
+            revert SafeCastOverflowedUintDowncast(128, value);
+        }
+        return uint128(value);
+    }
 
     // ***************************************************************
     // * ====================== FEED UPDATES ======================= *
@@ -330,8 +361,6 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
         newTopicId = nextTopicId++;
 
         topic[newTopicId].config = topicView.config;
-        topic[newTopicId].config.recentValue = 0;
-        topic[newTopicId].config.recentValueTime = 0;
 
         for (uint256 i = 0; i < topicView.validDataProviders.length;) {
             EnumerableSet.add(topic[newTopicId].validDataProviders, topicView.validDataProviders[i]);
@@ -386,7 +415,7 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
      * @param topicId The topicId to update the total fee for
      * @param totalFee The total fee to be paid per piece of data
      */
-    function updateTotalFee(uint256 topicId, uint128 totalFee) external onlyTopicOwner(topicId) {
+    function updateTotalFee(uint256 topicId, uint96 totalFee) external onlyTopicOwner(topicId) {
         if (0 < totalFee && totalFee < 1_000) {
             revert UpshotAdapterV2InvalidTotalFee();
         }

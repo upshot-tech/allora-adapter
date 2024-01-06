@@ -31,9 +31,7 @@ struct UpshotAdapterNumericData {
 struct TopicConfig {
     string title;
     address owner;
-    uint48 recentValueTime;
-    uint256 recentValue;
-    uint256 totalFee;
+    uint96 totalFee;
     IAggregator aggregator;
     bool ownerSwitchedOn;
     bool adminSwitchedOn;
@@ -46,6 +44,11 @@ struct TopicConfig {
 struct Topic { 
     TopicConfig config;
     EnumerableSet.AddressSet validDataProviders;
+}
+
+struct TopicValue { 
+    uint128 recentValue;
+    uint128 recentValueTime;
 }
 
 // TODO reduce data structure size
@@ -79,4 +82,12 @@ interface IUpshotAdapter {
      */
     function getTopic(uint256 topicId) external view returns (TopicView memory topicView);
 
+    /**
+     * @notice Get the topic data for a given topicId
+     * 
+     * @param topicId The topicId to get the topic data for
+     * @param extraData The extraData to get the topic data for
+     * @return topicValue The topic data
+     */
+    function getTopicValue(uint256 topicId, bytes calldata extraData) external view returns (TopicValue memory);
 }

@@ -6,6 +6,7 @@ export * as addTopicScriptSSol from "./AddTopicScript.s.sol";
 export * as averageAggregatorTSol from "./AverageAggregator.t.sol";
 export * as evenFeeHandlerTSol from "./EvenFeeHandler.t.sol";
 export * as medianAggregatorTSol from "./MedianAggregator.t.sol";
+export * as retrieveTopicValueSSol from "./RetrieveTopicValue.s.sol";
 export * as stdErrorSol from "./StdError.sol";
 export * as stdStorageSol from "./StdStorage.sol";
 export * as upshotAdapterTSol from "./UpshotAdapter.t.sol";

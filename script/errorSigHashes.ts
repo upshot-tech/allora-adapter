@@ -1,6 +1,6 @@
 import { ethers } from "ethers";
 import { resolve } from "path";
-import { readFile, appendFile } from "fs";
+import { readFile } from "fs";
 import { readdir } from "fs/promises";
 
 async function* getFiles(dir: string): AsyncGenerator<string> {

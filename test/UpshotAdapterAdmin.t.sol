@@ -184,14 +184,10 @@ contract UpshotAdapterAdmin is Test {
     function test_addingTopicWithValueSetIsIgnored() public {
         vm.startPrank(admin);
 
-        TopicView memory topicView = _getBasicTopicView();
-        topicView.config.recentValue = 1;
-        topicView.config.recentValueTime = 2;
+        uint256 topicId = upshotAdapter.addTopic(_getBasicTopicView());
 
-        uint256 topicId = upshotAdapter.addTopic(topicView);
-
-        assertEq(upshotAdapter.getTopic(topicId).config.recentValue, 0);
-        assertEq(upshotAdapter.getTopic(topicId).config.recentValueTime, 0);
+        assertEq(upshotAdapter.getTopicValue(topicId, '').recentValue, 0);
+        assertEq(upshotAdapter.getTopicValue(topicId, '').recentValueTime, 0);
 
     }
 
@@ -224,8 +220,6 @@ contract UpshotAdapterAdmin is Test {
                 title: 'secondary topic',
                 owner: topicOwner2,
                 totalFee: 0.001 ether,
-                recentValueTime: 0,
-                recentValue: 0,
                 aggregator: aggregator,
                 ownerSwitchedOn: false,
                 adminSwitchedOn: false,
@@ -592,8 +586,6 @@ contract UpshotAdapterAdmin is Test {
                 title: 'Initial topic',
                 owner: topicOwner,
                 totalFee: 0.001 ether,
-                recentValueTime: 0,
-                recentValue: 0,
                 aggregator: aggregator,
                 ownerSwitchedOn: true,
                 adminSwitchedOn: true,

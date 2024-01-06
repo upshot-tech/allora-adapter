@@ -36,8 +36,6 @@ export type UpshotAdapterConstructorArgsStructOutput = [
 export type TopicConfigStruct = {
   title: string;
   owner: AddressLike;
-  recentValueTime: BigNumberish;
-  recentValue: BigNumberish;
   totalFee: BigNumberish;
   aggregator: AddressLike;
   ownerSwitchedOn: boolean;
@@ -50,8 +48,6 @@ export type TopicConfigStruct = {
 export type TopicConfigStructOutput = [
   title: string,
   owner: string,
-  recentValueTime: bigint,
-  recentValue: bigint,
   totalFee: bigint,
   aggregator: string,
   ownerSwitchedOn: boolean,
@@ -62,8 +58,6 @@ export type TopicConfigStructOutput = [
 ] & {
   title: string;
   owner: string;
-  recentValueTime: bigint;
-  recentValue: bigint;
   totalFee: bigint;
   aggregator: string;
   ownerSwitchedOn: boolean;
@@ -102,6 +96,16 @@ export type NumericDataStructOutput = [
   extraData: string;
 };
 
+export type TopicValueStruct = {
+  recentValue: BigNumberish;
+  recentValueTime: BigNumberish;
+};
+
+export type TopicValueStructOutput = [
+  recentValue: bigint,
+  recentValueTime: bigint
+] & { recentValue: bigint; recentValueTime: bigint };
+
 export type SignedNumericDataStruct = {
   signature: BytesLike;
   numericData: NumericDataStruct;
@@ -138,6 +142,7 @@ export interface UpshotAdapterInterface extends Interface {
       | "eip712Domain"
       | "getMessage"
       | "getTopic"
+      | "getTopicValue"
       | "nextTopicId"
       | "owner"
       | "pendingOwner"
@@ -146,6 +151,7 @@ export interface UpshotAdapterInterface extends Interface {
       | "removeDataProvider"
       | "renounceOwnership"
       | "switchedOn"
+      | "topicValue"
       | "transferOwnership"
       | "turnOffTopic"
       | "turnOnTopic"
@@ -236,6 +242,10 @@ export interface UpshotAdapterInterface extends Interface {
     values: [BigNumberish]
   ): string;
   encodeFunctionData(
+    functionFragment: "getTopicValue",
+    values: [BigNumberish, BytesLike]
+  ): string;
+  encodeFunctionData(
     functionFragment: "nextTopicId",
     values?: undefined
   ): string;
@@ -263,6 +273,10 @@ export interface UpshotAdapterInterface extends Interface {
   encodeFunctionData(
     functionFragment: "switchedOn",
     values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "topicValue",
+    values: [BigNumberish, BytesLike]
   ): string;
   encodeFunctionData(
     functionFragment: "transferOwnership",
@@ -349,6 +363,10 @@ export interface UpshotAdapterInterface extends Interface {
   decodeFunctionResult(functionFragment: "getMessage", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "getTopic", data: BytesLike): Result;
   decodeFunctionResult(
+    functionFragment: "getTopicValue",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "nextTopicId",
     data: BytesLike
   ): Result;
@@ -374,6 +392,7 @@ export interface UpshotAdapterInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "switchedOn", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "topicValue", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "transferOwnership",
     data: BytesLike
@@ -798,6 +817,12 @@ export interface UpshotAdapter extends BaseContract {
     "view"
   >;
 
+  getTopicValue: TypedContractMethod<
+    [topicId: BigNumberish, extraData: BytesLike],
+    [TopicValueStructOutput],
+    "view"
+  >;
+
   nextTopicId: TypedContractMethod<[], [bigint], "view">;
 
   owner: TypedContractMethod<[], [string], "view">;
@@ -817,6 +842,12 @@ export interface UpshotAdapter extends BaseContract {
   renounceOwnership: TypedContractMethod<[], [void], "nonpayable">;
 
   switchedOn: TypedContractMethod<[], [boolean], "view">;
+
+  topicValue: TypedContractMethod<
+    [topicId: BigNumberish, extraData: BytesLike],
+    [[bigint, bigint] & { recentValue: bigint; recentValueTime: bigint }],
+    "view"
+  >;
 
   transferOwnership: TypedContractMethod<
     [newOwner: AddressLike],
@@ -948,6 +979,13 @@ export interface UpshotAdapter extends BaseContract {
     "view"
   >;
   getFunction(
+    nameOrSignature: "getTopicValue"
+  ): TypedContractMethod<
+    [topicId: BigNumberish, extraData: BytesLike],
+    [TopicValueStructOutput],
+    "view"
+  >;
+  getFunction(
     nameOrSignature: "nextTopicId"
   ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
@@ -975,6 +1013,13 @@ export interface UpshotAdapter extends BaseContract {
   getFunction(
     nameOrSignature: "switchedOn"
   ): TypedContractMethod<[], [boolean], "view">;
+  getFunction(
+    nameOrSignature: "topicValue"
+  ): TypedContractMethod<
+    [topicId: BigNumberish, extraData: BytesLike],
+    [[bigint, bigint] & { recentValue: bigint; recentValueTime: bigint }],
+    "view"
+  >;
   getFunction(
     nameOrSignature: "transferOwnership"
   ): TypedContractMethod<[newOwner: AddressLike], [void], "nonpayable">;
