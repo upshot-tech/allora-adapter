@@ -199,8 +199,10 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
 
         numericValue = topic[topicId].config.aggregator.aggregate(dataList, nd.extraData);
 
-        topicValue[topicId][extraData].recentValue = _toUint128(numericValue);
-        topicValue[topicId][extraData].recentValueTime = _toUint128(block.timestamp);
+        topicValue[topicId][extraData] = TopicValue({
+            recentValue: _toUint128(numericValue),
+            recentValueTime: _toUint128(block.timestamp)
+        });
         
         if (_protocolFee != 0) {
             _safeTransferETH(protocolFeeReceiver, _protocolFee);
