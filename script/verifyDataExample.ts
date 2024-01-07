@@ -134,10 +134,16 @@ const run = async () => {
     throw new Error('local signature does not match remote. Check chainId.')
   }
 
-  await upshotAdapter.verifyData({
+  const tx = await upshotAdapter.verifyData({
     signedNumericData:[{ signature, numericData }],
     extraData: ethers.toUtf8Bytes(''),
   })
+  console.info('tx hash:', tx.hash) 
+  console.info('Awaiting tx confirmation...')
+
+  const result = await tx.wait()
+
+  console.info('tx receipt:', result)
 }
 
 const getEnvVariable = (name: string) => {
