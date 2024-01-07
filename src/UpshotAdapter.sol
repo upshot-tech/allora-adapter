@@ -200,8 +200,8 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
         numericValue = topic[topicId].config.aggregator.aggregate(dataList, nd.extraData);
 
         topicValue[topicId][extraData] = TopicValue({
-            recentValue: _toUint128(numericValue),
-            recentValueTime: _toUint128(block.timestamp)
+            recentValue: _toUint192(numericValue),
+            recentValueTime: _toUint64(block.timestamp)
         });
         
         if (_protocolFee != 0) {
@@ -335,15 +335,37 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
     }
 
     /**
-     * @notice Downcast a uint256 to a uint128
-     * 
-     * @param value The value to downcast
+     * @dev Returns the downcasted uint192 from uint256, reverting on
+     * overflow (when the input is greater than largest uint192).
+     *
+     * Counterpart to Solidity's `uint192` operator.
+     *
+     * Requirements:
+     *
+     * - input must fit into 192 bits
      */
-    function _toUint128(uint256 value) internal pure returns (uint128) {
-        if (value > type(uint128).max) {
-            revert SafeCastOverflowedUintDowncast(128, value);
+    function _toUint192(uint256 value) internal pure returns (uint192) {
+        if (value > type(uint192).max) {
+            revert SafeCastOverflowedUintDowncast(192, value);
         }
-        return uint128(value);
+        return uint192(value);
+    }
+
+    /**
+     * @dev Returns the downcasted uint64 from uint256, reverting on
+     * overflow (when the input is greater than largest uint64).
+     *
+     * Counterpart to Solidity's `uint64` operator.
+     *
+     * Requirements:
+     *
+     * - input must fit into 64 bits
+     */
+    function _toUint64(uint256 value) internal pure returns (uint64) {
+        if (value > type(uint64).max) {
+            revert SafeCastOverflowedUintDowncast(64, value);
+        }
+        return uint64(value);
     }
 
     // ***************************************************************

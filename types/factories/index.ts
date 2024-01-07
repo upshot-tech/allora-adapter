@@ -11,6 +11,7 @@ export * as stdErrorSol from "./StdError.sol";
 export * as stdStorageSol from "./StdStorage.sol";
 export * as upshotAdapterTSol from "./UpshotAdapter.t.sol";
 export * as upshotAdapterAdminTSol from "./UpshotAdapterAdmin.t.sol";
+export * as verifyDataExampleSSol from "./VerifyDataExample.s.sol";
 export * as vmSol from "./Vm.sol";
 export * as testSol from "./test.sol";
 export { AverageAggregator__factory } from "./AverageAggregator__factory";

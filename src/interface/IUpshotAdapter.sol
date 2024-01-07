@@ -47,8 +47,8 @@ struct Topic {
 }
 
 struct TopicValue { 
-    uint128 recentValue;
-    uint128 recentValueTime;
+    uint192 recentValue;
+    uint64 recentValueTime;
 }
 
 // TODO reduce data structure size

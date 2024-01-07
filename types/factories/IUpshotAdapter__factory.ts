@@ -110,13 +110,13 @@ const _abi = [
         components: [
           {
             name: "recentValue",
-            type: "uint128",
-            internalType: "uint128",
+            type: "uint192",
+            internalType: "uint192",
           },
           {
             name: "recentValueTime",
-            type: "uint128",
-            internalType: "uint128",
+            type: "uint64",
+            internalType: "uint64",
           },
         ],
       },

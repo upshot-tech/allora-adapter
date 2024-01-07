@@ -21,6 +21,8 @@ import type * as upshotAdapterTSol from "./UpshotAdapter.t.sol";
 export type { upshotAdapterTSol };
 import type * as upshotAdapterAdminTSol from "./UpshotAdapterAdmin.t.sol";
 export type { upshotAdapterAdminTSol };
+import type * as verifyDataExampleSSol from "./VerifyDataExample.s.sol";
+export type { verifyDataExampleSSol };
 import type * as vmSol from "./Vm.sol";
 export type { vmSol };
 import type * as testSol from "./test.sol";
@@ -82,6 +84,8 @@ export type { UpshotAdapterAdmin } from "./UpshotAdapterAdmin.t.sol/UpshotAdapte
 export { UpshotAdapterAdmin__factory } from "./factories/UpshotAdapterAdmin.t.sol/UpshotAdapterAdmin__factory";
 export { UpshotAdapterBringPredictionOnChainExample__factory } from "./factories/UpshotAdapterBringPredictionOnChainExample__factory";
 export { UpshotAdapterViewPredictionExample__factory } from "./factories/UpshotAdapterViewPredictionExample__factory";
+export type { VerifyDataExample } from "./VerifyDataExample.s.sol/VerifyDataExample";
+export { VerifyDataExample__factory } from "./factories/VerifyDataExample.s.sol/VerifyDataExample__factory";
 export type { Vm } from "./Vm.sol/Vm";
 export { Vm__factory } from "./factories/Vm.sol/Vm__factory";
 export type { VmSafe } from "./Vm.sol/VmSafe";
