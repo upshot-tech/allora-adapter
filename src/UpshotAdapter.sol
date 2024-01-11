@@ -368,9 +368,32 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
         return uint64(value);
     }
 
+    /**
+     * @notice Internal helper to add a new topic
+     * 
+     * @param topicView The topic data to add
+     */
+    function _addTopic(
+        TopicView calldata topicView
+    ) internal returns (uint256 newTopicId) {
+        if (bytes(topicView.config.title).length == 0) {
+            revert UpshotAdapterV2InvalidTopicTitle();
+        }
+        newTopicId = nextTopicId++;
+        topic[newTopicId].config = topicView.config;
+
+        for (uint256 i = 0; i < topicView.validDataProviders.length;) {
+            EnumerableSet.add(topic[newTopicId].validDataProviders, topicView.validDataProviders[i]);
+            unchecked { ++i; }
+        }
+
+        emit UpshotAdapterV2TopicAdded(topicView);
+    }
+
     // ***************************************************************
-    // * ====================== FEED UPDATES ======================= *
+    // * ==================== TOPIC MANAGEMENT ===================== *
     // ***************************************************************
+
     /**
      * @notice Function to add a new topic, can be called by anyone
      * 
@@ -379,20 +402,23 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
     function addTopic(
         TopicView calldata topicView
     ) external returns (uint256 newTopicId) {
-        if (bytes(topicView.config.title).length == 0) {
-            revert UpshotAdapterV2InvalidTopicTitle();
-        }
-        newTopicId = nextTopicId++;
+        return _addTopic(topicView);
+    }
 
-        topic[newTopicId].config = topicView.config;
+    /**
+     * @notice Function to add multiple new topics in order, can be called by anyone
+     * 
+     * @param topicViews The data for the topics to add
+     */
+    function addTopics(
+        TopicView[] calldata topicViews
+    ) external returns (uint256[] memory newTopicIds) {
+        newTopicIds = new uint256[](topicViews.length);
 
-        for (uint256 i = 0; i < topicView.validDataProviders.length;) {
-            EnumerableSet.add(topic[newTopicId].validDataProviders, topicView.validDataProviders[i]);
-
+        for (uint256 i = 0; i < topicViews.length;) {
+            newTopicIds[i] = _addTopic(topicViews[i]);
             unchecked { ++i; }
         }
-
-        emit UpshotAdapterV2TopicAdded(topicView);
     }
 
     /**
