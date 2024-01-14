@@ -4,7 +4,7 @@ pragma solidity ^0.8.13;
 
 import { IAggregator } from './interface/IAggregator.sol';
 import { IFeeHandler } from './interface/IFeeHandler.sol';
-import { UpshotAdapterNumericData, NumericData, IUpshotAdapter, Topic, TopicView } from './interface/IUpshotAdapter.sol';
+import { UpshotAdapterNumericData, NumericData, IUpshotAdapter, Topic, TopicView, TopicValue } from './interface/IUpshotAdapter.sol';
 import { ECDSA } from "../lib/openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
 import { Math } from "../lib/openzeppelin-contracts/contracts/utils/math/Math.sol";
 import { Ownable2Step } from "../lib/openzeppelin-contracts/contracts/access/Ownable2Step.sol";
@@ -20,6 +20,9 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
 
     /// @dev The data for each topic. Call getTopic function for access to structured data
     mapping(uint256 topicId => Topic) internal topic;
+
+    /// @dev The value for each topic
+    mapping(uint256 topicId => mapping(bytes extraData => TopicValue)) public topicValue;
 
     /// @dev The next topicId to use
     uint256 public nextTopicId = 1;
@@ -101,6 +104,9 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
     error UpshotAdapterV2InvalidDataValiditySeconds();
     error UpshotAdapterV2InvalidProtocolFeeReceiver();
     error UpshotAdapterV2ProtocolFeeTooHigh();
+
+    // casting errors
+    error SafeCastOverflowedUintDowncast(uint8 bits, uint256 value);
 
     // ***************************************************************
     // * ================== USER INTERFACE ========================= *
@@ -193,9 +199,11 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
 
         numericValue = topic[topicId].config.aggregator.aggregate(dataList, nd.extraData);
 
-        topic[topicId].config.recentValue = numericValue;
-        topic[topicId].config.recentValueTime = uint48(block.timestamp);
-
+        topicValue[topicId][extraData] = TopicValue({
+            recentValue: _toUint192(numericValue),
+            recentValueTime: _toUint64(block.timestamp)
+        });
+        
         if (_protocolFee != 0) {
             _safeTransferETH(protocolFeeReceiver, _protocolFee);
         }
@@ -241,6 +249,20 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
             config: topic[topicId].config,
             validDataProviders: EnumerableSet.values(topic[topicId].validDataProviders)
         });
+    }
+
+    /**
+     * @notice Get the topic data for a given topicId
+     * 
+     * @param topicId The topicId to get the topic data for
+     * @param extraData The extraData to get the topic data for
+     * @return topicValue The topic data
+     */
+    function getTopicValue(
+        uint256 topicId, 
+        bytes calldata extraData
+    ) external view override returns (TopicValue memory) {
+        return topicValue[topicId][extraData];
     }
 
     // ***************************************************************
@@ -312,10 +334,66 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
         return true;
     }
 
+    /**
+     * @dev Returns the downcasted uint192 from uint256, reverting on
+     * overflow (when the input is greater than largest uint192).
+     *
+     * Counterpart to Solidity's `uint192` operator.
+     *
+     * Requirements:
+     *
+     * - input must fit into 192 bits
+     */
+    function _toUint192(uint256 value) internal pure returns (uint192) {
+        if (value > type(uint192).max) {
+            revert SafeCastOverflowedUintDowncast(192, value);
+        }
+        return uint192(value);
+    }
+
+    /**
+     * @dev Returns the downcasted uint64 from uint256, reverting on
+     * overflow (when the input is greater than largest uint64).
+     *
+     * Counterpart to Solidity's `uint64` operator.
+     *
+     * Requirements:
+     *
+     * - input must fit into 64 bits
+     */
+    function _toUint64(uint256 value) internal pure returns (uint64) {
+        if (value > type(uint64).max) {
+            revert SafeCastOverflowedUintDowncast(64, value);
+        }
+        return uint64(value);
+    }
+
+    /**
+     * @notice Internal helper to add a new topic
+     * 
+     * @param topicView The topic data to add
+     */
+    function _addTopic(
+        TopicView calldata topicView
+    ) internal returns (uint256 newTopicId) {
+        if (bytes(topicView.config.title).length == 0) {
+            revert UpshotAdapterV2InvalidTopicTitle();
+        }
+        newTopicId = nextTopicId++;
+        topic[newTopicId].config = topicView.config;
+
+        for (uint256 i = 0; i < topicView.validDataProviders.length;) {
+            EnumerableSet.add(topic[newTopicId].validDataProviders, topicView.validDataProviders[i]);
+            unchecked { ++i; }
+        }
+
+        emit UpshotAdapterV2TopicAdded(topicView);
+    }
 
     // ***************************************************************
-    // * ====================== FEED UPDATES ======================= *
+    // * ==================== TOPIC MANAGEMENT ===================== *
     // ***************************************************************
+
     /**
      * @notice Function to add a new topic, can be called by anyone
      * 
@@ -324,22 +402,23 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
     function addTopic(
         TopicView calldata topicView
     ) external returns (uint256 newTopicId) {
-        if (bytes(topicView.config.title).length == 0) {
-            revert UpshotAdapterV2InvalidTopicTitle();
-        }
-        newTopicId = nextTopicId++;
+        return _addTopic(topicView);
+    }
 
-        topic[newTopicId].config = topicView.config;
-        topic[newTopicId].config.recentValue = 0;
-        topic[newTopicId].config.recentValueTime = 0;
+    /**
+     * @notice Function to add multiple new topics in order, can be called by anyone
+     * 
+     * @param topicViews The data for the topics to add
+     */
+    function addTopics(
+        TopicView[] calldata topicViews
+    ) external returns (uint256[] memory newTopicIds) {
+        newTopicIds = new uint256[](topicViews.length);
 
-        for (uint256 i = 0; i < topicView.validDataProviders.length;) {
-            EnumerableSet.add(topic[newTopicId].validDataProviders, topicView.validDataProviders[i]);
-
+        for (uint256 i = 0; i < topicViews.length;) {
+            newTopicIds[i] = _addTopic(topicViews[i]);
             unchecked { ++i; }
         }
-
-        emit UpshotAdapterV2TopicAdded(topicView);
     }
 
     /**
@@ -386,7 +465,7 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
      * @param topicId The topicId to update the total fee for
      * @param totalFee The total fee to be paid per piece of data
      */
-    function updateTotalFee(uint256 topicId, uint128 totalFee) external onlyTopicOwner(topicId) {
+    function updateTotalFee(uint256 topicId, uint96 totalFee) external onlyTopicOwner(topicId) {
         if (0 < totalFee && totalFee < 1_000) {
             revert UpshotAdapterV2InvalidTotalFee();
         }

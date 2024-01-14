@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 import '../lib/forge-std/src/Script.sol';
 
-import { IUpshotAdapter, Topic, TopicView, TopicConfig, UpshotAdapterNumericData } from '../src/interface/IUpshotAdapter.sol';
+import { IUpshotAdapter, Topic, TopicValue, TopicConfig, UpshotAdapterNumericData } from '../src/interface/IUpshotAdapter.sol';
 import { Ownable2Step } from "../lib/openzeppelin-contracts/contracts/access/Ownable2Step.sol";
 import { EnumerableSet } from "../lib/openzeppelin-contracts/contracts/utils/structs/EnumerableSet.sol";
 
@@ -25,9 +25,9 @@ contract RetrieveTopicValue is Script {
         vm.startBroadcast(scriptRunnerPrivateKey);
         console.log('Broadcast started by %s', vm.addr(scriptRunnerPrivateKey));
 
-        TopicView memory topicView = UPSHOT_ADAPTER.getTopic(TOPIC_ID);
+        TopicValue memory topicValue = UPSHOT_ADAPTER.getTopicValue(TOPIC_ID, '');
 
-        console.log('Recent Value: %d', topicView.config.recentValue);
-        console.log('Recent Value Timestamp: %d', topicView.config.recentValueTime);
+        console.log('Recent Value: %d', topicValue.recentValue);
+        console.log('Recent Value Timestamp: %d', topicValue.recentValueTime);
     }
 }

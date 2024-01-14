@@ -24,8 +24,6 @@ import type {
 export type TopicConfigStruct = {
   title: string;
   owner: AddressLike;
-  recentValueTime: BigNumberish;
-  recentValue: BigNumberish;
   totalFee: BigNumberish;
   aggregator: AddressLike;
   ownerSwitchedOn: boolean;
@@ -38,8 +36,6 @@ export type TopicConfigStruct = {
 export type TopicConfigStructOutput = [
   title: string,
   owner: string,
-  recentValueTime: bigint,
-  recentValue: bigint,
   totalFee: bigint,
   aggregator: string,
   ownerSwitchedOn: boolean,
@@ -50,8 +46,6 @@ export type TopicConfigStructOutput = [
 ] & {
   title: string;
   owner: string;
-  recentValueTime: bigint;
-  recentValue: bigint;
   totalFee: bigint;
   aggregator: string;
   ownerSwitchedOn: boolean;
@@ -70,6 +64,16 @@ export type TopicViewStructOutput = [
   config: TopicConfigStructOutput,
   validDataProviders: string[]
 ] & { config: TopicConfigStructOutput; validDataProviders: string[] };
+
+export type TopicValueStruct = {
+  recentValue: BigNumberish;
+  recentValueTime: BigNumberish;
+};
+
+export type TopicValueStructOutput = [
+  recentValue: bigint,
+  recentValueTime: bigint
+] & { recentValue: bigint; recentValueTime: bigint };
 
 export type NumericDataStruct = {
   topicId: BigNumberish;
@@ -111,11 +115,17 @@ export type UpshotAdapterNumericDataStructOutput = [
 ] & { signedNumericData: SignedNumericDataStructOutput[]; extraData: string };
 
 export interface IUpshotAdapterInterface extends Interface {
-  getFunction(nameOrSignature: "getTopic" | "verifyData"): FunctionFragment;
+  getFunction(
+    nameOrSignature: "getTopic" | "getTopicValue" | "verifyData"
+  ): FunctionFragment;
 
   encodeFunctionData(
     functionFragment: "getTopic",
     values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getTopicValue",
+    values: [BigNumberish, BytesLike]
   ): string;
   encodeFunctionData(
     functionFragment: "verifyData",
@@ -123,6 +133,10 @@ export interface IUpshotAdapterInterface extends Interface {
   ): string;
 
   decodeFunctionResult(functionFragment: "getTopic", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "getTopicValue",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "verifyData", data: BytesLike): Result;
 }
 
@@ -175,6 +189,12 @@ export interface IUpshotAdapter extends BaseContract {
     "view"
   >;
 
+  getTopicValue: TypedContractMethod<
+    [topicId: BigNumberish, extraData: BytesLike],
+    [TopicValueStructOutput],
+    "view"
+  >;
+
   verifyData: TypedContractMethod<
     [pd: UpshotAdapterNumericDataStruct],
     [bigint],
@@ -190,6 +210,13 @@ export interface IUpshotAdapter extends BaseContract {
   ): TypedContractMethod<
     [topicId: BigNumberish],
     [TopicViewStructOutput],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "getTopicValue"
+  ): TypedContractMethod<
+    [topicId: BigNumberish, extraData: BytesLike],
+    [TopicValueStructOutput],
     "view"
   >;
   getFunction(

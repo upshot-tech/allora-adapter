@@ -79,6 +79,7 @@ export interface UpshotAdapterTestInterface extends Interface {
       | "test_dataFeesSplitCorrectlyWithProtocol"
       | "test_dataMedianAggregationWorksCorrectly"
       | "test_dataMedianAggregationWorksCorrectly2"
+      | "test_valueIsSavedWhenCallingVerifyDataWithExtraDataSet"
       | "test_valueIsSavedWhenCallingVerifyDataWithMultipleValidSignatures"
   ): FunctionFragment;
 
@@ -236,6 +237,10 @@ export interface UpshotAdapterTestInterface extends Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
+    functionFragment: "test_valueIsSavedWhenCallingVerifyDataWithExtraDataSet",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "test_valueIsSavedWhenCallingVerifyDataWithMultipleValidSignatures",
     values?: undefined
   ): string;
@@ -365,6 +370,10 @@ export interface UpshotAdapterTestInterface extends Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "test_dataMedianAggregationWorksCorrectly2",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "test_valueIsSavedWhenCallingVerifyDataWithExtraDataSet",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -865,6 +874,12 @@ export interface UpshotAdapterTest extends BaseContract {
     "nonpayable"
   >;
 
+  test_valueIsSavedWhenCallingVerifyDataWithExtraDataSet: TypedContractMethod<
+    [],
+    [void],
+    "nonpayable"
+  >;
+
   test_valueIsSavedWhenCallingVerifyDataWithMultipleValidSignatures: TypedContractMethod<
     [],
     [void],
@@ -980,6 +995,9 @@ export interface UpshotAdapterTest extends BaseContract {
   ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "test_dataMedianAggregationWorksCorrectly2"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "test_valueIsSavedWhenCallingVerifyDataWithExtraDataSet"
   ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "test_valueIsSavedWhenCallingVerifyDataWithMultipleValidSignatures"

@@ -17,10 +17,10 @@ const run = async () => {
   const wallet = new ethers.Wallet(DUMMY_PRIVATE_KEY, provider)
 
   const upshotAdapter = (new UpshotAdapter__factory()).attach(sepoliaAddresses.UpshotAdapter).connect(wallet) as UpshotAdapter
-  const result = await upshotAdapter.getTopic(TARGET_TOPIC_ID)
+  const { recentValue, recentValueTime } = await upshotAdapter.getTopicValue(TARGET_TOPIC_ID, '0x')
   console.info({
-    value: result.config.recentValue,
-    timestamp: result.config.recentValueTime,
+    value: recentValue,
+    timestamp: recentValueTime,
   })
 }
 
