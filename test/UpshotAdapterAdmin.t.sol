@@ -201,6 +201,42 @@ contract UpshotAdapterAdmin is Test {
         assertEq(upshotAdapter.getTopic(2).config.dataProviderQuorum, 1);
     }
 
+    function test_anyoneCanAddTopic() public {
+        vm.startPrank(imposter);
+
+        assertEq(upshotAdapter.getTopic(2).config.dataProviderQuorum, 0);
+
+        upshotAdapter.addTopic(_getBasicTopicView());
+
+        assertEq(upshotAdapter.getTopic(2).config.dataProviderQuorum, 1);
+    }
+
+    function test_anyoneCanAddMultipleTopics() public {
+        vm.startPrank(imposter);
+
+        assertEq(upshotAdapter.getTopic(2).config.title, '');
+        assertEq(upshotAdapter.getTopic(3).config.title, '');
+        assertEq(upshotAdapter.getTopic(2).config.dataProviderQuorum, 0);
+        assertEq(upshotAdapter.getTopic(3).config.dataProviderQuorum, 0);
+
+        TopicView[] memory topicViews = new TopicView[](2);
+        topicViews[0] = _getBasicTopicView();
+        topicViews[0].config.title = 'newTopic1'; 
+
+        topicViews[1] = _getBasicTopicView();
+        topicViews[1].config.title = 'newTopic2'; 
+
+        uint256[] memory topicIds = upshotAdapter.addTopics(topicViews);
+
+        assertEq(upshotAdapter.getTopic(2).config.title, 'newTopic1');
+        assertEq(upshotAdapter.getTopic(3).config.title, 'newTopic2');
+        assertEq(upshotAdapter.getTopic(2).config.dataProviderQuorum, 1);
+        assertEq(upshotAdapter.getTopic(3).config.dataProviderQuorum, 1);
+
+        assertEq(topicIds[0], 2);
+        assertEq(topicIds[1], 3);
+    }
+
     function test_addingTopicGivesProperId() public {
         vm.startPrank(admin);
         uint256 secondTopicId = upshotAdapter.addTopic(_getBasicTopicView());

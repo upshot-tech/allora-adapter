@@ -13,7 +13,6 @@ import { ECDSA } from '../lib/openzeppelin-contracts/contracts/utils/cryptograph
 // run with 
 // forge script ./script/AddTopicScript.s.sol:AddTopicScript --rpc-url <rpc url> --etherscan-api-key <etherscan api key> --broadcast --verify -vvvv
 
-
 /**
  * @title UpshotAdapterViewPredictionExample
  * @notice Example contract adding topics to an UpshotAdapter
@@ -31,7 +30,7 @@ contract AddTopicScript is Script {
         vm.startBroadcast(scriptRunnerPrivateKey);
         console.log('Broadcast started by %s', scriptRunner);
 
-        string[7] memory indices = [
+        string[7] memory topicTitles = [
             'Art Blocks Curated Index',
             'Yuga Index',
             'PFP Index',
@@ -41,34 +40,37 @@ contract AddTopicScript is Script {
             'PFP Index - Grails'
         ];
 
-        uint256[] memory topicIds = new uint256[](indices.length);
+        TopicView[] memory topicViews = new TopicView[](topicTitles.length);
 
-        for (uint256 i = 0; i < indices.length; i++) {
-            TopicConfig memory topicConfig = TopicConfig({
-                title: indices[i],
-                owner: scriptRunner,
-                totalFee: 0 ether,
-                aggregator: aggregator,
-                ownerSwitchedOn: true,
-                adminSwitchedOn: true,
-                feeHandler: feeHandler,
-                dataProviderQuorum: 1,
-                dataValiditySeconds: 1 hours
-            });
+        TopicConfig memory topicConfig = TopicConfig({
+            title: '',
+            owner: scriptRunner,
+            totalFee: 0 ether,
+            aggregator: aggregator,
+            ownerSwitchedOn: true,
+            adminSwitchedOn: true,
+            feeHandler: feeHandler,
+            dataProviderQuorum: 1,
+            dataValiditySeconds: 1 hours
+        });
 
-            address[] memory validDataProviders = new address[](1);
-            validDataProviders[0] = address(0xA459c3A3b7769e18E702a3B5e2dEcDD495655791);
+        address[] memory validDataProviders = new address[](1);
+        validDataProviders[0] = address(0xA459c3A3b7769e18E702a3B5e2dEcDD495655791);
 
-            TopicView memory topicView = TopicView({
-                config: topicConfig,
-                validDataProviders: validDataProviders
-            });
+        TopicView memory topicView = TopicView({
+            config: topicConfig,
+            validDataProviders: validDataProviders
+        });
 
-            topicIds[i] = upshotAdapter.addTopic(topicView);
+        for (uint256 i = 0; i < topicTitles.length; i++) {
+            topicViews[i] = topicView;
+            topicViews[i].config.title = topicTitles[i];
         }
 
-        for (uint256 i = 0; i < indices.length; i++) {
-            console.log('Topic "%s" generated with id %s', indices[i], topicIds[i]);
+        uint256[] memory topicIds = upshotAdapter.addTopics(topicViews);
+
+        for (uint256 i = 0; i < topicTitles.length; i++) {
+            console.log('Topic "%s" added with id %s', topicTitles[i], topicIds[i]);
         }
 
         vm.stopBroadcast();
