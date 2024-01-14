@@ -53,7 +53,7 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
     // ***************************************************************
 
     // main interface events
-    event UpshotAdapterV2AdapterVerifiedData(uint256 topicId, uint256 numericData, address[] dataProviders);
+    event UpshotAdapterV2AdapterVerifiedData(uint256 topicId, uint256 numericData, address[] dataProviders, bytes extraData);
     
     // topic owner update events
     event UpshotAdapterV2TopicAdded(TopicView topicView);
@@ -214,7 +214,7 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
             nd.extraData
         );
 
-        emit UpshotAdapterV2AdapterVerifiedData(topicId, numericValue, dataProviders);
+        emit UpshotAdapterV2AdapterVerifiedData(topicId, numericValue, dataProviders, extraData);
     }
 
     // ***************************************************************
