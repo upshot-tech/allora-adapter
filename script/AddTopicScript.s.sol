@@ -19,8 +19,8 @@ import { ECDSA } from '../lib/openzeppelin-contracts/contracts/utils/cryptograph
  */
 contract AddTopicScript is Script {
 
-    UpshotAdapter upshotAdapter = UpshotAdapter(0x4341a3F0a350C2428184a727BAb86e16D4ba7018);
-    IAggregator aggregator = IAggregator(0x3eB08C166509638669e78d0c50c0f82A25Bc8e46);
+    UpshotAdapter upshotAdapter = UpshotAdapter(0x9928f99dEf24e792cE8c20B7B67E64aafEC76c18);
+    IAggregator aggregator = IAggregator(0x28bd0750FCAd5280464180b5Ac4860302dC7373c);
 
     function run() public virtual {
         uint256 scriptRunnerPrivateKey = vm.envUint('SCRIPT_RUNNER_PRIVATE_KEY');
@@ -29,39 +29,35 @@ contract AddTopicScript is Script {
         vm.startBroadcast(scriptRunnerPrivateKey);
         console.log('Broadcast started by %s', scriptRunner);
 
-        string[7] memory topicTitles = [
+        string[8] memory topicTitles = [
             'Art Blocks Curated Index',
             'Yuga Index',
             'PFP Index',
             'Top 30 Liquid Collections Index',
             'Yuga Index - Grails',
             'Art Blocks Curated Index - Grails',
-            'PFP Index - Grails'
+            'PFP Index - Grails',
+            'CryptoDickbutt Appraisals'
         ];
-
-        TopicView[] memory topicViews = new TopicView[](topicTitles.length);
-
-        TopicConfig memory topicConfig = TopicConfig({
-            title: '',
-            owner: scriptRunner,
-            aggregator: aggregator,
-            ownerSwitchedOn: true,
-            adminSwitchedOn: true,
-            dataProviderQuorum: 1,
-            dataValiditySeconds: 1 hours
-        });
 
         address[] memory validDataProviders = new address[](1);
         validDataProviders[0] = address(0xA459c3A3b7769e18E702a3B5e2dEcDD495655791);
 
-        TopicView memory topicView = TopicView({
-            config: topicConfig,
-            validDataProviders: validDataProviders
-        });
+        TopicView[] memory topicViews = new TopicView[](topicTitles.length);
 
         for (uint256 i = 0; i < topicTitles.length; i++) {
-            topicViews[i] = topicView;
-            topicViews[i].config.title = topicTitles[i];
+            topicViews[i] = TopicView({
+                config: TopicConfig({
+                    title: topicTitles[i],
+                    owner: scriptRunner,
+                    aggregator: aggregator,
+                    ownerSwitchedOn: true,
+                    adminSwitchedOn: true,
+                    dataProviderQuorum: 1,
+                    dataValiditySeconds: 1 hours
+                }),
+                validDataProviders: validDataProviders
+            });
         }
 
         uint256[] memory topicIds = upshotAdapter.addTopics(topicViews);
