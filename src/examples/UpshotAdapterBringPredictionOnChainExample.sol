@@ -49,7 +49,7 @@ contract UpshotAdapterBringPredictionOnChainExample is Ownable2Step {
         uint256 protocolFunctionArgument,
         UpshotAdapterNumericData calldata upshotAdapterData
     ) external payable {
-        uint256 value = IUpshotAdapter(0x4341a3F0a350C2428184a727BAb86e16D4ba7018).verifyData(upshotAdapterData);
+        (uint256 value,,,) = IUpshotAdapter(0x4341a3F0a350C2428184a727BAb86e16D4ba7018).verifyData(upshotAdapterData);
 
         _protocolFunctionRequiringPredictionValue(protocolFunctionArgument, value);
     }

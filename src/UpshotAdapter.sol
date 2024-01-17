@@ -94,12 +94,13 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
     // ***************************************************************
     ///@inheritdoc IUpshotAdapter
     function verifyData(
-        UpshotAdapterNumericData calldata nd
-    ) external override returns (uint256 numericValue) {
-        uint256 topicId;
-        address[] memory dataProviders;
-        bytes calldata extraData;
-
+        UpshotAdapterNumericData memory nd
+    ) external override returns (
+        uint256 numericValue, 
+        uint256 topicId, 
+        address[] memory dataProviders, 
+        bytes memory extraData
+    ) {
         (numericValue, topicId, dataProviders, extraData) = _verifyData(nd);
 
         topicValue[topicId][extraData] = TopicValue({
@@ -112,9 +113,14 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
 
     ///@inheritdoc IUpshotAdapter
     function verifyDataViewOnly(
-        UpshotAdapterNumericData calldata nd
-    ) external view override returns (uint256 numericValue) {
-        (numericValue,,,) = _verifyData(nd);
+        UpshotAdapterNumericData memory nd
+    ) external view override returns (
+        uint256 numericValue, 
+        uint256 topicId, 
+        address[] memory dataProviders, 
+        bytes memory extraData
+    ) {
+        (numericValue, topicId, dataProviders, extraData) = _verifyData(nd);
     }
 
     /**
@@ -123,12 +129,12 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
      * @param nd The data to verify
      */
     function _verifyData(
-        UpshotAdapterNumericData calldata nd
+        UpshotAdapterNumericData memory nd
     ) internal view returns (
         uint256 numericValue, 
         uint256 topicId, 
         address[] memory dataProviders, 
-        bytes calldata extraData
+        bytes memory extraData
     ) {
         if (!switchedOn) {
             revert UpshotAdapterV2NotSwitchedOn();
@@ -157,7 +163,7 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
 
         uint256[] memory dataList = new uint256[](dataCount);
         dataProviders = new address[](dataCount);
-        NumericData calldata numericData;
+        NumericData memory numericData;
 
         for(uint256 i = 0; i < dataCount;) {
             numericData = nd.signedNumericData[i].numericData;
@@ -218,7 +224,7 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
      * @param numericData The numerical data to verify
      */
     function getMessage(
-        NumericData calldata numericData
+        NumericData memory numericData
     ) public view returns (bytes32) {
         return _hashTypedDataV4(keccak256(abi.encode(
             NUMERIC_DATA_TYPEHASH,
@@ -278,7 +284,7 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
      * @param b The second bytes calldata
      * @return Whether the bytes calldata are equal
      */
-    function _equalBytes(bytes calldata a, bytes calldata b) internal pure returns (bool) {
+    function _equalBytes(bytes memory a, bytes memory b) internal pure returns (bool) {
         uint256 aLength = a.length;
         // Check if their lengths are equal
         if (aLength != b.length) {

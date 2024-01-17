@@ -445,7 +445,7 @@ contract UpshotAdapterTest is Test {
             signer1pk
         );
 
-        uint256 numericValue = upshotAdapter.verifyData(_packageNumericData(numericData, ''));
+        (uint256 numericValue,,,) = upshotAdapter.verifyData(_packageNumericData(numericData, ''));
         assertEq(numericValue, 2 ether);
     }
 
@@ -476,8 +476,8 @@ contract UpshotAdapterTest is Test {
             signer1pk
         );
 
-        uint256 numericValue = upshotAdapter.verifyData(_packageNumericData(numericData, ''));
-        uint256 numericValueView = upshotAdapter.verifyDataViewOnly(_packageNumericData(numericData, ''));
+        (uint256 numericValue,,,) = upshotAdapter.verifyData(_packageNumericData(numericData, ''));
+        (uint256 numericValueView,,,) = upshotAdapter.verifyDataViewOnly(_packageNumericData(numericData, ''));
         assertEq(numericValue, 2 ether);
         assertEq(numericValue, numericValueView);
     }
@@ -594,8 +594,8 @@ contract UpshotAdapterTest is Test {
             signer1pk
         );
 
-        uint256 price = upshotAdapter.verifyData(_packageNumericData(numericData, ''));
-        assertEq(price, 2 ether);
+        (uint256 numericValue,,,) = upshotAdapter.verifyData(_packageNumericData(numericData, ''));
+        assertEq(numericValue, 2 ether);
     }
 
     function test_dataMedianAggregationWorksCorrectly2() public {
@@ -640,8 +640,8 @@ contract UpshotAdapterTest is Test {
             signer2pk
         );
 
-        uint256 price = upshotAdapter.verifyData(_packageNumericData(numericData, ''));
-        assertEq(price, 2 ether);
+        (uint256 numericValue,,,) = upshotAdapter.verifyData(_packageNumericData(numericData, ''));
+        assertEq(numericValue, 2 ether);
     }
 
     function test_dataAggregationWorksCorrectlyAfterUpdatingAggregator() public {
@@ -674,7 +674,7 @@ contract UpshotAdapterTest is Test {
         numericData[1] = _signNumericData(rawNumericData1, signer1pk);
         numericData[2] = _signNumericData(rawNumericData2, signer2pk);
 
-        uint256 numericValue = upshotAdapter.verifyData(_packageNumericData(numericData, ''));
+        (uint256 numericValue,,,) = upshotAdapter.verifyData(_packageNumericData(numericData, ''));
         assertEq(numericValue, 3 ether);
 
         MedianAggregator medianAggregator = new MedianAggregator();
@@ -687,7 +687,7 @@ contract UpshotAdapterTest is Test {
         numericData[1] = _signNumericData(rawNumericData1, signer1pk);
         numericData[2] = _signNumericData(rawNumericData2, signer2pk);
 
-        uint256 numericValue2 = upshotAdapter.verifyData(_packageNumericData(numericData, ''));
+        (uint256 numericValue2,,,) = upshotAdapter.verifyData(_packageNumericData(numericData, ''));
         assertEq(numericValue2, 2 ether);
     }
 

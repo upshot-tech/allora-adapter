@@ -67,16 +67,26 @@ interface IUpshotAdapter {
     /**
      * @notice Get a verified piece of numeric data for a given topic
      * 
-     * @param pd The numeric data to aggregate
+     * @param nd The numeric data to aggregate
      */
-    function verifyData(UpshotAdapterNumericData calldata pd) external returns (uint256 numericValue);
+    function verifyData(UpshotAdapterNumericData memory nd) external returns (
+        uint256 numericValue, 
+        uint256 topicId, 
+        address[] memory dataProviders, 
+        bytes memory extraData
+    );
 
     /**
      * @notice Get a verified piece of numeric data for a given topic without mutating state
      * 
      * @param pd The numeric data to aggregate
      */
-    function verifyDataViewOnly(UpshotAdapterNumericData calldata pd) external view returns (uint256 numericValue);
+    function verifyDataViewOnly(UpshotAdapterNumericData calldata pd) external view returns (
+        uint256 numericValue, 
+        uint256 topicId, 
+        address[] memory dataProviders, 
+        bytes memory extraData
+    );
 
     /**
      * @notice Get the topic data for a given topicId
