@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 
 import { IAggregator } from '../interface/IAggregator.sol';
-import { IFeeHandler } from '../interface/IFeeHandler.sol';
 import { EnumerableSet } from "../../lib/openzeppelin-contracts/contracts/utils/structs/EnumerableSet.sol";
 
 
@@ -31,13 +30,11 @@ struct UpshotAdapterNumericData {
 struct TopicConfig {
     string title;
     address owner;
-    uint96 totalFee;
+    uint48 dataProviderQuorum;
+    uint48 dataValiditySeconds;
     IAggregator aggregator;
     bool ownerSwitchedOn;
     bool adminSwitchedOn;
-    IFeeHandler feeHandler;
-    uint48 dataProviderQuorum;
-    uint48 dataValiditySeconds;
 }
 
 /// @dev The struct for a topic, using a set for valid data providers 
@@ -72,7 +69,14 @@ interface IUpshotAdapter {
      * 
      * @param pd The numeric data to aggregate
      */
-    function verifyData(UpshotAdapterNumericData calldata pd) external payable returns (uint256 numericValue);
+    function verifyData(UpshotAdapterNumericData calldata pd) external returns (uint256 numericValue);
+
+    /**
+     * @notice Get a verified piece of numeric data for a given topic without mutating state
+     * 
+     * @param pd The numeric data to aggregate
+     */
+    function verifyDataViewOnly(UpshotAdapterNumericData calldata pd) external view returns (uint256 numericValue);
 
     /**
      * @notice Get the topic data for a given topicId

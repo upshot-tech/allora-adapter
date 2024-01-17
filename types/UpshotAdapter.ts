@@ -23,48 +23,38 @@ import type {
   TypedContractMethod,
 } from "./common";
 
-export type UpshotAdapterConstructorArgsStruct = {
-  admin: AddressLike;
-  protocolFeeReceiver: AddressLike;
-};
+export type UpshotAdapterConstructorArgsStruct = { admin: AddressLike };
 
-export type UpshotAdapterConstructorArgsStructOutput = [
-  admin: string,
-  protocolFeeReceiver: string
-] & { admin: string; protocolFeeReceiver: string };
+export type UpshotAdapterConstructorArgsStructOutput = [admin: string] & {
+  admin: string;
+};
 
 export type TopicConfigStruct = {
   title: string;
   owner: AddressLike;
-  totalFee: BigNumberish;
+  dataProviderQuorum: BigNumberish;
+  dataValiditySeconds: BigNumberish;
   aggregator: AddressLike;
   ownerSwitchedOn: boolean;
   adminSwitchedOn: boolean;
-  feeHandler: AddressLike;
-  dataProviderQuorum: BigNumberish;
-  dataValiditySeconds: BigNumberish;
 };
 
 export type TopicConfigStructOutput = [
   title: string,
   owner: string,
-  totalFee: bigint,
+  dataProviderQuorum: bigint,
+  dataValiditySeconds: bigint,
   aggregator: string,
   ownerSwitchedOn: boolean,
-  adminSwitchedOn: boolean,
-  feeHandler: string,
-  dataProviderQuorum: bigint,
-  dataValiditySeconds: bigint
+  adminSwitchedOn: boolean
 ] & {
   title: string;
   owner: string;
-  totalFee: bigint;
+  dataProviderQuorum: bigint;
+  dataValiditySeconds: bigint;
   aggregator: string;
   ownerSwitchedOn: boolean;
   adminSwitchedOn: boolean;
-  feeHandler: string;
-  dataProviderQuorum: bigint;
-  dataValiditySeconds: bigint;
 };
 
 export type TopicViewStruct = {
@@ -133,8 +123,7 @@ export interface UpshotAdapterInterface extends Interface {
       | "acceptOwnership"
       | "addDataProvider"
       | "addTopic"
-      | "adminSetProtocolFee"
-      | "adminSetProtocolFeeReceiver"
+      | "addTopics"
       | "adminTurnOffAdapter"
       | "adminTurnOffTopic"
       | "adminTurnOnAdapter"
@@ -146,8 +135,6 @@ export interface UpshotAdapterInterface extends Interface {
       | "nextTopicId"
       | "owner"
       | "pendingOwner"
-      | "protocolFee"
-      | "protocolFeeReceiver"
       | "removeDataProvider"
       | "renounceOwnership"
       | "switchedOn"
@@ -158,10 +145,9 @@ export interface UpshotAdapterInterface extends Interface {
       | "updateAggregator"
       | "updateDataProviderQuorum"
       | "updateDataValiditySeconds"
-      | "updateFeeHandler"
       | "updateTopicOwner"
-      | "updateTotalFee"
       | "verifyData"
+      | "verifyDataViewOnly"
   ): FunctionFragment;
 
   getEvent(
@@ -173,8 +159,6 @@ export interface UpshotAdapterInterface extends Interface {
       | "UpshotAdapterV2AdapterAdminTopicTurnedOn"
       | "UpshotAdapterV2AdapterAdminTurnedOff"
       | "UpshotAdapterV2AdapterAdminTurnedOn"
-      | "UpshotAdapterV2AdapterAdminUpdatedProtocolFee"
-      | "UpshotAdapterV2AdapterAdminUpdatedProtocolFeeReceiver"
       | "UpshotAdapterV2AdapterTopicOwnerAddedDataProvider"
       | "UpshotAdapterV2AdapterTopicOwnerRemovedDataProvider"
       | "UpshotAdapterV2AdapterTopicOwnerTopicTurnedOff"
@@ -182,8 +166,6 @@ export interface UpshotAdapterInterface extends Interface {
       | "UpshotAdapterV2AdapterTopicOwnerUpdatedAggregator"
       | "UpshotAdapterV2AdapterTopicOwnerUpdatedDataProviderQuorum"
       | "UpshotAdapterV2AdapterTopicOwnerUpdatedDataValiditySeconds"
-      | "UpshotAdapterV2AdapterTopicOwnerUpdatedFee"
-      | "UpshotAdapterV2AdapterTopicOwnerUpdatedFeeHandler"
       | "UpshotAdapterV2AdapterTopicOwnerUpdatedOwner"
       | "UpshotAdapterV2AdapterVerifiedData"
       | "UpshotAdapterV2TopicAdded"
@@ -206,12 +188,8 @@ export interface UpshotAdapterInterface extends Interface {
     values: [TopicViewStruct]
   ): string;
   encodeFunctionData(
-    functionFragment: "adminSetProtocolFee",
-    values: [BigNumberish]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "adminSetProtocolFeeReceiver",
-    values: [AddressLike]
+    functionFragment: "addTopics",
+    values: [TopicViewStruct[]]
   ): string;
   encodeFunctionData(
     functionFragment: "adminTurnOffAdapter",
@@ -255,14 +233,6 @@ export interface UpshotAdapterInterface extends Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "protocolFee",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "protocolFeeReceiver",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
     functionFragment: "removeDataProvider",
     values: [BigNumberish, AddressLike]
   ): string;
@@ -303,19 +273,15 @@ export interface UpshotAdapterInterface extends Interface {
     values: [BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(
-    functionFragment: "updateFeeHandler",
-    values: [BigNumberish, AddressLike]
-  ): string;
-  encodeFunctionData(
     functionFragment: "updateTopicOwner",
     values: [BigNumberish, AddressLike]
   ): string;
   encodeFunctionData(
-    functionFragment: "updateTotalFee",
-    values: [BigNumberish, BigNumberish]
+    functionFragment: "verifyData",
+    values: [UpshotAdapterNumericDataStruct]
   ): string;
   encodeFunctionData(
-    functionFragment: "verifyData",
+    functionFragment: "verifyDataViewOnly",
     values: [UpshotAdapterNumericDataStruct]
   ): string;
 
@@ -332,14 +298,7 @@ export interface UpshotAdapterInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "addTopic", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "adminSetProtocolFee",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "adminSetProtocolFeeReceiver",
-    data: BytesLike
-  ): Result;
+  decodeFunctionResult(functionFragment: "addTopics", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "adminTurnOffAdapter",
     data: BytesLike
@@ -373,14 +332,6 @@ export interface UpshotAdapterInterface extends Interface {
   decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "pendingOwner",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "protocolFee",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "protocolFeeReceiver",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -418,18 +369,14 @@ export interface UpshotAdapterInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "updateFeeHandler",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
     functionFragment: "updateTopicOwner",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "verifyData", data: BytesLike): Result;
   decodeFunctionResult(
-    functionFragment: "updateTotalFee",
+    functionFragment: "verifyDataViewOnly",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "verifyData", data: BytesLike): Result;
 }
 
 export namespace EIP712DomainChangedEvent {
@@ -506,30 +453,6 @@ export namespace UpshotAdapterV2AdapterAdminTurnedOnEvent {
   export type InputTuple = [];
   export type OutputTuple = [];
   export interface OutputObject {}
-  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
-  export type Filter = TypedDeferredTopicFilter<Event>;
-  export type Log = TypedEventLog<Event>;
-  export type LogDescription = TypedLogDescription<Event>;
-}
-
-export namespace UpshotAdapterV2AdapterAdminUpdatedProtocolFeeEvent {
-  export type InputTuple = [newProtocolFee: BigNumberish];
-  export type OutputTuple = [newProtocolFee: bigint];
-  export interface OutputObject {
-    newProtocolFee: bigint;
-  }
-  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
-  export type Filter = TypedDeferredTopicFilter<Event>;
-  export type Log = TypedEventLog<Event>;
-  export type LogDescription = TypedLogDescription<Event>;
-}
-
-export namespace UpshotAdapterV2AdapterAdminUpdatedProtocolFeeReceiverEvent {
-  export type InputTuple = [protocolFeeReceiver: AddressLike];
-  export type OutputTuple = [protocolFeeReceiver: string];
-  export interface OutputObject {
-    protocolFeeReceiver: string;
-  }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
   export type Log = TypedEventLog<Event>;
@@ -630,31 +553,6 @@ export namespace UpshotAdapterV2AdapterTopicOwnerUpdatedDataValiditySecondsEvent
   export type LogDescription = TypedLogDescription<Event>;
 }
 
-export namespace UpshotAdapterV2AdapterTopicOwnerUpdatedFeeEvent {
-  export type InputTuple = [totalFee: BigNumberish];
-  export type OutputTuple = [totalFee: bigint];
-  export interface OutputObject {
-    totalFee: bigint;
-  }
-  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
-  export type Filter = TypedDeferredTopicFilter<Event>;
-  export type Log = TypedEventLog<Event>;
-  export type LogDescription = TypedLogDescription<Event>;
-}
-
-export namespace UpshotAdapterV2AdapterTopicOwnerUpdatedFeeHandlerEvent {
-  export type InputTuple = [topicId: BigNumberish, feeHandler: AddressLike];
-  export type OutputTuple = [topicId: bigint, feeHandler: string];
-  export interface OutputObject {
-    topicId: bigint;
-    feeHandler: string;
-  }
-  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
-  export type Filter = TypedDeferredTopicFilter<Event>;
-  export type Log = TypedEventLog<Event>;
-  export type LogDescription = TypedLogDescription<Event>;
-}
-
 export namespace UpshotAdapterV2AdapterTopicOwnerUpdatedOwnerEvent {
   export type InputTuple = [topicId: BigNumberish, newOwner: AddressLike];
   export type OutputTuple = [topicId: bigint, newOwner: string];
@@ -672,17 +570,20 @@ export namespace UpshotAdapterV2AdapterVerifiedDataEvent {
   export type InputTuple = [
     topicId: BigNumberish,
     numericData: BigNumberish,
-    dataProviders: AddressLike[]
+    dataProviders: AddressLike[],
+    extraData: BytesLike
   ];
   export type OutputTuple = [
     topicId: bigint,
     numericData: bigint,
-    dataProviders: string[]
+    dataProviders: string[],
+    extraData: string
   ];
   export interface OutputObject {
     topicId: bigint;
     numericData: bigint;
     dataProviders: string[];
+    extraData: string;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -761,15 +662,9 @@ export interface UpshotAdapter extends BaseContract {
     "nonpayable"
   >;
 
-  adminSetProtocolFee: TypedContractMethod<
-    [protocolFee_: BigNumberish],
-    [void],
-    "nonpayable"
-  >;
-
-  adminSetProtocolFeeReceiver: TypedContractMethod<
-    [protocolFeeReceiver_: AddressLike],
-    [void],
+  addTopics: TypedContractMethod<
+    [topicViews: TopicViewStruct[]],
+    [bigint[]],
     "nonpayable"
   >;
 
@@ -829,10 +724,6 @@ export interface UpshotAdapter extends BaseContract {
 
   pendingOwner: TypedContractMethod<[], [string], "view">;
 
-  protocolFee: TypedContractMethod<[], [bigint], "view">;
-
-  protocolFeeReceiver: TypedContractMethod<[], [string], "view">;
-
   removeDataProvider: TypedContractMethod<
     [topicId: BigNumberish, dataProvider: AddressLike],
     [void],
@@ -885,20 +776,8 @@ export interface UpshotAdapter extends BaseContract {
     "nonpayable"
   >;
 
-  updateFeeHandler: TypedContractMethod<
-    [topicId: BigNumberish, feeHandler: AddressLike],
-    [void],
-    "nonpayable"
-  >;
-
   updateTopicOwner: TypedContractMethod<
     [topicId: BigNumberish, owner_: AddressLike],
-    [void],
-    "nonpayable"
-  >;
-
-  updateTotalFee: TypedContractMethod<
-    [topicId: BigNumberish, totalFee: BigNumberish],
     [void],
     "nonpayable"
   >;
@@ -906,7 +785,13 @@ export interface UpshotAdapter extends BaseContract {
   verifyData: TypedContractMethod<
     [nd: UpshotAdapterNumericDataStruct],
     [bigint],
-    "payable"
+    "nonpayable"
+  >;
+
+  verifyDataViewOnly: TypedContractMethod<
+    [nd: UpshotAdapterNumericDataStruct],
+    [bigint],
+    "view"
   >;
 
   getFunction<T extends ContractMethod = ContractMethod>(
@@ -930,13 +815,10 @@ export interface UpshotAdapter extends BaseContract {
     nameOrSignature: "addTopic"
   ): TypedContractMethod<[topicView: TopicViewStruct], [bigint], "nonpayable">;
   getFunction(
-    nameOrSignature: "adminSetProtocolFee"
-  ): TypedContractMethod<[protocolFee_: BigNumberish], [void], "nonpayable">;
-  getFunction(
-    nameOrSignature: "adminSetProtocolFeeReceiver"
+    nameOrSignature: "addTopics"
   ): TypedContractMethod<
-    [protocolFeeReceiver_: AddressLike],
-    [void],
+    [topicViews: TopicViewStruct[]],
+    [bigint[]],
     "nonpayable"
   >;
   getFunction(
@@ -995,12 +877,6 @@ export interface UpshotAdapter extends BaseContract {
     nameOrSignature: "pendingOwner"
   ): TypedContractMethod<[], [string], "view">;
   getFunction(
-    nameOrSignature: "protocolFee"
-  ): TypedContractMethod<[], [bigint], "view">;
-  getFunction(
-    nameOrSignature: "protocolFeeReceiver"
-  ): TypedContractMethod<[], [string], "view">;
-  getFunction(
     nameOrSignature: "removeDataProvider"
   ): TypedContractMethod<
     [topicId: BigNumberish, dataProvider: AddressLike],
@@ -1051,23 +927,9 @@ export interface UpshotAdapter extends BaseContract {
     "nonpayable"
   >;
   getFunction(
-    nameOrSignature: "updateFeeHandler"
-  ): TypedContractMethod<
-    [topicId: BigNumberish, feeHandler: AddressLike],
-    [void],
-    "nonpayable"
-  >;
-  getFunction(
     nameOrSignature: "updateTopicOwner"
   ): TypedContractMethod<
     [topicId: BigNumberish, owner_: AddressLike],
-    [void],
-    "nonpayable"
-  >;
-  getFunction(
-    nameOrSignature: "updateTotalFee"
-  ): TypedContractMethod<
-    [topicId: BigNumberish, totalFee: BigNumberish],
     [void],
     "nonpayable"
   >;
@@ -1076,7 +938,14 @@ export interface UpshotAdapter extends BaseContract {
   ): TypedContractMethod<
     [nd: UpshotAdapterNumericDataStruct],
     [bigint],
-    "payable"
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "verifyDataViewOnly"
+  ): TypedContractMethod<
+    [nd: UpshotAdapterNumericDataStruct],
+    [bigint],
+    "view"
   >;
 
   getEvent(
@@ -1129,20 +998,6 @@ export interface UpshotAdapter extends BaseContract {
     UpshotAdapterV2AdapterAdminTurnedOnEvent.OutputObject
   >;
   getEvent(
-    key: "UpshotAdapterV2AdapterAdminUpdatedProtocolFee"
-  ): TypedContractEvent<
-    UpshotAdapterV2AdapterAdminUpdatedProtocolFeeEvent.InputTuple,
-    UpshotAdapterV2AdapterAdminUpdatedProtocolFeeEvent.OutputTuple,
-    UpshotAdapterV2AdapterAdminUpdatedProtocolFeeEvent.OutputObject
-  >;
-  getEvent(
-    key: "UpshotAdapterV2AdapterAdminUpdatedProtocolFeeReceiver"
-  ): TypedContractEvent<
-    UpshotAdapterV2AdapterAdminUpdatedProtocolFeeReceiverEvent.InputTuple,
-    UpshotAdapterV2AdapterAdminUpdatedProtocolFeeReceiverEvent.OutputTuple,
-    UpshotAdapterV2AdapterAdminUpdatedProtocolFeeReceiverEvent.OutputObject
-  >;
-  getEvent(
     key: "UpshotAdapterV2AdapterTopicOwnerAddedDataProvider"
   ): TypedContractEvent<
     UpshotAdapterV2AdapterTopicOwnerAddedDataProviderEvent.InputTuple,
@@ -1190,20 +1045,6 @@ export interface UpshotAdapter extends BaseContract {
     UpshotAdapterV2AdapterTopicOwnerUpdatedDataValiditySecondsEvent.InputTuple,
     UpshotAdapterV2AdapterTopicOwnerUpdatedDataValiditySecondsEvent.OutputTuple,
     UpshotAdapterV2AdapterTopicOwnerUpdatedDataValiditySecondsEvent.OutputObject
-  >;
-  getEvent(
-    key: "UpshotAdapterV2AdapterTopicOwnerUpdatedFee"
-  ): TypedContractEvent<
-    UpshotAdapterV2AdapterTopicOwnerUpdatedFeeEvent.InputTuple,
-    UpshotAdapterV2AdapterTopicOwnerUpdatedFeeEvent.OutputTuple,
-    UpshotAdapterV2AdapterTopicOwnerUpdatedFeeEvent.OutputObject
-  >;
-  getEvent(
-    key: "UpshotAdapterV2AdapterTopicOwnerUpdatedFeeHandler"
-  ): TypedContractEvent<
-    UpshotAdapterV2AdapterTopicOwnerUpdatedFeeHandlerEvent.InputTuple,
-    UpshotAdapterV2AdapterTopicOwnerUpdatedFeeHandlerEvent.OutputTuple,
-    UpshotAdapterV2AdapterTopicOwnerUpdatedFeeHandlerEvent.OutputObject
   >;
   getEvent(
     key: "UpshotAdapterV2AdapterTopicOwnerUpdatedOwner"
@@ -1305,28 +1146,6 @@ export interface UpshotAdapter extends BaseContract {
       UpshotAdapterV2AdapterAdminTurnedOnEvent.OutputObject
     >;
 
-    "UpshotAdapterV2AdapterAdminUpdatedProtocolFee(uint256)": TypedContractEvent<
-      UpshotAdapterV2AdapterAdminUpdatedProtocolFeeEvent.InputTuple,
-      UpshotAdapterV2AdapterAdminUpdatedProtocolFeeEvent.OutputTuple,
-      UpshotAdapterV2AdapterAdminUpdatedProtocolFeeEvent.OutputObject
-    >;
-    UpshotAdapterV2AdapterAdminUpdatedProtocolFee: TypedContractEvent<
-      UpshotAdapterV2AdapterAdminUpdatedProtocolFeeEvent.InputTuple,
-      UpshotAdapterV2AdapterAdminUpdatedProtocolFeeEvent.OutputTuple,
-      UpshotAdapterV2AdapterAdminUpdatedProtocolFeeEvent.OutputObject
-    >;
-
-    "UpshotAdapterV2AdapterAdminUpdatedProtocolFeeReceiver(address)": TypedContractEvent<
-      UpshotAdapterV2AdapterAdminUpdatedProtocolFeeReceiverEvent.InputTuple,
-      UpshotAdapterV2AdapterAdminUpdatedProtocolFeeReceiverEvent.OutputTuple,
-      UpshotAdapterV2AdapterAdminUpdatedProtocolFeeReceiverEvent.OutputObject
-    >;
-    UpshotAdapterV2AdapterAdminUpdatedProtocolFeeReceiver: TypedContractEvent<
-      UpshotAdapterV2AdapterAdminUpdatedProtocolFeeReceiverEvent.InputTuple,
-      UpshotAdapterV2AdapterAdminUpdatedProtocolFeeReceiverEvent.OutputTuple,
-      UpshotAdapterV2AdapterAdminUpdatedProtocolFeeReceiverEvent.OutputObject
-    >;
-
     "UpshotAdapterV2AdapterTopicOwnerAddedDataProvider(uint256,address)": TypedContractEvent<
       UpshotAdapterV2AdapterTopicOwnerAddedDataProviderEvent.InputTuple,
       UpshotAdapterV2AdapterTopicOwnerAddedDataProviderEvent.OutputTuple,
@@ -1404,28 +1223,6 @@ export interface UpshotAdapter extends BaseContract {
       UpshotAdapterV2AdapterTopicOwnerUpdatedDataValiditySecondsEvent.OutputObject
     >;
 
-    "UpshotAdapterV2AdapterTopicOwnerUpdatedFee(uint128)": TypedContractEvent<
-      UpshotAdapterV2AdapterTopicOwnerUpdatedFeeEvent.InputTuple,
-      UpshotAdapterV2AdapterTopicOwnerUpdatedFeeEvent.OutputTuple,
-      UpshotAdapterV2AdapterTopicOwnerUpdatedFeeEvent.OutputObject
-    >;
-    UpshotAdapterV2AdapterTopicOwnerUpdatedFee: TypedContractEvent<
-      UpshotAdapterV2AdapterTopicOwnerUpdatedFeeEvent.InputTuple,
-      UpshotAdapterV2AdapterTopicOwnerUpdatedFeeEvent.OutputTuple,
-      UpshotAdapterV2AdapterTopicOwnerUpdatedFeeEvent.OutputObject
-    >;
-
-    "UpshotAdapterV2AdapterTopicOwnerUpdatedFeeHandler(uint256,address)": TypedContractEvent<
-      UpshotAdapterV2AdapterTopicOwnerUpdatedFeeHandlerEvent.InputTuple,
-      UpshotAdapterV2AdapterTopicOwnerUpdatedFeeHandlerEvent.OutputTuple,
-      UpshotAdapterV2AdapterTopicOwnerUpdatedFeeHandlerEvent.OutputObject
-    >;
-    UpshotAdapterV2AdapterTopicOwnerUpdatedFeeHandler: TypedContractEvent<
-      UpshotAdapterV2AdapterTopicOwnerUpdatedFeeHandlerEvent.InputTuple,
-      UpshotAdapterV2AdapterTopicOwnerUpdatedFeeHandlerEvent.OutputTuple,
-      UpshotAdapterV2AdapterTopicOwnerUpdatedFeeHandlerEvent.OutputObject
-    >;
-
     "UpshotAdapterV2AdapterTopicOwnerUpdatedOwner(uint256,address)": TypedContractEvent<
       UpshotAdapterV2AdapterTopicOwnerUpdatedOwnerEvent.InputTuple,
       UpshotAdapterV2AdapterTopicOwnerUpdatedOwnerEvent.OutputTuple,
@@ -1437,7 +1234,7 @@ export interface UpshotAdapter extends BaseContract {
       UpshotAdapterV2AdapterTopicOwnerUpdatedOwnerEvent.OutputObject
     >;
 
-    "UpshotAdapterV2AdapterVerifiedData(uint256,uint256,address[])": TypedContractEvent<
+    "UpshotAdapterV2AdapterVerifiedData(uint256,uint256,address[],bytes)": TypedContractEvent<
       UpshotAdapterV2AdapterVerifiedDataEvent.InputTuple,
       UpshotAdapterV2AdapterVerifiedDataEvent.OutputTuple,
       UpshotAdapterV2AdapterVerifiedDataEvent.OutputObject

@@ -41,9 +41,14 @@ const _abi = [
                 internalType: "address",
               },
               {
-                name: "totalFee",
-                type: "uint96",
-                internalType: "uint96",
+                name: "dataProviderQuorum",
+                type: "uint48",
+                internalType: "uint48",
+              },
+              {
+                name: "dataValiditySeconds",
+                type: "uint48",
+                internalType: "uint48",
               },
               {
                 name: "aggregator",
@@ -59,21 +64,6 @@ const _abi = [
                 name: "adminSwitchedOn",
                 type: "bool",
                 internalType: "bool",
-              },
-              {
-                name: "feeHandler",
-                type: "address",
-                internalType: "contract IFeeHandler",
-              },
-              {
-                name: "dataProviderQuorum",
-                type: "uint48",
-                internalType: "uint48",
-              },
-              {
-                name: "dataValiditySeconds",
-                type: "uint48",
-                internalType: "uint48",
               },
             ],
           },
@@ -186,7 +176,72 @@ const _abi = [
         internalType: "uint256",
       },
     ],
-    stateMutability: "payable",
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "verifyDataViewOnly",
+    inputs: [
+      {
+        name: "pd",
+        type: "tuple",
+        internalType: "struct UpshotAdapterNumericData",
+        components: [
+          {
+            name: "signedNumericData",
+            type: "tuple[]",
+            internalType: "struct SignedNumericData[]",
+            components: [
+              {
+                name: "signature",
+                type: "bytes",
+                internalType: "bytes",
+              },
+              {
+                name: "numericData",
+                type: "tuple",
+                internalType: "struct NumericData",
+                components: [
+                  {
+                    name: "topicId",
+                    type: "uint256",
+                    internalType: "uint256",
+                  },
+                  {
+                    name: "timestamp",
+                    type: "uint256",
+                    internalType: "uint256",
+                  },
+                  {
+                    name: "numericValue",
+                    type: "uint256",
+                    internalType: "uint256",
+                  },
+                  {
+                    name: "extraData",
+                    type: "bytes",
+                    internalType: "bytes",
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            name: "extraData",
+            type: "bytes",
+            internalType: "bytes",
+          },
+        ],
+      },
+    ],
+    outputs: [
+      {
+        name: "numericValue",
+        type: "uint256",
+        internalType: "uint256",
+      },
+    ],
+    stateMutability: "view",
   },
 ] as const;
 

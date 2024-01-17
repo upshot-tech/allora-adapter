@@ -11,7 +11,6 @@ import {
     TopicConfig, 
     UpshotAdapterNumericData
 } from "../src/interface/IUpshotAdapter.sol";
-import { EvenFeeHandler, EvenFeeHandlerConstructorArgs } from "../src/feeHandler/EvenFeeHandler.sol";
 import { AverageAggregator } from "../src/aggregator/AverageAggregator.sol";
 import { MedianAggregator } from "../src/aggregator/MedianAggregator.sol";
 import { IAggregator } from "../src/interface/IAggregator.sol";
@@ -21,7 +20,6 @@ import { IFeeHandler } from "../src/interface/IFeeHandler.sol";
 contract UpshotAdapterTest is Test {
 
     IAggregator aggregator;
-    EvenFeeHandler evenFeeHandler;
     UpshotAdapter upshotAdapter;
 
     address admin = address(100);
@@ -46,12 +44,8 @@ contract UpshotAdapterTest is Test {
         vm.warp(1 hours);
 
         aggregator = new AverageAggregator();
-        evenFeeHandler = new EvenFeeHandler(EvenFeeHandlerConstructorArgs({
-            admin: admin
-        }));
         upshotAdapter = new UpshotAdapter(UpshotAdapterConstructorArgs({
-            admin: admin,
-            protocolFeeReceiver: protocolFeeReceiver
+            admin: admin
         }));
 
         signer0 = vm.addr(signer0pk);
@@ -85,32 +79,11 @@ contract UpshotAdapterTest is Test {
         upshotAdapter.verifyData(_packageNumericData(numericData, ''));
     }
 
-    function test_cantCallVerifyDataWithoutFee() public {
-        vm.startPrank(admin);
-        upshotAdapter.addTopic(_getBasicTopicView());
-        vm.stopPrank();
-
-        SignedNumericData[] memory numericData = new SignedNumericData[](1);
-
-        numericData[0] = _signNumericData(
-            NumericData({
-                topicId: 1,
-                timestamp: uint64(block.timestamp - 1 minutes),
-                numericValue: 1 ether,
-                extraData: ''
-            }),
-            signer0pk
-        );
-
-        vm.expectRevert(abi.encodeWithSignature("UpshotAdapterV2InsufficientPayment()"));
-        upshotAdapter.verifyData(_packageNumericData(numericData, ''));
-    }
-
     function test_cantCallVerifyDataWithNoData() public {
         SignedNumericData[] memory numericData = new SignedNumericData[](0);
 
         vm.expectRevert(abi.encodeWithSignature("UpshotAdapterV2NoDataProvided()"));
-        upshotAdapter.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
+        upshotAdapter.verifyData(_packageNumericData(numericData, ''));
     }
 
     function test_cantCallVerifyDAtaWithLessThanThresholdData() public {
@@ -133,7 +106,7 @@ contract UpshotAdapterTest is Test {
         );
 
         vm.expectRevert(abi.encodeWithSignature("UpshotAdapterV2NotEnoughData()"));
-        upshotAdapter.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
+        upshotAdapter.verifyData(_packageNumericData(numericData, ''));
     }
 
     function test_canCallVerifyDataWithValidSignature() public {
@@ -153,10 +126,10 @@ contract UpshotAdapterTest is Test {
             signer0pk
         );
 
-        upshotAdapter.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
+        upshotAdapter.verifyData(_packageNumericData(numericData, ''));
     }
 
-    function test_canValueIsSavedWhenCallingVerifyDataWithValidSignature() public {
+    function test_valueIsSavedWhenCallingVerifyDataWithValidSignature() public {
         vm.startPrank(admin);
         upshotAdapter.addTopic(_getBasicTopicView());
         vm.stopPrank();
@@ -179,7 +152,7 @@ contract UpshotAdapterTest is Test {
             signer0pk
         );
 
-        upshotAdapter.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
+        upshotAdapter.verifyData(_packageNumericData(numericData, ''));
 
         uint256 recentValueTime1 = upshotAdapter.getTopicValue(1, '').recentValueTime;
         uint256 recentValue1 = upshotAdapter.getTopicValue(1, '').recentValue;
@@ -205,7 +178,7 @@ contract UpshotAdapterTest is Test {
         );
 
         vm.expectRevert(abi.encodeWithSignature("UpshotAdapterV2OwnerTurnedTopicOff()"));
-        upshotAdapter.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
+        upshotAdapter.verifyData(_packageNumericData(numericData, ''));
     }
 
     function test_cantCallVerifyDataWhenTopicIsTurnedOffByOwner() public {
@@ -227,7 +200,7 @@ contract UpshotAdapterTest is Test {
         );
 
         vm.expectRevert(abi.encodeWithSignature("UpshotAdapterV2OwnerTurnedTopicOff()"));
-        upshotAdapter.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
+        upshotAdapter.verifyData(_packageNumericData(numericData, ''));
     }
 
     function test_cantCallVerifyDataWhenTopicIsTurnedOffByAdmin() public {
@@ -252,7 +225,7 @@ contract UpshotAdapterTest is Test {
         );
 
         vm.expectRevert(abi.encodeWithSignature("UpshotAdapterV2AdminTurnedTopicOff()"));
-        upshotAdapter.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
+        upshotAdapter.verifyData(_packageNumericData(numericData, ''));
     }
 
     function test_cantCallVerifyDataWithMismatchedTopics() public {
@@ -284,7 +257,7 @@ contract UpshotAdapterTest is Test {
 
         vm.expectRevert(abi.encodeWithSignature("UpshotAdapterV2TopicMismatch()"));
 
-        upshotAdapter.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
+        upshotAdapter.verifyData(_packageNumericData(numericData, ''));
     }
 
     function test_cantCallVerifyDataWithMismatchedExtraData() public {
@@ -316,7 +289,7 @@ contract UpshotAdapterTest is Test {
 
         vm.expectRevert(abi.encodeWithSignature("UpshotAdapterV2ExtraDataMismatch()"));
 
-        upshotAdapter.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
+        upshotAdapter.verifyData(_packageNumericData(numericData, ''));
     }
 
     function test_cantCallVerifyDataWithMismatchedExtraData2() public {
@@ -348,7 +321,7 @@ contract UpshotAdapterTest is Test {
 
         vm.expectRevert(abi.encodeWithSignature("UpshotAdapterV2ExtraDataMismatch()"));
 
-        upshotAdapter.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
+        upshotAdapter.verifyData(_packageNumericData(numericData, ''));
     }
 
     function test_cantCallVerifyDataWithFutureTime() public {
@@ -369,7 +342,7 @@ contract UpshotAdapterTest is Test {
         );
 
         vm.expectRevert(abi.encodeWithSignature("UpshotAdapterV2InvalidDataTime()"));
-        upshotAdapter.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
+        upshotAdapter.verifyData(_packageNumericData(numericData, ''));
     }
 
     function test_cantCallVerifyDataWithExpiredTime() public {
@@ -390,7 +363,7 @@ contract UpshotAdapterTest is Test {
         );
 
         vm.expectRevert(abi.encodeWithSignature("UpshotAdapterV2InvalidDataTime()"));
-        upshotAdapter.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
+        upshotAdapter.verifyData(_packageNumericData(numericData, ''));
     }
 
     function test_cantCallVerifyDataWithInvalidDataProvider() public {
@@ -411,7 +384,7 @@ contract UpshotAdapterTest is Test {
         );
 
         vm.expectRevert(abi.encodeWithSignature("UpshotAdapterV2InvalidDataProvider()"));
-        upshotAdapter.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
+        upshotAdapter.verifyData(_packageNumericData(numericData, ''));
     }
 
     function test_cantCallVerifyDataWithDuplicateDataProvider() public {
@@ -442,7 +415,7 @@ contract UpshotAdapterTest is Test {
         );
 
         vm.expectRevert(abi.encodeWithSignature("UpshotAdapterV2DuplicateDataProvider()"));
-        upshotAdapter.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
+        upshotAdapter.verifyData(_packageNumericData(numericData, ''));
     }
 
     function test_dataAverageAggregationWorksCorrectly() public {
@@ -472,8 +445,41 @@ contract UpshotAdapterTest is Test {
             signer1pk
         );
 
-        uint256 numericValue = upshotAdapter.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
+        uint256 numericValue = upshotAdapter.verifyData(_packageNumericData(numericData, ''));
         assertEq(numericValue, 2 ether);
+    }
+
+    function test_viewAndNonViewFunctionsGiveSameResult() public {
+        vm.startPrank(admin);
+        upshotAdapter.addTopic(_getBasicTopicViewTwoDataProviders());
+        vm.stopPrank();
+
+        SignedNumericData[] memory numericData = new SignedNumericData[](2);
+
+        numericData[0] = _signNumericData(
+            NumericData({
+                topicId: 1,
+                timestamp: uint64(block.timestamp - 1 minutes),
+                numericValue: 1 ether,
+                extraData: ''
+            }),
+            signer0pk
+        );
+
+        numericData[1] = _signNumericData(
+            NumericData({
+                topicId: 1,
+                timestamp: uint64(block.timestamp - 1 minutes),
+                numericValue: 3 ether,
+                extraData: ''
+            }),
+            signer1pk
+        );
+
+        uint256 numericValue = upshotAdapter.verifyData(_packageNumericData(numericData, ''));
+        uint256 numericValueView = upshotAdapter.verifyDataViewOnly(_packageNumericData(numericData, ''));
+        assertEq(numericValue, 2 ether);
+        assertEq(numericValue, numericValueView);
     }
 
     function test_valueIsSavedWhenCallingVerifyDataWithMultipleValidSignatures() public {
@@ -506,7 +512,7 @@ contract UpshotAdapterTest is Test {
             signer1pk
         );
 
-        upshotAdapter.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
+        upshotAdapter.verifyData(_packageNumericData(numericData, ''));
 
         uint256 recentValue1 = upshotAdapter.getTopicValue(1, '').recentValue;
 
@@ -545,7 +551,7 @@ contract UpshotAdapterTest is Test {
             signer1pk
         );
 
-        upshotAdapter.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
+        upshotAdapter.verifyData(_packageNumericData(numericData, ''));
 
         uint256 recentValueEmptyExtraData1 = upshotAdapter.getTopicValue(1, '').recentValue;
         uint256 recentValue1 = upshotAdapter.getTopicValue(1, '123').recentValue;
@@ -588,7 +594,7 @@ contract UpshotAdapterTest is Test {
             signer1pk
         );
 
-        uint256 price = upshotAdapter.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
+        uint256 price = upshotAdapter.verifyData(_packageNumericData(numericData, ''));
         assertEq(price, 2 ether);
     }
 
@@ -634,7 +640,7 @@ contract UpshotAdapterTest is Test {
             signer2pk
         );
 
-        uint256 price = upshotAdapter.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
+        uint256 price = upshotAdapter.verifyData(_packageNumericData(numericData, ''));
         assertEq(price, 2 ether);
     }
 
@@ -668,7 +674,7 @@ contract UpshotAdapterTest is Test {
         numericData[1] = _signNumericData(rawNumericData1, signer1pk);
         numericData[2] = _signNumericData(rawNumericData2, signer2pk);
 
-        uint256 numericValue = upshotAdapter.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
+        uint256 numericValue = upshotAdapter.verifyData(_packageNumericData(numericData, ''));
         assertEq(numericValue, 3 ether);
 
         MedianAggregator medianAggregator = new MedianAggregator();
@@ -681,87 +687,9 @@ contract UpshotAdapterTest is Test {
         numericData[1] = _signNumericData(rawNumericData1, signer1pk);
         numericData[2] = _signNumericData(rawNumericData2, signer2pk);
 
-        uint256 numericValue2 = upshotAdapter.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
+        uint256 numericValue2 = upshotAdapter.verifyData(_packageNumericData(numericData, ''));
         assertEq(numericValue2, 2 ether);
     }
-
-    function test_dataFeesSplitCorrectly() public {
-        vm.startPrank(topicOwner);
-        upshotAdapter.addTopic(_getBasicTopicViewTwoDataProviders());
-        vm.stopPrank();
-
-        SignedNumericData[] memory numericData = new SignedNumericData[](2);
-
-        numericData[0] = _signNumericData(
-            NumericData({
-                topicId: 1,
-                timestamp: uint64(block.timestamp - 1 minutes),
-                numericValue: 1 ether,
-                extraData: ''
-            }),
-            signer0pk
-        );
-
-        numericData[1] = _signNumericData(
-            NumericData({
-                topicId: 1,
-                timestamp: uint64(block.timestamp - 1 minutes),
-                numericValue: 3 ether,
-                extraData: ''
-            }),
-            signer1pk
-        );
-
-        upshotAdapter.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
-
-        assertEq(evenFeeHandler.feesAccrued(topicOwner), 0.2 ether);
-
-        assertEq(evenFeeHandler.feesAccrued(signer0), 0.4 ether);
-        assertEq(evenFeeHandler.feesAccrued(signer1), 0.4 ether);
-
-    }
-
-    function test_dataFeesSplitCorrectlyWithProtocol() public {
-        vm.startPrank(topicOwner);
-        upshotAdapter.addTopic(_getBasicTopicViewTwoDataProviders());
-        vm.stopPrank();
-
-        vm.startPrank(admin);
-        upshotAdapter.adminSetProtocolFee(0.2 ether);
-        vm.stopPrank();
-
-        SignedNumericData[] memory numericData = new SignedNumericData[](2);
-
-        numericData[0] = _signNumericData(
-            NumericData({
-                topicId: 1,
-                timestamp: uint64(block.timestamp - 1 minutes),
-                numericValue: 1 ether,
-                extraData: ''
-            }),
-            signer0pk
-        );
-
-        numericData[1] = _signNumericData(
-            NumericData({
-                topicId: 1,
-                timestamp: uint64(block.timestamp - 1 minutes),
-                numericValue: 3 ether,
-                extraData: ''
-            }),
-            signer1pk
-        );
-
-        upshotAdapter.verifyData{value: 1 ether}(_packageNumericData(numericData, ''));
-
-        assertEq(upshotAdapter.protocolFeeReceiver().balance, 0.2 ether);
-        assertEq(evenFeeHandler.feesAccrued(topicOwner), 0.16 ether);
-
-        assertEq(evenFeeHandler.feesAccrued(signer0), 0.32 ether);
-        assertEq(evenFeeHandler.feesAccrued(signer1), 0.32 ether);
-
-    }
-
 
     // ***************************************************************
     // * ================= INTERNAL HELPERS ======================== *
@@ -789,11 +717,9 @@ contract UpshotAdapterTest is Test {
             config: TopicConfig({
                 title: 'Initial topic',
                 owner: topicOwner,
-                totalFee: 0.001 ether,
                 aggregator: aggregator,
                 ownerSwitchedOn: true,
                 adminSwitchedOn: true,
-                feeHandler: evenFeeHandler,
                 dataProviderQuorum: 1,
                 dataValiditySeconds: 5 minutes
             }),

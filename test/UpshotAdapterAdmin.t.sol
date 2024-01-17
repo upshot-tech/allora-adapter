@@ -15,7 +15,6 @@ contract UpshotAdapterAdmin is Test {
 
     EvenFeeHandler public evenFeeHandler;
     IAggregator aggregator;
-    IFeeHandler feeHandler;
     UpshotAdapter upshotAdapter;
 
     address admin = address(100);
@@ -45,13 +44,7 @@ contract UpshotAdapterAdmin is Test {
         vm.warp(1 hours);
 
         aggregator = new AverageAggregator();
-        feeHandler = new EvenFeeHandler(EvenFeeHandlerConstructorArgs({
-            admin: admin
-        }));
-        upshotAdapter = new UpshotAdapter(UpshotAdapterConstructorArgs({
-            admin: admin,
-            protocolFeeReceiver: protocolFeeReceiver
-        }));
+        upshotAdapter = new UpshotAdapter(UpshotAdapterConstructorArgs({ admin: admin }));
 
         signer0 = vm.addr(signer0pk);
         signer1 = vm.addr(signer1pk);
@@ -255,11 +248,9 @@ contract UpshotAdapterAdmin is Test {
             config: TopicConfig({
                 title: 'secondary topic',
                 owner: topicOwner2,
-                totalFee: 0.001 ether,
                 aggregator: aggregator,
                 ownerSwitchedOn: false,
                 adminSwitchedOn: false,
-                feeHandler: feeHandler,
                 dataProviderQuorum: 3,
                 dataValiditySeconds: 12 minutes
             }),
@@ -273,15 +264,12 @@ contract UpshotAdapterAdmin is Test {
 
         assertEq(addedTopic.config.title, secondTopic.config.title);
         assertEq(addedTopic.config.owner, secondTopic.config.owner);
-        assertEq(addedTopic.config.totalFee, secondTopic.config.totalFee);
         assertEq(addedTopic.config.dataProviderQuorum, secondTopic.config.dataProviderQuorum);
         assertEq(addedTopic.config.dataValiditySeconds, secondTopic.config.dataValiditySeconds);
         assertEq(address(addedTopic.config.aggregator), address(secondTopic.config.aggregator));
         assertTrue(address(secondTopic.config.aggregator) != address(0));
         assertEq(addedTopic.config.ownerSwitchedOn, secondTopic.config.ownerSwitchedOn);
         assertEq(addedTopic.config.adminSwitchedOn, secondTopic.config.adminSwitchedOn);
-        assertEq(address(addedTopic.config.feeHandler), address(secondTopic.config.feeHandler));
-        assertTrue(address(addedTopic.config.feeHandler) != address(0));
         assertEq(secondTopic.validDataProviders.length, 3);
         assertEq(addedTopic.validDataProviders.length, 3);
 
@@ -410,78 +398,6 @@ contract UpshotAdapterAdmin is Test {
     }
 
     // ***************************************************************
-    // * ================= UPDATE FEE HANDLER ====================== *
-    // ***************************************************************
-
-    function test_imposterCantUpdateFeeHandler() public {
-        vm.startPrank(imposter);
-
-        vm.expectRevert(abi.encodeWithSignature("UpshotAdapterV2OnlyTopicOwner()"));
-        upshotAdapter.updateFeeHandler(1, dummyFeeHandler);
-    }
-
-    function test_ownerCantUpdateFeeHandlerToZeroAddress() public {
-        vm.startPrank(topicOwner);
-
-        vm.expectRevert(abi.encodeWithSignature("UpshotAdapterV2InvalidFeeHandler()"));
-        upshotAdapter.updateFeeHandler(1, IFeeHandler(address(0)));
-    }
-
-    function test_ownerCanUpdateFeeHandler() public {
-        vm.startPrank(topicOwner);
-
-        EvenFeeHandler newFeeHandler = new EvenFeeHandler(EvenFeeHandlerConstructorArgs({
-            admin: admin
-        }));
-
-        assertTrue(address(feeHandler) != address(newFeeHandler));
-
-        assertEq(address(upshotAdapter.getTopic(1).config.feeHandler), address(feeHandler));
-
-        upshotAdapter.updateFeeHandler(1, newFeeHandler);
-
-        assertEq(address(upshotAdapter.getTopic(1).config.feeHandler), address(newFeeHandler));
-    }
-
-    // ***************************************************************
-    // * ================== UPDATE TOTAL FEE ======================= *
-    // ***************************************************************
-
-    function test_imposterCantUpdateTotalFee() public {
-        vm.startPrank(imposter);
-
-        vm.expectRevert(abi.encodeWithSignature("UpshotAdapterV2OnlyTopicOwner()"));
-        upshotAdapter.updateTotalFee(1, 1 ether);
-    }
-
-    function test_ownerCantUpdateTotalFeeToLessThan1000() public {
-        vm.startPrank(topicOwner);
-
-        vm.expectRevert(abi.encodeWithSignature("UpshotAdapterV2InvalidTotalFee()"));
-        upshotAdapter.updateTotalFee(1, 999);
-    }
-
-    function test_ownerCanUpdateTotalFeeToZero() public {
-        vm.startPrank(topicOwner);
-
-        assertEq(upshotAdapter.getTopic(1).config.totalFee, 0.001 ether);
-
-        upshotAdapter.updateTotalFee(1, 0);
-
-        assertEq(upshotAdapter.getTopic(1).config.totalFee, 0);
-    }
-
-    function test_ownerCanUpdateTotalFee() public {
-        vm.startPrank(topicOwner);
-
-        assertEq(upshotAdapter.getTopic(1).config.totalFee, 0.001 ether);
-
-        upshotAdapter.updateTotalFee(1, 1 ether);
-
-        assertEq(upshotAdapter.getTopic(1).config.totalFee, 1 ether);
-    }
-
-    // ***************************************************************
     // * ================== UPDATE FEED OWNER ====================== *
     // ***************************************************************
 
@@ -546,64 +462,6 @@ contract UpshotAdapterAdmin is Test {
     }
 
     // ***************************************************************
-    // * ================ UPDATE PROTOCOL FEE ====================== *
-    // ***************************************************************
-
-    function test_imposterCantUpdateProtocolFee() public {
-        vm.startPrank(imposter);
-
-        vm.expectRevert('Ownable: caller is not the owner');
-        upshotAdapter.adminSetProtocolFee(1);
-    }
-
-    function test_ownerCantUpdateProtocolFeeToBeTooLarge() public {
-        vm.startPrank(admin);
-
-        assertEq(upshotAdapter.protocolFee(), 0);
-
-        vm.expectRevert(abi.encodeWithSignature("UpshotAdapterV2ProtocolFeeTooHigh()"));
-        upshotAdapter.adminSetProtocolFee(0.5 ether + 1);
-    }
-
-    function test_ownerCanUpdateProtocolFee() public {
-        vm.startPrank(admin);
-
-        assertEq(upshotAdapter.protocolFee(), 0);
-
-        upshotAdapter.adminSetProtocolFee(0.1 ether);
-
-        assertEq(upshotAdapter.protocolFee(), 0.1 ether);
-    }
-
-    // ***************************************************************
-    // * ============ UPDATE PROTOCOL FEE RECEIVER ================= *
-    // ***************************************************************
-
-    function test_imposterCantUpdateProtocolFeeReciever() public {
-        vm.startPrank(imposter);
-
-        vm.expectRevert('Ownable: caller is not the owner');
-        upshotAdapter.adminSetProtocolFeeReceiver(protocolFeeReceiver2);
-    }
-
-    function test_ownerCantUpdateProtocolFeeReceiverToZeroAddress() public {
-        vm.startPrank(admin);
-
-        vm.expectRevert(abi.encodeWithSignature("UpshotAdapterV2InvalidProtocolFeeReceiver()"));
-        upshotAdapter.adminSetProtocolFeeReceiver(address(0));
-    }
-
-    function test_ownerCanUpdateProtocolFeeReceiver() public {
-        vm.startPrank(admin);
-
-        assertEq(upshotAdapter.protocolFeeReceiver(), protocolFeeReceiver);
-
-        upshotAdapter.adminSetProtocolFeeReceiver(protocolFeeReceiver2);
-
-        assertEq(upshotAdapter.protocolFeeReceiver(), protocolFeeReceiver2);
-    }
-
-    // ***************************************************************
     // * ================= INTERNAL HELPERS ======================== *
     // ***************************************************************
 
@@ -621,11 +479,9 @@ contract UpshotAdapterAdmin is Test {
             config: TopicConfig({
                 title: 'Initial topic',
                 owner: topicOwner,
-                totalFee: 0.001 ether,
                 aggregator: aggregator,
                 ownerSwitchedOn: true,
                 adminSwitchedOn: true,
-                feeHandler: feeHandler,
                 dataProviderQuorum: 1,
                 dataValiditySeconds: 5 minutes
             }),

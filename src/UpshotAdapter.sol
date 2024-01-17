@@ -13,7 +13,6 @@ import { EnumerableSet } from "../lib/openzeppelin-contracts/contracts/utils/str
 
 struct UpshotAdapterConstructorArgs {
     address admin;
-    address protocolFeeReceiver;
 }
 
 contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
@@ -30,12 +29,6 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
     /// @dev Whether the UpshotAdapter contract is switched on and usable
     bool public switchedOn = true;
 
-    /// @dev The fee collected by the protocol per verification
-    uint256 public protocolFee = 0;
-
-    /// @dev the address that receives the protocol fee
-    address public protocolFeeReceiver;
-
     bytes32 public constant NUMERIC_DATA_TYPEHASH = keccak256(
         "NumericData(uint256 topicId,uint256 timestamp,uint256 numericValue,bytes extraData)"
     );
@@ -44,8 +37,6 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
         EIP712("UpshotAdapter", "1") 
     {
         _transferOwnership(args.admin);
-
-        _setProtocolFeeReceiver(args.protocolFeeReceiver);
     }
 
     // ***************************************************************
@@ -62,15 +53,11 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
     event UpshotAdapterV2AdapterTopicOwnerAddedDataProvider(uint256 topicId, address dataProvider);
     event UpshotAdapterV2AdapterTopicOwnerRemovedDataProvider(address dataProvider);
     event UpshotAdapterV2AdapterTopicOwnerUpdatedAggregator(uint256 topicId, IAggregator aggregator);
-    event UpshotAdapterV2AdapterTopicOwnerUpdatedFeeHandler(uint256 topicId, IFeeHandler feeHandler);
-    event UpshotAdapterV2AdapterTopicOwnerUpdatedFee(uint128 totalFee);
     event UpshotAdapterV2AdapterTopicOwnerUpdatedOwner(uint256 topicId, address newOwner);
     event UpshotAdapterV2AdapterTopicOwnerTopicTurnedOff(uint256 topicId);
     event UpshotAdapterV2AdapterTopicOwnerTopicTurnedOn(uint256 topicId);
 
     // adapter admin updates
-    event UpshotAdapterV2AdapterAdminUpdatedProtocolFee(uint256 newProtocolFee);
-    event UpshotAdapterV2AdapterAdminUpdatedProtocolFeeReceiver(address protocolFeeReceiver);
     event UpshotAdapterV2AdapterAdminTopicTurnedOff(uint256 topicId);
     event UpshotAdapterV2AdapterAdminTopicTurnedOn(uint256 topicId);
     event UpshotAdapterV2AdapterAdminTurnedOff();
@@ -85,25 +72,19 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
     error UpshotAdapterV2NoDataProvided();
     error UpshotAdapterV2OwnerTurnedTopicOff();
     error UpshotAdapterV2AdminTurnedTopicOff();
-    error UpshotAdapterV2InsufficientPayment();
     error UpshotAdapterV2NotEnoughData();
     error UpshotAdapterV2TopicMismatch();
     error UpshotAdapterV2ExtraDataMismatch();
     error UpshotAdapterV2InvalidDataTime();
     error UpshotAdapterV2InvalidDataProvider();
     error UpshotAdapterV2DuplicateDataProvider();
-    error UpshotAdapterV2EthTransferFailed();
 
     // parameter update errors
     error UpshotAdapterV2InvalidTopicTitle();
     error UpshotAdapterV2OnlyTopicOwner();
-    error UpshotAdapterV2InvalidTotalFee();
-    error UpshotAdapterV2InvalidFeeHandler();
     error UpshotAdapterV2InvalidAggregator();
     error UpshotAdapterV2InvalidDataProviderQuorum();
     error UpshotAdapterV2InvalidDataValiditySeconds();
-    error UpshotAdapterV2InvalidProtocolFeeReceiver();
-    error UpshotAdapterV2ProtocolFeeTooHigh();
 
     // casting errors
     error SafeCastOverflowedUintDowncast(uint8 bits, uint256 value);
@@ -114,7 +95,41 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
     ///@inheritdoc IUpshotAdapter
     function verifyData(
         UpshotAdapterNumericData calldata nd
-    ) external payable override returns (uint256 numericValue) {
+    ) external override returns (uint256 numericValue) {
+        uint256 topicId;
+        address[] memory dataProviders;
+        bytes calldata extraData;
+
+        (numericValue, topicId, dataProviders, extraData) = _verifyData(nd);
+
+        topicValue[topicId][extraData] = TopicValue({
+            recentValue: _toUint192(numericValue),
+            recentValueTime: _toUint64(block.timestamp)
+        });
+
+        emit UpshotAdapterV2AdapterVerifiedData(topicId, numericValue, dataProviders, extraData);
+    }
+
+    ///@inheritdoc IUpshotAdapter
+    function verifyDataViewOnly(
+        UpshotAdapterNumericData calldata nd
+    ) external view override returns (uint256 numericValue) {
+        (numericValue,,,) = _verifyData(nd);
+    }
+
+    /**
+     * @notice Verify the data provided by the data providers
+     * 
+     * @param nd The data to verify
+     */
+    function _verifyData(
+        UpshotAdapterNumericData calldata nd
+    ) internal view returns (
+        uint256 numericValue, 
+        uint256 topicId, 
+        address[] memory dataProviders, 
+        bytes calldata extraData
+    ) {
         if (!switchedOn) {
             revert UpshotAdapterV2NotSwitchedOn();
         }
@@ -125,8 +140,8 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
             revert UpshotAdapterV2NoDataProvided();
         }
 
-        uint256 topicId = nd.signedNumericData[0].numericData.topicId;
-        bytes calldata extraData = nd.signedNumericData[0].numericData.extraData;
+        topicId = nd.signedNumericData[0].numericData.topicId;
+        extraData = nd.signedNumericData[0].numericData.extraData;
 
         if (!topic[topicId].config.ownerSwitchedOn) {
             revert UpshotAdapterV2OwnerTurnedTopicOff();
@@ -136,19 +151,12 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
             revert UpshotAdapterV2AdminTurnedTopicOff();
         }
 
-        // load once to save gas
-        uint256 _protocolFee = protocolFee;
-
-        if (msg.value < topic[topicId].config.totalFee + _protocolFee) {
-            revert UpshotAdapterV2InsufficientPayment();
-        }
-
         if (dataCount < topic[topicId].config.dataProviderQuorum) {
             revert UpshotAdapterV2NotEnoughData();
         }
 
         uint256[] memory dataList = new uint256[](dataCount);
-        address[] memory dataProviders = new address[](dataCount);
+        dataProviders = new address[](dataCount);
         NumericData calldata numericData;
 
         for(uint256 i = 0; i < dataCount;) {
@@ -198,23 +206,6 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
         }
 
         numericValue = topic[topicId].config.aggregator.aggregate(dataList, nd.extraData);
-
-        topicValue[topicId][extraData] = TopicValue({
-            recentValue: _toUint192(numericValue),
-            recentValueTime: _toUint64(block.timestamp)
-        });
-        
-        if (_protocolFee != 0) {
-            _safeTransferETH(protocolFeeReceiver, _protocolFee);
-        }
-
-        topic[topicId].config.feeHandler.handleFees{value: msg.value - _protocolFee}(
-            topic[topicId].config.owner,
-            dataProviders, 
-            nd.extraData
-        );
-
-        emit UpshotAdapterV2AdapterVerifiedData(topicId, numericValue, dataProviders, extraData);
     }
 
     // ***************************************************************
@@ -278,35 +269,6 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
             revert UpshotAdapterV2OnlyTopicOwner();
         }
         _;
-    }
-
-    /**
-     * @notice Safely transfer ETH to an address
-     * 
-     * @param to The address to send ETH to
-     * @param value The amount of ETH to send
-     */
-    function _safeTransferETH(address to, uint256 value) internal {
-        (bool success, ) = to.call{value: value}(new bytes(0));
-        if (!success) {
-            revert UpshotAdapterV2EthTransferFailed();
-        }
-    }
-
-    /**
-     * @dev Update the protocol fee receiver. Pulled out into a helper function because 
-     *   this is called in the constructor and in the admin function
-     * 
-     * @param protocolFeeReceiver_ The new protocol fee receiver
-     */
-    function _setProtocolFeeReceiver(address protocolFeeReceiver_) internal {
-        if (protocolFeeReceiver_ == address(0)) {
-            revert UpshotAdapterV2InvalidProtocolFeeReceiver();
-        }
-
-        protocolFeeReceiver = protocolFeeReceiver_;
-
-        emit UpshotAdapterV2AdapterAdminUpdatedProtocolFeeReceiver(protocolFeeReceiver_);
     }
 
     /**
@@ -459,21 +421,6 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
         emit UpshotAdapterV2AdapterTopicOwnerUpdatedDataValiditySeconds(topicId, dataValiditySeconds);
     }
 
-    /**
-     * @notice Topic owner function to update the total fee
-     * 
-     * @param topicId The topicId to update the total fee for
-     * @param totalFee The total fee to be paid per piece of data
-     */
-    function updateTotalFee(uint256 topicId, uint96 totalFee) external onlyTopicOwner(topicId) {
-        if (0 < totalFee && totalFee < 1_000) {
-            revert UpshotAdapterV2InvalidTotalFee();
-        }
-        topic[topicId].config.totalFee = totalFee;
-
-        emit UpshotAdapterV2AdapterTopicOwnerUpdatedFee(totalFee);
-    }
-
   /**
      * @notice Topic owner function to add a data provider
      * 
@@ -537,22 +484,6 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
     }
 
     /**
-     * @notice Topic owner function to update the fee handler to use for handling fees
-     * 
-     * @param topicId The topicId to update the fee handler for
-     * @param feeHandler The fee handler to use for handling fees
-     */
-    function updateFeeHandler(uint256 topicId, IFeeHandler feeHandler) external onlyTopicOwner(topicId) {
-        if (address(feeHandler) == address(0)) {
-            revert UpshotAdapterV2InvalidFeeHandler();
-        }
-
-        topic[topicId].config.feeHandler = feeHandler;
-
-        emit UpshotAdapterV2AdapterTopicOwnerUpdatedFeeHandler(topicId, feeHandler);
-    } 
-
-    /**
      * @notice Topic owner function to update the owner of the topic 
      * 
      * @param topicId The topicId to update the fee handler for
@@ -605,29 +536,5 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
         topic[topicId].config.adminSwitchedOn = true;
         
         emit UpshotAdapterV2AdapterAdminTopicTurnedOn(topicId);
-    }
-
-    /**
-     * @notice Admin function to update the portion of the total fee that goes to the protocol
-     * 
-     * @param protocolFee_ The new protocol fee
-     */
-    function adminSetProtocolFee(uint256 protocolFee_) external onlyOwner {
-        if (protocolFee_ > 0.5 ether) {
-            revert UpshotAdapterV2ProtocolFeeTooHigh();
-        }
-
-        protocolFee = protocolFee_;
-
-        emit UpshotAdapterV2AdapterAdminUpdatedProtocolFee(protocolFee_);
-    }
-
-    /**
-     * @notice Admin function to update the protocol fee receiver
-     * 
-     * @param protocolFeeReceiver_ The new protocol fee receiver
-     */
-    function adminSetProtocolFeeReceiver(address protocolFeeReceiver_) external onlyOwner {
-        _setProtocolFeeReceiver(protocolFeeReceiver_);
     }
 }

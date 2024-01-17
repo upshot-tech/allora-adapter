@@ -21,7 +21,6 @@ contract AddTopicScript is Script {
 
     UpshotAdapter upshotAdapter = UpshotAdapter(0x4341a3F0a350C2428184a727BAb86e16D4ba7018);
     IAggregator aggregator = IAggregator(0x3eB08C166509638669e78d0c50c0f82A25Bc8e46);
-    IFeeHandler feeHandler = IFeeHandler(0x97E4F3C818F8F2E5e7Caa3e16DFC060D7c49bB43);
 
     function run() public virtual {
         uint256 scriptRunnerPrivateKey = vm.envUint('SCRIPT_RUNNER_PRIVATE_KEY');
@@ -45,11 +44,9 @@ contract AddTopicScript is Script {
         TopicConfig memory topicConfig = TopicConfig({
             title: '',
             owner: scriptRunner,
-            totalFee: 0 ether,
             aggregator: aggregator,
             ownerSwitchedOn: true,
             adminSwitchedOn: true,
-            feeHandler: feeHandler,
             dataProviderQuorum: 1,
             dataValiditySeconds: 1 hours
         });

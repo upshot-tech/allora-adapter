@@ -24,35 +24,29 @@ import type {
 export type TopicConfigStruct = {
   title: string;
   owner: AddressLike;
-  totalFee: BigNumberish;
+  dataProviderQuorum: BigNumberish;
+  dataValiditySeconds: BigNumberish;
   aggregator: AddressLike;
   ownerSwitchedOn: boolean;
   adminSwitchedOn: boolean;
-  feeHandler: AddressLike;
-  dataProviderQuorum: BigNumberish;
-  dataValiditySeconds: BigNumberish;
 };
 
 export type TopicConfigStructOutput = [
   title: string,
   owner: string,
-  totalFee: bigint,
+  dataProviderQuorum: bigint,
+  dataValiditySeconds: bigint,
   aggregator: string,
   ownerSwitchedOn: boolean,
-  adminSwitchedOn: boolean,
-  feeHandler: string,
-  dataProviderQuorum: bigint,
-  dataValiditySeconds: bigint
+  adminSwitchedOn: boolean
 ] & {
   title: string;
   owner: string;
-  totalFee: bigint;
+  dataProviderQuorum: bigint;
+  dataValiditySeconds: bigint;
   aggregator: string;
   ownerSwitchedOn: boolean;
   adminSwitchedOn: boolean;
-  feeHandler: string;
-  dataProviderQuorum: bigint;
-  dataValiditySeconds: bigint;
 };
 
 export type TopicViewStruct = {
@@ -116,7 +110,11 @@ export type UpshotAdapterNumericDataStructOutput = [
 
 export interface IUpshotAdapterInterface extends Interface {
   getFunction(
-    nameOrSignature: "getTopic" | "getTopicValue" | "verifyData"
+    nameOrSignature:
+      | "getTopic"
+      | "getTopicValue"
+      | "verifyData"
+      | "verifyDataViewOnly"
   ): FunctionFragment;
 
   encodeFunctionData(
@@ -131,6 +129,10 @@ export interface IUpshotAdapterInterface extends Interface {
     functionFragment: "verifyData",
     values: [UpshotAdapterNumericDataStruct]
   ): string;
+  encodeFunctionData(
+    functionFragment: "verifyDataViewOnly",
+    values: [UpshotAdapterNumericDataStruct]
+  ): string;
 
   decodeFunctionResult(functionFragment: "getTopic", data: BytesLike): Result;
   decodeFunctionResult(
@@ -138,6 +140,10 @@ export interface IUpshotAdapterInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "verifyData", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "verifyDataViewOnly",
+    data: BytesLike
+  ): Result;
 }
 
 export interface IUpshotAdapter extends BaseContract {
@@ -198,7 +204,13 @@ export interface IUpshotAdapter extends BaseContract {
   verifyData: TypedContractMethod<
     [pd: UpshotAdapterNumericDataStruct],
     [bigint],
-    "payable"
+    "nonpayable"
+  >;
+
+  verifyDataViewOnly: TypedContractMethod<
+    [pd: UpshotAdapterNumericDataStruct],
+    [bigint],
+    "view"
   >;
 
   getFunction<T extends ContractMethod = ContractMethod>(
@@ -224,7 +236,14 @@ export interface IUpshotAdapter extends BaseContract {
   ): TypedContractMethod<
     [pd: UpshotAdapterNumericDataStruct],
     [bigint],
-    "payable"
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "verifyDataViewOnly"
+  ): TypedContractMethod<
+    [pd: UpshotAdapterNumericDataStruct],
+    [bigint],
+    "view"
   >;
 
   filters: {};
