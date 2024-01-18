@@ -3,7 +3,7 @@ import Deployer from './Deployer'
 
 import { EvenFeeHandler__factory } from '../types/factories/EvenFeeHandler__factory'
 import { MedianAggregator__factory } from '../types/factories/MedianAggregator__factory'
-import { UpshotAdapter__factory } from '../types/factories/UpshotAdapter__factory'
+import { AlloraAdapter__factory } from '../types/factories/AlloraAdapter__factory'
 
 const contractInfoMap = {
   'MedianAggregator': {
@@ -14,9 +14,9 @@ const contractInfoMap = {
     path: 'src/feeHandler/EvenFeeHandler.sol',
     factory: new EvenFeeHandler__factory()
   },
-  'UpshotAdapter': {
-    path: 'src/UpshotAdapter.sol',
-    factory: new UpshotAdapter__factory()
+  'AlloraAdapter': {
+    path: 'src/AlloraAdapter.sol',
+    factory: new AlloraAdapter__factory()
   },
 }
 
@@ -27,7 +27,7 @@ const deploy = async () => {
 
   const MedianAggregator = await deployer.deploy('MedianAggregator', [])
 
-  const UpshotAdapter = await deployer.deploy('UpshotAdapter', [{ admin: ADMIN, }])
+  const AlloraAdapter = await deployer.deploy('AlloraAdapter', [{ admin: ADMIN, }])
 }
 
 deploy()

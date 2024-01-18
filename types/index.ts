@@ -32,6 +32,7 @@ export type { vmSol };
 import type * as testSol from "./test.sol";
 export type { testSol };
 export type { AlloraAdapter } from "./AlloraAdapter";
+export type { AlloraAdapterBringPredictionOnChainExample } from "./AlloraAdapterBringPredictionOnChainExample";
 export type { AverageAggregator } from "./AverageAggregator";
 export type { EIP712 } from "./EIP712";
 export type { EvenFeeHandler } from "./EvenFeeHandler";
@@ -57,6 +58,7 @@ export type { AlloraAdapterTest } from "./AlloraAdapter.t.sol/AlloraAdapterTest"
 export { AlloraAdapterTest__factory } from "./factories/AlloraAdapter.t.sol/AlloraAdapterTest__factory";
 export type { AlloraAdapterAdmin } from "./AlloraAdapterAdmin.t.sol/AlloraAdapterAdmin";
 export { AlloraAdapterAdmin__factory } from "./factories/AlloraAdapterAdmin.t.sol/AlloraAdapterAdmin__factory";
+export { AlloraAdapterBringPredictionOnChainExample__factory } from "./factories/AlloraAdapterBringPredictionOnChainExample__factory";
 export { AverageAggregator__factory } from "./factories/AverageAggregator__factory";
 export type { AverageAggregatorTest } from "./AverageAggregator.t.sol/AverageAggregatorTest";
 export { AverageAggregatorTest__factory } from "./factories/AverageAggregator.t.sol/AverageAggregatorTest__factory";
@@ -90,8 +92,6 @@ export type { UpshotAdapterTest } from "./UpshotAdapter.t.sol/UpshotAdapterTest"
 export { UpshotAdapterTest__factory } from "./factories/UpshotAdapter.t.sol/UpshotAdapterTest__factory";
 export type { UpshotAdapterAdmin } from "./UpshotAdapterAdmin.t.sol/UpshotAdapterAdmin";
 export { UpshotAdapterAdmin__factory } from "./factories/UpshotAdapterAdmin.t.sol/UpshotAdapterAdmin__factory";
-export type { AlloraAdapterBringPredictionOnChainExample } from "./UpshotAdapterBringPredictionOnChainExample.sol/AlloraAdapterBringPredictionOnChainExample";
-export { AlloraAdapterBringPredictionOnChainExample__factory } from "./factories/UpshotAdapterBringPredictionOnChainExample.sol/AlloraAdapterBringPredictionOnChainExample__factory";
 export type { UpshotAdapterBringPredictionOnChainExample } from "./UpshotAdapterBringPredictionOnChainExample.sol/UpshotAdapterBringPredictionOnChainExample";
 export { UpshotAdapterBringPredictionOnChainExample__factory } from "./factories/UpshotAdapterBringPredictionOnChainExample.sol/UpshotAdapterBringPredictionOnChainExample__factory";
 export type { VerifyDataExample } from "./VerifyDataExample.s.sol/VerifyDataExample";

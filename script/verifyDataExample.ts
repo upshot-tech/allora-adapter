@@ -7,10 +7,10 @@ import * as dotenv from 'dotenv';
 
 // to run: ts-node script/verifyDataExample.ts
 
-const UPSHOT_ADAPTER_NAME = 'AlloraAdapter'
-const UPSHOT_ADAPTER_VERSION = 1
-const UPSHOT_ADAPTER_ADDRESS = '0x238D0abD53fC68fAfa0CCD860446e381b400b5Be'
-const UPSHOT_ADAPTER_CHAIN_ID = 11155111
+const ALLORA_ADAPTER_NAME = 'AlloraAdapter'
+const ALLORA_ADAPTER_VERSION = 1
+const ALLORA_ADAPTER_ADDRESS = '0x238D0abD53fC68fAfa0CCD860446e381b400b5Be'
+const ALLORA_ADAPTER_CHAIN_ID = 11155111
 
 type NumericDataStruct = {
   topicId: BigNumberish
@@ -49,8 +49,8 @@ const constructMessageLocally = async (
     ['bytes32', 'bytes32', 'bytes32', 'uint256', 'address'],
     [
       keccak(toBytes('EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)')),
-      keccak(toBytes(UPSHOT_ADAPTER_NAME)),
-      keccak(toBytes(UPSHOT_ADAPTER_VERSION.toString())),
+      keccak(toBytes(ALLORA_ADAPTER_NAME)),
+      keccak(toBytes(ALLORA_ADAPTER_VERSION.toString())),
       chainId.toString(),
       alloraAdapterAddress,
     ]
@@ -105,7 +105,7 @@ const run = async () => {
   const provider = new ethers.JsonRpcProvider(rpcUrl)
   const wallet = new ethers.Wallet(privateKey, provider)
 
-  const alloraAdapter = (new AlloraAdapter__factory()).attach(UPSHOT_ADAPTER_ADDRESS).connect(wallet) as AlloraAdapter
+  const alloraAdapter = (new AlloraAdapter__factory()).attach(ALLORA_ADAPTER_ADDRESS).connect(wallet) as AlloraAdapter
 
   const numericData: NumericDataStruct = {
     topicId: 1,
@@ -123,8 +123,8 @@ const run = async () => {
   // sign the message with the private key
   const signature = await wallet.signMessage(messageBytes)
   const localSignature = await signMessageLocally(numericData, { 
-    chainId: UPSHOT_ADAPTER_CHAIN_ID,
-    alloraAdapterAddress: UPSHOT_ADAPTER_ADDRESS, 
+    chainId: ALLORA_ADAPTER_CHAIN_ID,
+    alloraAdapterAddress: ALLORA_ADAPTER_ADDRESS, 
     privateKey 
   })
 

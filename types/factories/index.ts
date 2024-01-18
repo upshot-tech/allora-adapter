@@ -17,6 +17,7 @@ export * as verifyDataExampleSSol from "./VerifyDataExample.s.sol";
 export * as vmSol from "./Vm.sol";
 export * as testSol from "./test.sol";
 export { AlloraAdapter__factory } from "./AlloraAdapter__factory";
+export { AlloraAdapterBringPredictionOnChainExample__factory } from "./AlloraAdapterBringPredictionOnChainExample__factory";
 export { AverageAggregator__factory } from "./AverageAggregator__factory";
 export { EIP712__factory } from "./EIP712__factory";
 export { EvenFeeHandler__factory } from "./EvenFeeHandler__factory";

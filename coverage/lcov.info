@@ -333,9 +333,9 @@ BRF:12
 BRH:12
 end_of_record
 TN:
-SF:src/examples/UpshotAdapterBringPredictionOnChainExample.sol
-FN:29,AlloraAdapterBringPredictionOnChainExample.callProtocolFunctionWithExistingIndexValue
-FNDA:0,AlloraAdapterBringPredictionOnChainExample.callProtocolFunctionWithExistingIndexValue
+SF:src/examples/AlloraAdapterBringPredictionOnChainExample.sol
+FN:29,AlloraAdapterBringPredictionOnChainExample.callProtocolFunctionWithExistingValue
+FNDA:0,AlloraAdapterBringPredictionOnChainExample.callProtocolFunctionWithExistingValue
 DA:33,0
 DA:35,0
 BRDA:35,0,0,-
