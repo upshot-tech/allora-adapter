@@ -784,13 +784,27 @@ export interface UpshotAdapter extends BaseContract {
 
   verifyData: TypedContractMethod<
     [nd: UpshotAdapterNumericDataStruct],
-    [bigint],
+    [
+      [bigint, bigint, string[], string] & {
+        numericValue: bigint;
+        topicId: bigint;
+        dataProviders: string[];
+        extraData: string;
+      }
+    ],
     "nonpayable"
   >;
 
   verifyDataViewOnly: TypedContractMethod<
     [nd: UpshotAdapterNumericDataStruct],
-    [bigint],
+    [
+      [bigint, bigint, string[], string] & {
+        numericValue: bigint;
+        topicId: bigint;
+        dataProviders: string[];
+        extraData: string;
+      }
+    ],
     "view"
   >;
 
@@ -937,14 +951,28 @@ export interface UpshotAdapter extends BaseContract {
     nameOrSignature: "verifyData"
   ): TypedContractMethod<
     [nd: UpshotAdapterNumericDataStruct],
-    [bigint],
+    [
+      [bigint, bigint, string[], string] & {
+        numericValue: bigint;
+        topicId: bigint;
+        dataProviders: string[];
+        extraData: string;
+      }
+    ],
     "nonpayable"
   >;
   getFunction(
     nameOrSignature: "verifyDataViewOnly"
   ): TypedContractMethod<
     [nd: UpshotAdapterNumericDataStruct],
-    [bigint],
+    [
+      [bigint, bigint, string[], string] & {
+        numericValue: bigint;
+        topicId: bigint;
+        dataProviders: string[];
+        extraData: string;
+      }
+    ],
     "view"
   >;
 

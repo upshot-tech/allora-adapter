@@ -202,14 +202,28 @@ export interface IUpshotAdapter extends BaseContract {
   >;
 
   verifyData: TypedContractMethod<
-    [pd: UpshotAdapterNumericDataStruct],
-    [bigint],
+    [nd: UpshotAdapterNumericDataStruct],
+    [
+      [bigint, bigint, string[], string] & {
+        numericValue: bigint;
+        topicId: bigint;
+        dataProviders: string[];
+        extraData: string;
+      }
+    ],
     "nonpayable"
   >;
 
   verifyDataViewOnly: TypedContractMethod<
     [pd: UpshotAdapterNumericDataStruct],
-    [bigint],
+    [
+      [bigint, bigint, string[], string] & {
+        numericValue: bigint;
+        topicId: bigint;
+        dataProviders: string[];
+        extraData: string;
+      }
+    ],
     "view"
   >;
 
@@ -234,15 +248,29 @@ export interface IUpshotAdapter extends BaseContract {
   getFunction(
     nameOrSignature: "verifyData"
   ): TypedContractMethod<
-    [pd: UpshotAdapterNumericDataStruct],
-    [bigint],
+    [nd: UpshotAdapterNumericDataStruct],
+    [
+      [bigint, bigint, string[], string] & {
+        numericValue: bigint;
+        topicId: bigint;
+        dataProviders: string[];
+        extraData: string;
+      }
+    ],
     "nonpayable"
   >;
   getFunction(
     nameOrSignature: "verifyDataViewOnly"
   ): TypedContractMethod<
     [pd: UpshotAdapterNumericDataStruct],
-    [bigint],
+    [
+      [bigint, bigint, string[], string] & {
+        numericValue: bigint;
+        topicId: bigint;
+        dataProviders: string[];
+        extraData: string;
+      }
+    ],
     "view"
   >;
 

@@ -118,7 +118,7 @@ const _abi = [
     name: "verifyData",
     inputs: [
       {
-        name: "pd",
+        name: "nd",
         type: "tuple",
         internalType: "struct UpshotAdapterNumericData",
         components: [
@@ -174,6 +174,21 @@ const _abi = [
         name: "numericValue",
         type: "uint256",
         internalType: "uint256",
+      },
+      {
+        name: "topicId",
+        type: "uint256",
+        internalType: "uint256",
+      },
+      {
+        name: "dataProviders",
+        type: "address[]",
+        internalType: "address[]",
+      },
+      {
+        name: "extraData",
+        type: "bytes",
+        internalType: "bytes",
       },
     ],
     stateMutability: "nonpayable",
@@ -239,6 +254,21 @@ const _abi = [
         name: "numericValue",
         type: "uint256",
         internalType: "uint256",
+      },
+      {
+        name: "topicId",
+        type: "uint256",
+        internalType: "uint256",
+      },
+      {
+        name: "dataProviders",
+        type: "address[]",
+        internalType: "address[]",
+      },
+      {
+        name: "extraData",
+        type: "bytes",
+        internalType: "bytes",
       },
     ],
     stateMutability: "view",
