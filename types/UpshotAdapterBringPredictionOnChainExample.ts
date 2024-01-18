@@ -67,7 +67,8 @@ export interface UpshotAdapterBringPredictionOnChainExampleInterface
   getFunction(
     nameOrSignature:
       | "acceptOwnership"
-      | "callProtocolFunctionWithUpshotAdapterPrice"
+      | "callProtocolFunctionWithExistingIndexValue"
+      | "callProtocolFunctionWithUpshotAdapterPredictionValue"
       | "owner"
       | "pendingOwner"
       | "renounceOwnership"
@@ -85,7 +86,11 @@ export interface UpshotAdapterBringPredictionOnChainExampleInterface
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "callProtocolFunctionWithUpshotAdapterPrice",
+    functionFragment: "callProtocolFunctionWithExistingIndexValue",
+    values: [BigNumberish, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "callProtocolFunctionWithUpshotAdapterPredictionValue",
     values: [BigNumberish, UpshotAdapterNumericDataStruct]
   ): string;
   encodeFunctionData(functionFragment: "owner", values?: undefined): string;
@@ -115,7 +120,11 @@ export interface UpshotAdapterBringPredictionOnChainExampleInterface
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "callProtocolFunctionWithUpshotAdapterPrice",
+    functionFragment: "callProtocolFunctionWithExistingIndexValue",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "callProtocolFunctionWithUpshotAdapterPredictionValue",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
@@ -215,7 +224,13 @@ export interface UpshotAdapterBringPredictionOnChainExample
 
   acceptOwnership: TypedContractMethod<[], [void], "nonpayable">;
 
-  callProtocolFunctionWithUpshotAdapterPrice: TypedContractMethod<
+  callProtocolFunctionWithExistingIndexValue: TypedContractMethod<
+    [protocolFunctionArgument: BigNumberish, topicId: BigNumberish],
+    [void],
+    "payable"
+  >;
+
+  callProtocolFunctionWithUpshotAdapterPredictionValue: TypedContractMethod<
     [
       protocolFunctionArgument: BigNumberish,
       upshotAdapterData: UpshotAdapterNumericDataStruct
@@ -252,7 +267,14 @@ export interface UpshotAdapterBringPredictionOnChainExample
     nameOrSignature: "acceptOwnership"
   ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
-    nameOrSignature: "callProtocolFunctionWithUpshotAdapterPrice"
+    nameOrSignature: "callProtocolFunctionWithExistingIndexValue"
+  ): TypedContractMethod<
+    [protocolFunctionArgument: BigNumberish, topicId: BigNumberish],
+    [void],
+    "payable"
+  >;
+  getFunction(
+    nameOrSignature: "callProtocolFunctionWithUpshotAdapterPredictionValue"
   ): TypedContractMethod<
     [
       protocolFunctionArgument: BigNumberish,

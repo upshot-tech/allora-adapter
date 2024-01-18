@@ -58,7 +58,6 @@ export interface UpshotAdapterTestInterface extends Interface {
       | "targetSelectors"
       | "targetSenders"
       | "test_canCallVerifyDataWithValidSignature"
-      | "test_canValueIsSavedWhenCallingVerifyDataWithValidSignature"
       | "test_cantCallVerifyDAtaWithLessThanThresholdData"
       | "test_cantCallVerifyDataWhenContractSwitchedOff"
       | "test_cantCallVerifyDataWhenTopicIsTurnedOffByAdmin"
@@ -71,16 +70,15 @@ export interface UpshotAdapterTestInterface extends Interface {
       | "test_cantCallVerifyDataWithMismatchedExtraData2"
       | "test_cantCallVerifyDataWithMismatchedTopics"
       | "test_cantCallVerifyDataWithNoData"
-      | "test_cantCallVerifyDataWithoutFee"
       | "test_cantCallVerifyDataWithoutValidTopicId"
       | "test_dataAggregationWorksCorrectlyAfterUpdatingAggregator"
       | "test_dataAverageAggregationWorksCorrectly"
-      | "test_dataFeesSplitCorrectly"
-      | "test_dataFeesSplitCorrectlyWithProtocol"
       | "test_dataMedianAggregationWorksCorrectly"
       | "test_dataMedianAggregationWorksCorrectly2"
       | "test_valueIsSavedWhenCallingVerifyDataWithExtraDataSet"
       | "test_valueIsSavedWhenCallingVerifyDataWithMultipleValidSignatures"
+      | "test_valueIsSavedWhenCallingVerifyDataWithValidSignature"
+      | "test_viewAndNonViewFunctionsGiveSameResult"
   ): FunctionFragment;
 
   getEvent(
@@ -153,10 +151,6 @@ export interface UpshotAdapterTestInterface extends Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "test_canValueIsSavedWhenCallingVerifyDataWithValidSignature",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
     functionFragment: "test_cantCallVerifyDAtaWithLessThanThresholdData",
     values?: undefined
   ): string;
@@ -205,10 +199,6 @@ export interface UpshotAdapterTestInterface extends Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "test_cantCallVerifyDataWithoutFee",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
     functionFragment: "test_cantCallVerifyDataWithoutValidTopicId",
     values?: undefined
   ): string;
@@ -218,14 +208,6 @@ export interface UpshotAdapterTestInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "test_dataAverageAggregationWorksCorrectly",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "test_dataFeesSplitCorrectly",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "test_dataFeesSplitCorrectlyWithProtocol",
     values?: undefined
   ): string;
   encodeFunctionData(
@@ -242,6 +224,14 @@ export interface UpshotAdapterTestInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "test_valueIsSavedWhenCallingVerifyDataWithMultipleValidSignatures",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "test_valueIsSavedWhenCallingVerifyDataWithValidSignature",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "test_viewAndNonViewFunctionsGiveSameResult",
     values?: undefined
   ): string;
 
@@ -289,10 +279,6 @@ export interface UpshotAdapterTestInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "test_canValueIsSavedWhenCallingVerifyDataWithValidSignature",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
     functionFragment: "test_cantCallVerifyDAtaWithLessThanThresholdData",
     data: BytesLike
   ): Result;
@@ -341,10 +327,6 @@ export interface UpshotAdapterTestInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "test_cantCallVerifyDataWithoutFee",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
     functionFragment: "test_cantCallVerifyDataWithoutValidTopicId",
     data: BytesLike
   ): Result;
@@ -354,14 +336,6 @@ export interface UpshotAdapterTestInterface extends Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "test_dataAverageAggregationWorksCorrectly",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "test_dataFeesSplitCorrectly",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "test_dataFeesSplitCorrectlyWithProtocol",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -378,6 +352,14 @@ export interface UpshotAdapterTestInterface extends Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "test_valueIsSavedWhenCallingVerifyDataWithMultipleValidSignatures",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "test_valueIsSavedWhenCallingVerifyDataWithValidSignature",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "test_viewAndNonViewFunctionsGiveSameResult",
     data: BytesLike
   ): Result;
 }
@@ -752,12 +734,6 @@ export interface UpshotAdapterTest extends BaseContract {
     "nonpayable"
   >;
 
-  test_canValueIsSavedWhenCallingVerifyDataWithValidSignature: TypedContractMethod<
-    [],
-    [void],
-    "nonpayable"
-  >;
-
   test_cantCallVerifyDAtaWithLessThanThresholdData: TypedContractMethod<
     [],
     [void],
@@ -830,12 +806,6 @@ export interface UpshotAdapterTest extends BaseContract {
     "nonpayable"
   >;
 
-  test_cantCallVerifyDataWithoutFee: TypedContractMethod<
-    [],
-    [void],
-    "nonpayable"
-  >;
-
   test_cantCallVerifyDataWithoutValidTopicId: TypedContractMethod<
     [],
     [void],
@@ -849,14 +819,6 @@ export interface UpshotAdapterTest extends BaseContract {
   >;
 
   test_dataAverageAggregationWorksCorrectly: TypedContractMethod<
-    [],
-    [void],
-    "nonpayable"
-  >;
-
-  test_dataFeesSplitCorrectly: TypedContractMethod<[], [void], "nonpayable">;
-
-  test_dataFeesSplitCorrectlyWithProtocol: TypedContractMethod<
     [],
     [void],
     "nonpayable"
@@ -881,6 +843,18 @@ export interface UpshotAdapterTest extends BaseContract {
   >;
 
   test_valueIsSavedWhenCallingVerifyDataWithMultipleValidSignatures: TypedContractMethod<
+    [],
+    [void],
+    "nonpayable"
+  >;
+
+  test_valueIsSavedWhenCallingVerifyDataWithValidSignature: TypedContractMethod<
+    [],
+    [void],
+    "nonpayable"
+  >;
+
+  test_viewAndNonViewFunctionsGiveSameResult: TypedContractMethod<
     [],
     [void],
     "nonpayable"
@@ -934,9 +908,6 @@ export interface UpshotAdapterTest extends BaseContract {
     nameOrSignature: "test_canCallVerifyDataWithValidSignature"
   ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
-    nameOrSignature: "test_canValueIsSavedWhenCallingVerifyDataWithValidSignature"
-  ): TypedContractMethod<[], [void], "nonpayable">;
-  getFunction(
     nameOrSignature: "test_cantCallVerifyDAtaWithLessThanThresholdData"
   ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
@@ -973,9 +944,6 @@ export interface UpshotAdapterTest extends BaseContract {
     nameOrSignature: "test_cantCallVerifyDataWithNoData"
   ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
-    nameOrSignature: "test_cantCallVerifyDataWithoutFee"
-  ): TypedContractMethod<[], [void], "nonpayable">;
-  getFunction(
     nameOrSignature: "test_cantCallVerifyDataWithoutValidTopicId"
   ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
@@ -983,12 +951,6 @@ export interface UpshotAdapterTest extends BaseContract {
   ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "test_dataAverageAggregationWorksCorrectly"
-  ): TypedContractMethod<[], [void], "nonpayable">;
-  getFunction(
-    nameOrSignature: "test_dataFeesSplitCorrectly"
-  ): TypedContractMethod<[], [void], "nonpayable">;
-  getFunction(
-    nameOrSignature: "test_dataFeesSplitCorrectlyWithProtocol"
   ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "test_dataMedianAggregationWorksCorrectly"
@@ -1001,6 +963,12 @@ export interface UpshotAdapterTest extends BaseContract {
   ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "test_valueIsSavedWhenCallingVerifyDataWithMultipleValidSignatures"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "test_valueIsSavedWhenCallingVerifyDataWithValidSignature"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "test_viewAndNonViewFunctionsGiveSameResult"
   ): TypedContractMethod<[], [void], "nonpayable">;
 
   getEvent(

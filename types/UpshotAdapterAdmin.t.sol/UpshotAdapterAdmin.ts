@@ -65,6 +65,8 @@ export interface UpshotAdapterAdminInterface extends Interface {
       | "test_adminCanTurnOnTopic"
       | "test_adminImposterCantTurnOffTopic"
       | "test_adminImposterCantTurnOnTopic"
+      | "test_anyoneCanAddMultipleTopics"
+      | "test_anyoneCanAddTopic"
       | "test_imposterCantAddDataProvider"
       | "test_imposterCantRemoveDataProvider"
       | "test_imposterCantTurnOffAdapter"
@@ -74,11 +76,7 @@ export interface UpshotAdapterAdminInterface extends Interface {
       | "test_imposterCantUpdateAggregator"
       | "test_imposterCantUpdateDataProviderQuorum"
       | "test_imposterCantUpdateDataValiditySeconds"
-      | "test_imposterCantUpdateFeeHandler"
-      | "test_imposterCantUpdateProtocolFee"
-      | "test_imposterCantUpdateProtocolFeeReciever"
       | "test_imposterCantUpdateTopicOwner"
-      | "test_imposterCantUpdateTotalFee"
       | "test_ownerCanAddDataProvider"
       | "test_ownerCanAddTopic"
       | "test_ownerCanRemoveDataProvider"
@@ -89,20 +87,11 @@ export interface UpshotAdapterAdminInterface extends Interface {
       | "test_ownerCanUpdateAggregator"
       | "test_ownerCanUpdateDataProviderQuorum"
       | "test_ownerCanUpdateDataValiditySeconds"
-      | "test_ownerCanUpdateFeeHandler"
-      | "test_ownerCanUpdateProtocolFee"
-      | "test_ownerCanUpdateProtocolFeeReceiver"
       | "test_ownerCanUpdateTopicOwner"
-      | "test_ownerCanUpdateTotalFee"
-      | "test_ownerCanUpdateTotalFeeToZero"
       | "test_ownerCantAddTopicWithEmptyTitle"
       | "test_ownerCantUpdateAggregatorToZeroAddress"
       | "test_ownerCantUpdateDataProviderQuorumToZero"
       | "test_ownerCantUpdateDataValiditySecondsToZero"
-      | "test_ownerCantUpdateFeeHandlerToZeroAddress"
-      | "test_ownerCantUpdateProtocolFeeReceiverToZeroAddress"
-      | "test_ownerCantUpdateProtocolFeeToBeTooLarge"
-      | "test_ownerCantUpdateTotalFeeToLessThan1000"
   ): FunctionFragment;
 
   getEvent(
@@ -203,6 +192,14 @@ export interface UpshotAdapterAdminInterface extends Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
+    functionFragment: "test_anyoneCanAddMultipleTopics",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "test_anyoneCanAddTopic",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "test_imposterCantAddDataProvider",
     values?: undefined
   ): string;
@@ -239,23 +236,7 @@ export interface UpshotAdapterAdminInterface extends Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "test_imposterCantUpdateFeeHandler",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "test_imposterCantUpdateProtocolFee",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "test_imposterCantUpdateProtocolFeeReciever",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
     functionFragment: "test_imposterCantUpdateTopicOwner",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "test_imposterCantUpdateTotalFee",
     values?: undefined
   ): string;
   encodeFunctionData(
@@ -299,27 +280,7 @@ export interface UpshotAdapterAdminInterface extends Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "test_ownerCanUpdateFeeHandler",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "test_ownerCanUpdateProtocolFee",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "test_ownerCanUpdateProtocolFeeReceiver",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
     functionFragment: "test_ownerCanUpdateTopicOwner",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "test_ownerCanUpdateTotalFee",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "test_ownerCanUpdateTotalFeeToZero",
     values?: undefined
   ): string;
   encodeFunctionData(
@@ -336,22 +297,6 @@ export interface UpshotAdapterAdminInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "test_ownerCantUpdateDataValiditySecondsToZero",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "test_ownerCantUpdateFeeHandlerToZeroAddress",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "test_ownerCantUpdateProtocolFeeReceiverToZeroAddress",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "test_ownerCantUpdateProtocolFeeToBeTooLarge",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "test_ownerCantUpdateTotalFeeToLessThan1000",
     values?: undefined
   ): string;
 
@@ -427,6 +372,14 @@ export interface UpshotAdapterAdminInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "test_anyoneCanAddMultipleTopics",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "test_anyoneCanAddTopic",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "test_imposterCantAddDataProvider",
     data: BytesLike
   ): Result;
@@ -463,23 +416,7 @@ export interface UpshotAdapterAdminInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "test_imposterCantUpdateFeeHandler",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "test_imposterCantUpdateProtocolFee",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "test_imposterCantUpdateProtocolFeeReciever",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
     functionFragment: "test_imposterCantUpdateTopicOwner",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "test_imposterCantUpdateTotalFee",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -523,27 +460,7 @@ export interface UpshotAdapterAdminInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "test_ownerCanUpdateFeeHandler",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "test_ownerCanUpdateProtocolFee",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "test_ownerCanUpdateProtocolFeeReceiver",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
     functionFragment: "test_ownerCanUpdateTopicOwner",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "test_ownerCanUpdateTotalFee",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "test_ownerCanUpdateTotalFeeToZero",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -560,22 +477,6 @@ export interface UpshotAdapterAdminInterface extends Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "test_ownerCantUpdateDataValiditySecondsToZero",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "test_ownerCantUpdateFeeHandlerToZeroAddress",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "test_ownerCantUpdateProtocolFeeReceiverToZeroAddress",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "test_ownerCantUpdateProtocolFeeToBeTooLarge",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "test_ownerCantUpdateTotalFeeToLessThan1000",
     data: BytesLike
   ): Result;
 }
@@ -976,6 +877,14 @@ export interface UpshotAdapterAdmin extends BaseContract {
     "nonpayable"
   >;
 
+  test_anyoneCanAddMultipleTopics: TypedContractMethod<
+    [],
+    [void],
+    "nonpayable"
+  >;
+
+  test_anyoneCanAddTopic: TypedContractMethod<[], [void], "nonpayable">;
+
   test_imposterCantAddDataProvider: TypedContractMethod<
     [],
     [void],
@@ -1018,31 +927,7 @@ export interface UpshotAdapterAdmin extends BaseContract {
     "nonpayable"
   >;
 
-  test_imposterCantUpdateFeeHandler: TypedContractMethod<
-    [],
-    [void],
-    "nonpayable"
-  >;
-
-  test_imposterCantUpdateProtocolFee: TypedContractMethod<
-    [],
-    [void],
-    "nonpayable"
-  >;
-
-  test_imposterCantUpdateProtocolFeeReciever: TypedContractMethod<
-    [],
-    [void],
-    "nonpayable"
-  >;
-
   test_imposterCantUpdateTopicOwner: TypedContractMethod<
-    [],
-    [void],
-    "nonpayable"
-  >;
-
-  test_imposterCantUpdateTotalFee: TypedContractMethod<
     [],
     [void],
     "nonpayable"
@@ -1080,25 +965,7 @@ export interface UpshotAdapterAdmin extends BaseContract {
     "nonpayable"
   >;
 
-  test_ownerCanUpdateFeeHandler: TypedContractMethod<[], [void], "nonpayable">;
-
-  test_ownerCanUpdateProtocolFee: TypedContractMethod<[], [void], "nonpayable">;
-
-  test_ownerCanUpdateProtocolFeeReceiver: TypedContractMethod<
-    [],
-    [void],
-    "nonpayable"
-  >;
-
   test_ownerCanUpdateTopicOwner: TypedContractMethod<[], [void], "nonpayable">;
-
-  test_ownerCanUpdateTotalFee: TypedContractMethod<[], [void], "nonpayable">;
-
-  test_ownerCanUpdateTotalFeeToZero: TypedContractMethod<
-    [],
-    [void],
-    "nonpayable"
-  >;
 
   test_ownerCantAddTopicWithEmptyTitle: TypedContractMethod<
     [],
@@ -1119,30 +986,6 @@ export interface UpshotAdapterAdmin extends BaseContract {
   >;
 
   test_ownerCantUpdateDataValiditySecondsToZero: TypedContractMethod<
-    [],
-    [void],
-    "nonpayable"
-  >;
-
-  test_ownerCantUpdateFeeHandlerToZeroAddress: TypedContractMethod<
-    [],
-    [void],
-    "nonpayable"
-  >;
-
-  test_ownerCantUpdateProtocolFeeReceiverToZeroAddress: TypedContractMethod<
-    [],
-    [void],
-    "nonpayable"
-  >;
-
-  test_ownerCantUpdateProtocolFeeToBeTooLarge: TypedContractMethod<
-    [],
-    [void],
-    "nonpayable"
-  >;
-
-  test_ownerCantUpdateTotalFeeToLessThan1000: TypedContractMethod<
     [],
     [void],
     "nonpayable"
@@ -1217,6 +1060,12 @@ export interface UpshotAdapterAdmin extends BaseContract {
     nameOrSignature: "test_adminImposterCantTurnOnTopic"
   ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
+    nameOrSignature: "test_anyoneCanAddMultipleTopics"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "test_anyoneCanAddTopic"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
     nameOrSignature: "test_imposterCantAddDataProvider"
   ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
@@ -1244,19 +1093,7 @@ export interface UpshotAdapterAdmin extends BaseContract {
     nameOrSignature: "test_imposterCantUpdateDataValiditySeconds"
   ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
-    nameOrSignature: "test_imposterCantUpdateFeeHandler"
-  ): TypedContractMethod<[], [void], "nonpayable">;
-  getFunction(
-    nameOrSignature: "test_imposterCantUpdateProtocolFee"
-  ): TypedContractMethod<[], [void], "nonpayable">;
-  getFunction(
-    nameOrSignature: "test_imposterCantUpdateProtocolFeeReciever"
-  ): TypedContractMethod<[], [void], "nonpayable">;
-  getFunction(
     nameOrSignature: "test_imposterCantUpdateTopicOwner"
-  ): TypedContractMethod<[], [void], "nonpayable">;
-  getFunction(
-    nameOrSignature: "test_imposterCantUpdateTotalFee"
   ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "test_ownerCanAddDataProvider"
@@ -1289,22 +1126,7 @@ export interface UpshotAdapterAdmin extends BaseContract {
     nameOrSignature: "test_ownerCanUpdateDataValiditySeconds"
   ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
-    nameOrSignature: "test_ownerCanUpdateFeeHandler"
-  ): TypedContractMethod<[], [void], "nonpayable">;
-  getFunction(
-    nameOrSignature: "test_ownerCanUpdateProtocolFee"
-  ): TypedContractMethod<[], [void], "nonpayable">;
-  getFunction(
-    nameOrSignature: "test_ownerCanUpdateProtocolFeeReceiver"
-  ): TypedContractMethod<[], [void], "nonpayable">;
-  getFunction(
     nameOrSignature: "test_ownerCanUpdateTopicOwner"
-  ): TypedContractMethod<[], [void], "nonpayable">;
-  getFunction(
-    nameOrSignature: "test_ownerCanUpdateTotalFee"
-  ): TypedContractMethod<[], [void], "nonpayable">;
-  getFunction(
-    nameOrSignature: "test_ownerCanUpdateTotalFeeToZero"
   ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "test_ownerCantAddTopicWithEmptyTitle"
@@ -1317,18 +1139,6 @@ export interface UpshotAdapterAdmin extends BaseContract {
   ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "test_ownerCantUpdateDataValiditySecondsToZero"
-  ): TypedContractMethod<[], [void], "nonpayable">;
-  getFunction(
-    nameOrSignature: "test_ownerCantUpdateFeeHandlerToZeroAddress"
-  ): TypedContractMethod<[], [void], "nonpayable">;
-  getFunction(
-    nameOrSignature: "test_ownerCantUpdateProtocolFeeReceiverToZeroAddress"
-  ): TypedContractMethod<[], [void], "nonpayable">;
-  getFunction(
-    nameOrSignature: "test_ownerCantUpdateProtocolFeeToBeTooLarge"
-  ): TypedContractMethod<[], [void], "nonpayable">;
-  getFunction(
-    nameOrSignature: "test_ownerCantUpdateTotalFeeToLessThan1000"
   ): TypedContractMethod<[], [void], "nonpayable">;
 
   getEvent(
