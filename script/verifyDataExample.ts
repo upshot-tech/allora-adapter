@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: BUSL-1.1
 
-import { UpshotAdapter__factory } from '../types/factories/UpshotAdapter__factory'
-import { UpshotAdapter } from '../types/UpshotAdapter';
+import { AlloraAdapter__factory } from '../types/factories/AlloraAdapter__factory'
+import { AlloraAdapter } from '../types/AlloraAdapter';
 import { ethers, BigNumberish, BytesLike } from 'ethers';
 import * as dotenv from 'dotenv';
 
 // to run: ts-node script/verifyDataExample.ts
 
-const UPSHOT_ADAPTER_NAME = 'UpshotAdapter'
+const UPSHOT_ADAPTER_NAME = 'AlloraAdapter'
 const UPSHOT_ADAPTER_VERSION = 1
 const UPSHOT_ADAPTER_ADDRESS = '0x238D0abD53fC68fAfa0CCD860446e381b400b5Be'
 const UPSHOT_ADAPTER_CHAIN_ID = 11155111
@@ -34,14 +34,14 @@ const constructMessageLocally = async (
   numericData: NumericDataStruct, 
   config: {
     chainId: number,
-    upshotAdapterAddress: string,
+    alloraAdapterAddress: string,
   }
 ) => {
   const keccak = ethers.keccak256
   const coder = new ethers.AbiCoder()
   const toBytes = ethers.toUtf8Bytes
 
-  const { chainId, upshotAdapterAddress } = config
+  const { chainId, alloraAdapterAddress } = config
 
   const numericDataTypehash = keccak(toBytes('NumericData(uint256 topicId,uint256 timestamp,uint256 numericValue,bytes extraData)'))
 
@@ -52,7 +52,7 @@ const constructMessageLocally = async (
       keccak(toBytes(UPSHOT_ADAPTER_NAME)),
       keccak(toBytes(UPSHOT_ADAPTER_VERSION.toString())),
       chainId.toString(),
-      upshotAdapterAddress,
+      alloraAdapterAddress,
     ]
   ))
 
@@ -79,16 +79,16 @@ const signMessageLocally = async (
   numericData: NumericDataStruct, 
   config: {
     chainId: number
-    upshotAdapterAddress: string
+    alloraAdapterAddress: string
     privateKey: string
   }
 ) => {
-  const { chainId, upshotAdapterAddress, privateKey } = config
+  const { chainId, alloraAdapterAddress, privateKey } = config
   const wallet = new ethers.Wallet(privateKey)
 
   const message = await constructMessageLocally(
     numericData, 
-    { chainId, upshotAdapterAddress }
+    { chainId, alloraAdapterAddress }
   )
   const messageBytes = hexStringToByteArray(message)
 
@@ -105,7 +105,7 @@ const run = async () => {
   const provider = new ethers.JsonRpcProvider(rpcUrl)
   const wallet = new ethers.Wallet(privateKey, provider)
 
-  const upshotAdapter = (new UpshotAdapter__factory()).attach(UPSHOT_ADAPTER_ADDRESS).connect(wallet) as UpshotAdapter
+  const alloraAdapter = (new AlloraAdapter__factory()).attach(UPSHOT_ADAPTER_ADDRESS).connect(wallet) as AlloraAdapter
 
   const numericData: NumericDataStruct = {
     topicId: 1,
@@ -117,14 +117,14 @@ const run = async () => {
   console.info('verifying numericData')
   console.info({numericData})
 
-  const message = await upshotAdapter.getMessage(numericData)
+  const message = await alloraAdapter.getMessage(numericData)
   const messageBytes = hexStringToByteArray(message)
 
   // sign the message with the private key
   const signature = await wallet.signMessage(messageBytes)
   const localSignature = await signMessageLocally(numericData, { 
     chainId: UPSHOT_ADAPTER_CHAIN_ID,
-    upshotAdapterAddress: UPSHOT_ADAPTER_ADDRESS, 
+    alloraAdapterAddress: UPSHOT_ADAPTER_ADDRESS, 
     privateKey 
   })
 
@@ -134,7 +134,7 @@ const run = async () => {
     throw new Error('local signature does not match remote. Check chainId.')
   }
 
-  const tx = await upshotAdapter.verifyData({
+  const tx = await alloraAdapter.verifyData({
     signedNumericData:[{ signature, numericData }],
     extraData: ethers.toUtf8Bytes(''),
   })

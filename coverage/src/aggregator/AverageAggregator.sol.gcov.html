@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Date:</td>
-            <td class="headerValue">2024-01-18 08:28:38</td>
+            <td class="headerValue">2024-01-18 10:43:56</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntry">1</td>
@@ -75,7 +75,7 @@
 <a name="13"><span class="lineNum">      13 </span>            :     // * ========================= ERRORS ========================== *</a>
 <a name="14"><span class="lineNum">      14 </span>            :     // ***************************************************************</a>
 <a name="15"><span class="lineNum">      15 </span>            : </a>
-<a name="16"><span class="lineNum">      16 </span>            :     error UpshotAdapterV2AverageAggregatorNoValuesToAggregate();</a>
+<a name="16"><span class="lineNum">      16 </span>            :     error AlloraAdapterV2AverageAggregatorNoValuesToAggregate();</a>
 <a name="17"><span class="lineNum">      17 </span>            : </a>
 <a name="18"><span class="lineNum">      18 </span>            :     // ***************************************************************</a>
 <a name="19"><span class="lineNum">      19 </span>            :     // * ===================== USER INTERFACE ====================== *</a>
@@ -88,7 +88,7 @@
 <a name="26"><span class="lineNum">      26 </span>            :     ) external pure returns (uint256 value) {</a>
 <a name="27"><span class="lineNum">      27 </span><span class="lineCov">        266 :         uint256 countValues = values.length;</span></a>
 <a name="28"><span class="lineNum">      28 </span><span class="lineCov">        266 :         if (countValues == 0) {</span></a>
-<a name="29"><span class="lineNum">      29 </span><span class="lineCov">          1 :             revert UpshotAdapterV2AverageAggregatorNoValuesToAggregate();</span></a>
+<a name="29"><span class="lineNum">      29 </span><span class="lineCov">          1 :             revert AlloraAdapterV2AverageAggregatorNoValuesToAggregate();</span></a>
 <a name="30"><span class="lineNum">      30 </span>            :         }</a>
 <a name="31"><span class="lineNum">      31 </span>            : </a>
 <a name="32"><span class="lineNum">      32 </span><span class="lineCov">        265 :         uint256 sum = 0;</span></a>

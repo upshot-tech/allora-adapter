@@ -3,11 +3,11 @@ pragma solidity 0.8.21;
 
 import '../lib/forge-std/src/Script.sol';
 
-import { UpshotAdapter } from '../src/UpshotAdapter.sol';
-import { TopicConfig, TopicView } from '../src/interface/IUpshotAdapter.sol';
+import { AlloraAdapter } from '../src/AlloraAdapter.sol';
+import { TopicConfig, TopicView } from '../src/interface/IAlloraAdapter.sol';
 import { IAggregator } from '../src/interface/IAggregator.sol';
 import { IFeeHandler } from '../src/interface/IFeeHandler.sol';
-import { NumericData, SignedNumericData, UpshotAdapterNumericData } from '../src/interface/IUpshotAdapter.sol';
+import { NumericData, SignedNumericData, AlloraAdapterNumericData } from '../src/interface/IAlloraAdapter.sol';
 import { ECDSA } from '../lib/openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol';
 
 // run with 
@@ -15,7 +15,7 @@ import { ECDSA } from '../lib/openzeppelin-contracts/contracts/utils/cryptograph
 
 contract VerifyDataExample is Script {
 
-    UpshotAdapter upshotAdapter = UpshotAdapter(0x238D0abD53fC68fAfa0CCD860446e381b400b5Be);
+    AlloraAdapter alloraAdapter = AlloraAdapter(0x238D0abD53fC68fAfa0CCD860446e381b400b5Be);
 
     function run() public virtual {
         uint256 scriptRunnerPrivateKey = vm.envUint('SCRIPT_RUNNER_PRIVATE_KEY');
@@ -31,7 +31,7 @@ contract VerifyDataExample is Script {
             extraData: ''
         });
 
-        bytes32 message = upshotAdapter.getMessage(numericData);
+        bytes32 message = alloraAdapter.getMessage(numericData);
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(
             scriptRunnerPrivateKey, 
@@ -45,7 +45,7 @@ contract VerifyDataExample is Script {
             numericData: numericData
         });
 
-        upshotAdapter.verifyData(UpshotAdapterNumericData({
+        alloraAdapter.verifyData(AlloraAdapterNumericData({
             signedNumericData: signedNumericData,
             extraData: ''
         }));

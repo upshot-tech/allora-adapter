@@ -1,9 +1,9 @@
 {
-  "name": "upshot-adapter-v2",
+  "name": "allora-adapter",
   "version": "0.0.1",
-  "description": "Upshot Adapter V2",
+  "description": "Allora Adapter",
   "main": "index.js",
-  "repository": "https://github.com/upshot-tech/upshot-adapter-v2.git",
+  "repository": "https://github.com/upshot-tech/allora-adapter.git",
   "author": "br4e <milesminton@gmail.com>",
   "license": "BUSL-1.1",
   "private": true,

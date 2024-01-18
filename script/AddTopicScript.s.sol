@@ -3,23 +3,23 @@ pragma solidity 0.8.21;
 
 import '../lib/forge-std/src/Script.sol';
 
-import { UpshotAdapter } from '../src/UpshotAdapter.sol';
-import { TopicConfig, TopicView } from '../src/interface/IUpshotAdapter.sol';
+import { AlloraAdapter } from '../src/AlloraAdapter.sol';
+import { TopicConfig, TopicView } from '../src/interface/IAlloraAdapter.sol';
 import { IAggregator } from '../src/interface/IAggregator.sol';
 import { IFeeHandler } from '../src/interface/IFeeHandler.sol';
-import { NumericData } from '../src/interface/IUpshotAdapter.sol';
+import { NumericData } from '../src/interface/IAlloraAdapter.sol';
 import { ECDSA } from '../lib/openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol';
 
 // run with 
 // forge script ./script/AddTopicScript.s.sol:AddTopicScript --rpc-url <rpc url> --etherscan-api-key <etherscan api key> --broadcast --verify -vvvv
 
 /**
- * @title UpshotAdapterViewPredictionExample
- * @notice Example contract adding topics to an UpshotAdapter
+ * @title AlloraAdapterViewPredictionExample
+ * @notice Example contract adding topics to an AlloraAdapter
  */
 contract AddTopicScript is Script {
 
-    UpshotAdapter upshotAdapter = UpshotAdapter(0x9928f99dEf24e792cE8c20B7B67E64aafEC76c18);
+    AlloraAdapter alloraAdapter = AlloraAdapter(0x9928f99dEf24e792cE8c20B7B67E64aafEC76c18);
     IAggregator aggregator = IAggregator(0x28bd0750FCAd5280464180b5Ac4860302dC7373c);
 
     function run() public virtual {
@@ -60,7 +60,7 @@ contract AddTopicScript is Script {
             });
         }
 
-        uint256[] memory topicIds = upshotAdapter.addTopics(topicViews);
+        uint256[] memory topicIds = alloraAdapter.addTopics(topicViews);
 
         for (uint256 i = 0; i < topicTitles.length; i++) {
             console.log('Topic "%s" added with id %s', topicTitles[i], topicIds[i]);

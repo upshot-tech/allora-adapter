@@ -4,18 +4,18 @@ pragma solidity ^0.8.13;
 
 import { IAggregator } from './interface/IAggregator.sol';
 import { IFeeHandler } from './interface/IFeeHandler.sol';
-import { UpshotAdapterNumericData, NumericData, IUpshotAdapter, Topic, TopicView, TopicValue } from './interface/IUpshotAdapter.sol';
+import { AlloraAdapterNumericData, NumericData, IAlloraAdapter, Topic, TopicView, TopicValue } from './interface/IAlloraAdapter.sol';
 import { ECDSA } from "../lib/openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
 import { Math } from "../lib/openzeppelin-contracts/contracts/utils/math/Math.sol";
 import { Ownable2Step } from "../lib/openzeppelin-contracts/contracts/access/Ownable2Step.sol";
 import { EIP712 } from "../lib/openzeppelin-contracts/contracts/utils/cryptography/EIP712.sol";
 import { EnumerableSet } from "../lib/openzeppelin-contracts/contracts/utils/structs/EnumerableSet.sol";
 
-struct UpshotAdapterConstructorArgs {
+struct AlloraAdapterConstructorArgs {
     address admin;
 }
 
-contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
+contract AlloraAdapter is IAlloraAdapter, Ownable2Step, EIP712 {
 
     /// @dev The data for each topic. Call getTopic function for access to structured data
     mapping(uint256 topicId => Topic) internal topic;
@@ -26,15 +26,15 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
     /// @dev The next topicId to use
     uint256 public nextTopicId = 1;
 
-    /// @dev Whether the UpshotAdapter contract is switched on and usable
+    /// @dev Whether the AlloraAdapter contract is switched on and usable
     bool public switchedOn = true;
 
     bytes32 public constant NUMERIC_DATA_TYPEHASH = keccak256(
         "NumericData(uint256 topicId,uint256 timestamp,uint256 numericValue,bytes extraData)"
     );
 
-    constructor(UpshotAdapterConstructorArgs memory args) 
-        EIP712("UpshotAdapter", "1") 
+    constructor(AlloraAdapterConstructorArgs memory args) 
+        EIP712("AlloraAdapter", "1") 
     {
         _transferOwnership(args.admin);
     }
@@ -44,47 +44,47 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
     // ***************************************************************
 
     // main interface events
-    event UpshotAdapterV2AdapterVerifiedData(uint256 topicId, uint256 numericData, address[] dataProviders, bytes extraData);
+    event AlloraAdapterV2AdapterVerifiedData(uint256 topicId, uint256 numericData, address[] dataProviders, bytes extraData);
     
     // topic owner update events
-    event UpshotAdapterV2TopicAdded(TopicView topicView);
-    event UpshotAdapterV2AdapterTopicOwnerUpdatedDataProviderQuorum(uint256 topicId, uint48 dataProviderQuorum);
-    event UpshotAdapterV2AdapterTopicOwnerUpdatedDataValiditySeconds(uint256 topicId, uint48 dataValiditySeconds);
-    event UpshotAdapterV2AdapterTopicOwnerAddedDataProvider(uint256 topicId, address dataProvider);
-    event UpshotAdapterV2AdapterTopicOwnerRemovedDataProvider(address dataProvider);
-    event UpshotAdapterV2AdapterTopicOwnerUpdatedAggregator(uint256 topicId, IAggregator aggregator);
-    event UpshotAdapterV2AdapterTopicOwnerUpdatedOwner(uint256 topicId, address newOwner);
-    event UpshotAdapterV2AdapterTopicOwnerTopicTurnedOff(uint256 topicId);
-    event UpshotAdapterV2AdapterTopicOwnerTopicTurnedOn(uint256 topicId);
+    event AlloraAdapterV2TopicAdded(TopicView topicView);
+    event AlloraAdapterV2AdapterTopicOwnerUpdatedDataProviderQuorum(uint256 topicId, uint48 dataProviderQuorum);
+    event AlloraAdapterV2AdapterTopicOwnerUpdatedDataValiditySeconds(uint256 topicId, uint48 dataValiditySeconds);
+    event AlloraAdapterV2AdapterTopicOwnerAddedDataProvider(uint256 topicId, address dataProvider);
+    event AlloraAdapterV2AdapterTopicOwnerRemovedDataProvider(address dataProvider);
+    event AlloraAdapterV2AdapterTopicOwnerUpdatedAggregator(uint256 topicId, IAggregator aggregator);
+    event AlloraAdapterV2AdapterTopicOwnerUpdatedOwner(uint256 topicId, address newOwner);
+    event AlloraAdapterV2AdapterTopicOwnerTopicTurnedOff(uint256 topicId);
+    event AlloraAdapterV2AdapterTopicOwnerTopicTurnedOn(uint256 topicId);
 
     // adapter admin updates
-    event UpshotAdapterV2AdapterAdminTopicTurnedOff(uint256 topicId);
-    event UpshotAdapterV2AdapterAdminTopicTurnedOn(uint256 topicId);
-    event UpshotAdapterV2AdapterAdminTurnedOff();
-    event UpshotAdapterV2AdapterAdminTurnedOn();
+    event AlloraAdapterV2AdapterAdminTopicTurnedOff(uint256 topicId);
+    event AlloraAdapterV2AdapterAdminTopicTurnedOn(uint256 topicId);
+    event AlloraAdapterV2AdapterAdminTurnedOff();
+    event AlloraAdapterV2AdapterAdminTurnedOn();
 
     // ***************************************************************
     // * ========================= ERRORS ========================== *
     // ***************************************************************
 
     // verification errors
-    error UpshotAdapterV2NotSwitchedOn();
-    error UpshotAdapterV2NoDataProvided();
-    error UpshotAdapterV2OwnerTurnedTopicOff();
-    error UpshotAdapterV2AdminTurnedTopicOff();
-    error UpshotAdapterV2NotEnoughData();
-    error UpshotAdapterV2TopicMismatch();
-    error UpshotAdapterV2ExtraDataMismatch();
-    error UpshotAdapterV2InvalidDataTime();
-    error UpshotAdapterV2InvalidDataProvider();
-    error UpshotAdapterV2DuplicateDataProvider();
+    error AlloraAdapterV2NotSwitchedOn();
+    error AlloraAdapterV2NoDataProvided();
+    error AlloraAdapterV2OwnerTurnedTopicOff();
+    error AlloraAdapterV2AdminTurnedTopicOff();
+    error AlloraAdapterV2NotEnoughData();
+    error AlloraAdapterV2TopicMismatch();
+    error AlloraAdapterV2ExtraDataMismatch();
+    error AlloraAdapterV2InvalidDataTime();
+    error AlloraAdapterV2InvalidDataProvider();
+    error AlloraAdapterV2DuplicateDataProvider();
 
     // parameter update errors
-    error UpshotAdapterV2InvalidTopicTitle();
-    error UpshotAdapterV2OnlyTopicOwner();
-    error UpshotAdapterV2InvalidAggregator();
-    error UpshotAdapterV2InvalidDataProviderQuorum();
-    error UpshotAdapterV2InvalidDataValiditySeconds();
+    error AlloraAdapterV2InvalidTopicTitle();
+    error AlloraAdapterV2OnlyTopicOwner();
+    error AlloraAdapterV2InvalidAggregator();
+    error AlloraAdapterV2InvalidDataProviderQuorum();
+    error AlloraAdapterV2InvalidDataValiditySeconds();
 
     // casting errors
     error SafeCastOverflowedUintDowncast(uint8 bits, uint256 value);
@@ -92,9 +92,9 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
     // ***************************************************************
     // * ================== USER INTERFACE ========================= *
     // ***************************************************************
-    ///@inheritdoc IUpshotAdapter
+    ///@inheritdoc IAlloraAdapter
     function verifyData(
-        UpshotAdapterNumericData memory nd
+        AlloraAdapterNumericData memory nd
     ) external override returns (
         uint256 numericValue, 
         uint256 topicId, 
@@ -108,12 +108,12 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
             recentValueTime: _toUint64(block.timestamp)
         });
 
-        emit UpshotAdapterV2AdapterVerifiedData(topicId, numericValue, dataProviders, extraData);
+        emit AlloraAdapterV2AdapterVerifiedData(topicId, numericValue, dataProviders, extraData);
     }
 
-    ///@inheritdoc IUpshotAdapter
+    ///@inheritdoc IAlloraAdapter
     function verifyDataViewOnly(
-        UpshotAdapterNumericData memory nd
+        AlloraAdapterNumericData memory nd
     ) external view override returns (
         uint256 numericValue, 
         uint256 topicId, 
@@ -129,7 +129,7 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
      * @param nd The data to verify
      */
     function _verifyData(
-        UpshotAdapterNumericData memory nd
+        AlloraAdapterNumericData memory nd
     ) internal view returns (
         uint256 numericValue, 
         uint256 topicId, 
@@ -137,28 +137,28 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
         bytes memory extraData
     ) {
         if (!switchedOn) {
-            revert UpshotAdapterV2NotSwitchedOn();
+            revert AlloraAdapterV2NotSwitchedOn();
         }
 
         uint256 dataCount = nd.signedNumericData.length;
 
         if (dataCount == 0) {
-            revert UpshotAdapterV2NoDataProvided();
+            revert AlloraAdapterV2NoDataProvided();
         }
 
         topicId = nd.signedNumericData[0].numericData.topicId;
         extraData = nd.signedNumericData[0].numericData.extraData;
 
         if (!topic[topicId].config.ownerSwitchedOn) {
-            revert UpshotAdapterV2OwnerTurnedTopicOff();
+            revert AlloraAdapterV2OwnerTurnedTopicOff();
         }
 
         if (!topic[topicId].config.adminSwitchedOn) {
-            revert UpshotAdapterV2AdminTurnedTopicOff();
+            revert AlloraAdapterV2AdminTurnedTopicOff();
         }
 
         if (dataCount < topic[topicId].config.dataProviderQuorum) {
-            revert UpshotAdapterV2NotEnoughData();
+            revert AlloraAdapterV2NotEnoughData();
         }
 
         uint256[] memory dataList = new uint256[](dataCount);
@@ -169,18 +169,18 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
             numericData = nd.signedNumericData[i].numericData;
 
             if (numericData.topicId != topicId) {
-                revert UpshotAdapterV2TopicMismatch();
+                revert AlloraAdapterV2TopicMismatch();
             }
 
             if (!_equalBytes(numericData.extraData, extraData)) {
-                revert UpshotAdapterV2ExtraDataMismatch();
+                revert AlloraAdapterV2ExtraDataMismatch();
             }
 
             if (
                 block.timestamp < numericData.timestamp ||
                 numericData.timestamp + topic[topicId].config.dataValiditySeconds < block.timestamp
             ) {
-                revert UpshotAdapterV2InvalidDataTime();
+                revert AlloraAdapterV2InvalidDataTime();
             }
 
             address dataProvider = ECDSA.recover(
@@ -189,12 +189,12 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
             );
 
             if (!EnumerableSet.contains(topic[topicId].validDataProviders, dataProvider)) {
-                revert UpshotAdapterV2InvalidDataProvider();
+                revert AlloraAdapterV2InvalidDataProvider();
             }
 
             for (uint256 j = 0; j < i;) {
                 if (dataProvider == dataProviders[j]) {
-                    revert UpshotAdapterV2DuplicateDataProvider();
+                    revert AlloraAdapterV2DuplicateDataProvider();
                 }
 
                 unchecked { 
@@ -272,7 +272,7 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
      */
     modifier onlyTopicOwner(uint256 topicId) {
         if (msg.sender != topic[topicId].config.owner) {
-            revert UpshotAdapterV2OnlyTopicOwner();
+            revert AlloraAdapterV2OnlyTopicOwner();
         }
         _;
     }
@@ -345,7 +345,7 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
         TopicView calldata topicView
     ) internal returns (uint256 newTopicId) {
         if (bytes(topicView.config.title).length == 0) {
-            revert UpshotAdapterV2InvalidTopicTitle();
+            revert AlloraAdapterV2InvalidTopicTitle();
         }
         newTopicId = nextTopicId++;
         topic[newTopicId].config = topicView.config;
@@ -355,7 +355,7 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
             unchecked { ++i; }
         }
 
-        emit UpshotAdapterV2TopicAdded(topicView);
+        emit AlloraAdapterV2TopicAdded(topicView);
     }
 
     // ***************************************************************
@@ -400,12 +400,12 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
         uint48 dataProviderQuorum
     ) external onlyTopicOwner(topicId) {
         if (dataProviderQuorum == 0) {
-            revert UpshotAdapterV2InvalidDataProviderQuorum();
+            revert AlloraAdapterV2InvalidDataProviderQuorum();
         }
 
         topic[topicId].config.dataProviderQuorum = dataProviderQuorum;
 
-        emit UpshotAdapterV2AdapterTopicOwnerUpdatedDataProviderQuorum(topicId, dataProviderQuorum);
+        emit AlloraAdapterV2AdapterTopicOwnerUpdatedDataProviderQuorum(topicId, dataProviderQuorum);
     }
 
     /**
@@ -419,12 +419,12 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
         uint48 dataValiditySeconds
     ) external onlyTopicOwner(topicId) {
         if (dataValiditySeconds == 0) { 
-            revert UpshotAdapterV2InvalidDataValiditySeconds();
+            revert AlloraAdapterV2InvalidDataValiditySeconds();
         }
 
         topic[topicId].config.dataValiditySeconds = dataValiditySeconds;
 
-        emit UpshotAdapterV2AdapterTopicOwnerUpdatedDataValiditySeconds(topicId, dataValiditySeconds);
+        emit AlloraAdapterV2AdapterTopicOwnerUpdatedDataValiditySeconds(topicId, dataValiditySeconds);
     }
 
   /**
@@ -436,7 +436,7 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
     function addDataProvider(uint256 topicId, address dataProvider) external onlyTopicOwner(topicId) {
         EnumerableSet.add(topic[topicId].validDataProviders, dataProvider);
 
-        emit UpshotAdapterV2AdapterTopicOwnerAddedDataProvider(topicId, dataProvider);
+        emit AlloraAdapterV2AdapterTopicOwnerAddedDataProvider(topicId, dataProvider);
     }
 
     /**
@@ -448,7 +448,7 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
     function removeDataProvider(uint256 topicId, address dataProvider) external onlyTopicOwner(topicId) {
         EnumerableSet.remove(topic[topicId].validDataProviders, dataProvider);
 
-        emit UpshotAdapterV2AdapterTopicOwnerRemovedDataProvider(dataProvider);
+        emit AlloraAdapterV2AdapterTopicOwnerRemovedDataProvider(dataProvider);
     }
 
     /**
@@ -459,7 +459,7 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
     function turnOffTopic(uint256 topicId) external onlyTopicOwner(topicId) {
         topic[topicId].config.ownerSwitchedOn = false;
         
-        emit UpshotAdapterV2AdapterTopicOwnerTopicTurnedOff(topicId);
+        emit AlloraAdapterV2AdapterTopicOwnerTopicTurnedOff(topicId);
     }
 
     /**
@@ -470,7 +470,7 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
     function turnOnTopic(uint256 topicId) external onlyTopicOwner(topicId) {
         topic[topicId].config.ownerSwitchedOn = true;
         
-        emit UpshotAdapterV2AdapterTopicOwnerTopicTurnedOn(topicId);
+        emit AlloraAdapterV2AdapterTopicOwnerTopicTurnedOn(topicId);
     }
 
     /**
@@ -481,12 +481,12 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
      */
     function updateAggregator(uint256 topicId, IAggregator aggregator) external onlyTopicOwner(topicId) {
         if (address(aggregator) == address(0)) {
-            revert UpshotAdapterV2InvalidAggregator();
+            revert AlloraAdapterV2InvalidAggregator();
         }
 
         topic[topicId].config.aggregator = aggregator;
 
-        emit UpshotAdapterV2AdapterTopicOwnerUpdatedAggregator(topicId, aggregator);
+        emit AlloraAdapterV2AdapterTopicOwnerUpdatedAggregator(topicId, aggregator);
     }
 
     /**
@@ -498,7 +498,7 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
     function updateTopicOwner(uint256 topicId, address owner_) external onlyTopicOwner(topicId) {
         topic[topicId].config.owner = owner_;
 
-        emit UpshotAdapterV2AdapterTopicOwnerUpdatedOwner(topicId, owner_);
+        emit AlloraAdapterV2AdapterTopicOwnerUpdatedOwner(topicId, owner_);
     } 
 
     // ***************************************************************
@@ -510,7 +510,7 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
     function adminTurnOffAdapter() external onlyOwner {
         switchedOn = false;
 
-        emit UpshotAdapterV2AdapterAdminTurnedOff();
+        emit AlloraAdapterV2AdapterAdminTurnedOff();
     }
 
     /**
@@ -519,7 +519,7 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
     function adminTurnOnAdapter() external onlyOwner {
         switchedOn = true;
 
-        emit UpshotAdapterV2AdapterAdminTurnedOn();
+        emit AlloraAdapterV2AdapterAdminTurnedOn();
     }
     
     /**
@@ -530,7 +530,7 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
     function adminTurnOffTopic(uint256 topicId) external onlyOwner {
         topic[topicId].config.adminSwitchedOn = false;
         
-        emit UpshotAdapterV2AdapterAdminTopicTurnedOff(topicId);
+        emit AlloraAdapterV2AdapterAdminTopicTurnedOff(topicId);
     }
 
     /**
@@ -541,6 +541,6 @@ contract UpshotAdapter is IUpshotAdapter, Ownable2Step, EIP712 {
     function adminTurnOnTopic(uint256 topicId) external onlyOwner {
         topic[topicId].config.adminSwitchedOn = true;
         
-        emit UpshotAdapterV2AdapterAdminTopicTurnedOn(topicId);
+        emit AlloraAdapterV2AdapterAdminTopicTurnedOn(topicId);
     }
 }

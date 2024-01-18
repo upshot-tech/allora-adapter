@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 
-import { UpshotAdapter__factory } from '../types/factories/UpshotAdapter__factory'
-import { UpshotAdapter } from '../types/UpshotAdapter'
+import { AlloraAdapter__factory } from '../types/factories/AlloraAdapter__factory'
+import { AlloraAdapter } from '../types/AlloraAdapter'
 import { ethers } from 'ethers';
 import * as dotenv from 'dotenv';
 import sepoliaAddresses from '../deploy/deployments/sepolia.json'
@@ -16,8 +16,8 @@ const run = async () => {
   const provider = new ethers.JsonRpcProvider(getEnvVariable('rpcUrl'))
   const wallet = new ethers.Wallet(DUMMY_PRIVATE_KEY, provider)
 
-  const upshotAdapter = (new UpshotAdapter__factory()).attach(sepoliaAddresses.UpshotAdapter).connect(wallet) as UpshotAdapter
-  const { recentValue, recentValueTime } = await upshotAdapter.getTopicValue(TARGET_TOPIC_ID, '0x')
+  const alloraAdapter = (new AlloraAdapter__factory()).attach(sepoliaAddresses.AlloraAdapter).connect(wallet) as AlloraAdapter
+  const { recentValue, recentValueTime } = await alloraAdapter.getTopicValue(TARGET_TOPIC_ID, '0x')
   console.info({
     value: recentValue,
     timestamp: recentValueTime,

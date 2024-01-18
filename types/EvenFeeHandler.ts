@@ -46,11 +46,11 @@ export interface EvenFeeHandlerInterface extends Interface {
 
   getEvent(
     nameOrSignatureOrTopic:
+      | "AlloraAdapterV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortion"
+      | "AlloraAdapterV2EvenFeeHandlerFeesClaimed"
+      | "AlloraAdapterV2EvenFeeHandlerFeesHandled"
       | "OwnershipTransferStarted"
       | "OwnershipTransferred"
-      | "UpshotAdapterV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortion"
-      | "UpshotAdapterV2EvenFeeHandlerFeesClaimed"
-      | "UpshotAdapterV2EvenFeeHandlerFeesHandled"
   ): EventFragment;
 
   encodeFunctionData(
@@ -121,6 +121,44 @@ export interface EvenFeeHandlerInterface extends Interface {
   ): Result;
 }
 
+export namespace AlloraAdapterV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortionEvent {
+  export type InputTuple = [feedOwnerPortion: BigNumberish];
+  export type OutputTuple = [feedOwnerPortion: bigint];
+  export interface OutputObject {
+    feedOwnerPortion: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace AlloraAdapterV2EvenFeeHandlerFeesClaimedEvent {
+  export type InputTuple = [claimer: AddressLike, fees: BigNumberish];
+  export type OutputTuple = [claimer: string, fees: bigint];
+  export interface OutputObject {
+    claimer: string;
+    fees: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace AlloraAdapterV2EvenFeeHandlerFeesHandledEvent {
+  export type InputTuple = [fee: BigNumberish, feeReceivers: AddressLike[]];
+  export type OutputTuple = [fee: bigint, feeReceivers: string[]];
+  export interface OutputObject {
+    fee: bigint;
+    feeReceivers: string[];
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
 export namespace OwnershipTransferStartedEvent {
   export type InputTuple = [previousOwner: AddressLike, newOwner: AddressLike];
   export type OutputTuple = [previousOwner: string, newOwner: string];
@@ -140,44 +178,6 @@ export namespace OwnershipTransferredEvent {
   export interface OutputObject {
     previousOwner: string;
     newOwner: string;
-  }
-  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
-  export type Filter = TypedDeferredTopicFilter<Event>;
-  export type Log = TypedEventLog<Event>;
-  export type LogDescription = TypedLogDescription<Event>;
-}
-
-export namespace UpshotAdapterV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortionEvent {
-  export type InputTuple = [feedOwnerPortion: BigNumberish];
-  export type OutputTuple = [feedOwnerPortion: bigint];
-  export interface OutputObject {
-    feedOwnerPortion: bigint;
-  }
-  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
-  export type Filter = TypedDeferredTopicFilter<Event>;
-  export type Log = TypedEventLog<Event>;
-  export type LogDescription = TypedLogDescription<Event>;
-}
-
-export namespace UpshotAdapterV2EvenFeeHandlerFeesClaimedEvent {
-  export type InputTuple = [claimer: AddressLike, fees: BigNumberish];
-  export type OutputTuple = [claimer: string, fees: bigint];
-  export interface OutputObject {
-    claimer: string;
-    fees: bigint;
-  }
-  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
-  export type Filter = TypedDeferredTopicFilter<Event>;
-  export type Log = TypedEventLog<Event>;
-  export type LogDescription = TypedLogDescription<Event>;
-}
-
-export namespace UpshotAdapterV2EvenFeeHandlerFeesHandledEvent {
-  export type InputTuple = [fee: BigNumberish, feeReceivers: AddressLike[]];
-  export type OutputTuple = [fee: bigint, feeReceivers: string[]];
-  export interface OutputObject {
-    fee: bigint;
-    feeReceivers: string[];
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -308,6 +308,27 @@ export interface EvenFeeHandler extends BaseContract {
   >;
 
   getEvent(
+    key: "AlloraAdapterV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortion"
+  ): TypedContractEvent<
+    AlloraAdapterV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortionEvent.InputTuple,
+    AlloraAdapterV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortionEvent.OutputTuple,
+    AlloraAdapterV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortionEvent.OutputObject
+  >;
+  getEvent(
+    key: "AlloraAdapterV2EvenFeeHandlerFeesClaimed"
+  ): TypedContractEvent<
+    AlloraAdapterV2EvenFeeHandlerFeesClaimedEvent.InputTuple,
+    AlloraAdapterV2EvenFeeHandlerFeesClaimedEvent.OutputTuple,
+    AlloraAdapterV2EvenFeeHandlerFeesClaimedEvent.OutputObject
+  >;
+  getEvent(
+    key: "AlloraAdapterV2EvenFeeHandlerFeesHandled"
+  ): TypedContractEvent<
+    AlloraAdapterV2EvenFeeHandlerFeesHandledEvent.InputTuple,
+    AlloraAdapterV2EvenFeeHandlerFeesHandledEvent.OutputTuple,
+    AlloraAdapterV2EvenFeeHandlerFeesHandledEvent.OutputObject
+  >;
+  getEvent(
     key: "OwnershipTransferStarted"
   ): TypedContractEvent<
     OwnershipTransferStartedEvent.InputTuple,
@@ -321,29 +342,41 @@ export interface EvenFeeHandler extends BaseContract {
     OwnershipTransferredEvent.OutputTuple,
     OwnershipTransferredEvent.OutputObject
   >;
-  getEvent(
-    key: "UpshotAdapterV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortion"
-  ): TypedContractEvent<
-    UpshotAdapterV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortionEvent.InputTuple,
-    UpshotAdapterV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortionEvent.OutputTuple,
-    UpshotAdapterV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortionEvent.OutputObject
-  >;
-  getEvent(
-    key: "UpshotAdapterV2EvenFeeHandlerFeesClaimed"
-  ): TypedContractEvent<
-    UpshotAdapterV2EvenFeeHandlerFeesClaimedEvent.InputTuple,
-    UpshotAdapterV2EvenFeeHandlerFeesClaimedEvent.OutputTuple,
-    UpshotAdapterV2EvenFeeHandlerFeesClaimedEvent.OutputObject
-  >;
-  getEvent(
-    key: "UpshotAdapterV2EvenFeeHandlerFeesHandled"
-  ): TypedContractEvent<
-    UpshotAdapterV2EvenFeeHandlerFeesHandledEvent.InputTuple,
-    UpshotAdapterV2EvenFeeHandlerFeesHandledEvent.OutputTuple,
-    UpshotAdapterV2EvenFeeHandlerFeesHandledEvent.OutputObject
-  >;
 
   filters: {
+    "AlloraAdapterV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortion(uint256)": TypedContractEvent<
+      AlloraAdapterV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortionEvent.InputTuple,
+      AlloraAdapterV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortionEvent.OutputTuple,
+      AlloraAdapterV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortionEvent.OutputObject
+    >;
+    AlloraAdapterV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortion: TypedContractEvent<
+      AlloraAdapterV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortionEvent.InputTuple,
+      AlloraAdapterV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortionEvent.OutputTuple,
+      AlloraAdapterV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortionEvent.OutputObject
+    >;
+
+    "AlloraAdapterV2EvenFeeHandlerFeesClaimed(address,uint256)": TypedContractEvent<
+      AlloraAdapterV2EvenFeeHandlerFeesClaimedEvent.InputTuple,
+      AlloraAdapterV2EvenFeeHandlerFeesClaimedEvent.OutputTuple,
+      AlloraAdapterV2EvenFeeHandlerFeesClaimedEvent.OutputObject
+    >;
+    AlloraAdapterV2EvenFeeHandlerFeesClaimed: TypedContractEvent<
+      AlloraAdapterV2EvenFeeHandlerFeesClaimedEvent.InputTuple,
+      AlloraAdapterV2EvenFeeHandlerFeesClaimedEvent.OutputTuple,
+      AlloraAdapterV2EvenFeeHandlerFeesClaimedEvent.OutputObject
+    >;
+
+    "AlloraAdapterV2EvenFeeHandlerFeesHandled(uint256,address[])": TypedContractEvent<
+      AlloraAdapterV2EvenFeeHandlerFeesHandledEvent.InputTuple,
+      AlloraAdapterV2EvenFeeHandlerFeesHandledEvent.OutputTuple,
+      AlloraAdapterV2EvenFeeHandlerFeesHandledEvent.OutputObject
+    >;
+    AlloraAdapterV2EvenFeeHandlerFeesHandled: TypedContractEvent<
+      AlloraAdapterV2EvenFeeHandlerFeesHandledEvent.InputTuple,
+      AlloraAdapterV2EvenFeeHandlerFeesHandledEvent.OutputTuple,
+      AlloraAdapterV2EvenFeeHandlerFeesHandledEvent.OutputObject
+    >;
+
     "OwnershipTransferStarted(address,address)": TypedContractEvent<
       OwnershipTransferStartedEvent.InputTuple,
       OwnershipTransferStartedEvent.OutputTuple,
@@ -364,39 +397,6 @@ export interface EvenFeeHandler extends BaseContract {
       OwnershipTransferredEvent.InputTuple,
       OwnershipTransferredEvent.OutputTuple,
       OwnershipTransferredEvent.OutputObject
-    >;
-
-    "UpshotAdapterV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortion(uint256)": TypedContractEvent<
-      UpshotAdapterV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortionEvent.InputTuple,
-      UpshotAdapterV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortionEvent.OutputTuple,
-      UpshotAdapterV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortionEvent.OutputObject
-    >;
-    UpshotAdapterV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortion: TypedContractEvent<
-      UpshotAdapterV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortionEvent.InputTuple,
-      UpshotAdapterV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortionEvent.OutputTuple,
-      UpshotAdapterV2EvenFeeHandlerAdminUpdatedFeedOwnerFeePortionEvent.OutputObject
-    >;
-
-    "UpshotAdapterV2EvenFeeHandlerFeesClaimed(address,uint256)": TypedContractEvent<
-      UpshotAdapterV2EvenFeeHandlerFeesClaimedEvent.InputTuple,
-      UpshotAdapterV2EvenFeeHandlerFeesClaimedEvent.OutputTuple,
-      UpshotAdapterV2EvenFeeHandlerFeesClaimedEvent.OutputObject
-    >;
-    UpshotAdapterV2EvenFeeHandlerFeesClaimed: TypedContractEvent<
-      UpshotAdapterV2EvenFeeHandlerFeesClaimedEvent.InputTuple,
-      UpshotAdapterV2EvenFeeHandlerFeesClaimedEvent.OutputTuple,
-      UpshotAdapterV2EvenFeeHandlerFeesClaimedEvent.OutputObject
-    >;
-
-    "UpshotAdapterV2EvenFeeHandlerFeesHandled(uint256,address[])": TypedContractEvent<
-      UpshotAdapterV2EvenFeeHandlerFeesHandledEvent.InputTuple,
-      UpshotAdapterV2EvenFeeHandlerFeesHandledEvent.OutputTuple,
-      UpshotAdapterV2EvenFeeHandlerFeesHandledEvent.OutputObject
-    >;
-    UpshotAdapterV2EvenFeeHandlerFeesHandled: TypedContractEvent<
-      UpshotAdapterV2EvenFeeHandlerFeesHandledEvent.InputTuple,
-      UpshotAdapterV2EvenFeeHandlerFeesHandledEvent.OutputTuple,
-      UpshotAdapterV2EvenFeeHandlerFeesHandledEvent.OutputObject
     >;
   };
 }

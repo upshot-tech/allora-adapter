@@ -138,6 +138,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"allora-adapter@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "allora-adapter@workspace:."
+  dependencies:
+    "@typechain/ethers-v6": ^0.5.0
+    axios: ^1.6.0
+    dotenv: ^16.3.1
+    ethers: ^6.7.1
+    ts-node: ^10.9.1
+    typechain: ^8.3.1
+    typescript: ^5.2.2
+  languageName: unknown
+  linkType: soft
+
 "ansi-styles@npm:^3.2.1":
   version: 3.2.1
   resolution: "ansi-styles@npm:3.2.1"
@@ -761,20 +775,6 @@ __metadata:
   checksum: 40cdc60f6e61070fe658ca36016a8f4ec216b29bf04a55dce14e3710cc84c7448538ef4dad3728d0bfe29975ccd7bfb5f414c45e7b78883567fb31b246f02dff
   languageName: node
   linkType: hard
-
-"upshot-adapter-v2@workspace:.":
-  version: 0.0.0-use.local
-  resolution: "upshot-adapter-v2@workspace:."
-  dependencies:
-    "@typechain/ethers-v6": ^0.5.0
-    axios: ^1.6.0
-    dotenv: ^16.3.1
-    ethers: ^6.7.1
-    ts-node: ^10.9.1
-    typechain: ^8.3.1
-    typescript: ^5.2.2
-  languageName: unknown
-  linkType: soft
 
 "v8-compile-cache-lib@npm:^3.0.1":
   version: 3.0.1

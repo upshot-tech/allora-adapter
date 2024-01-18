@@ -8,11 +8,11 @@ import {
   Interface,
 } from "ethers";
 import type { Signer, ContractDeployTransaction, ContractRunner } from "ethers";
-import type { NonPayableOverrides } from "../common";
+import type { NonPayableOverrides } from "../../common";
 import type {
   UpshotAdapterBringPredictionOnChainExample,
   UpshotAdapterBringPredictionOnChainExampleInterface,
-} from "../UpshotAdapterBringPredictionOnChainExample";
+} from "../../UpshotAdapterBringPredictionOnChainExample.sol/UpshotAdapterBringPredictionOnChainExample";
 
 const _abi = [
   {

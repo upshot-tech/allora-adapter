@@ -21,19 +21,60 @@ import type {
   TypedLogDescription,
   TypedListener,
   TypedContractMethod,
-} from "./common";
+} from "../common";
 
-export interface UpshotAdapterViewPredictionExampleInterface extends Interface {
+export type NumericDataStruct = {
+  topicId: BigNumberish;
+  timestamp: BigNumberish;
+  numericValue: BigNumberish;
+  extraData: BytesLike;
+};
+
+export type NumericDataStructOutput = [
+  topicId: bigint,
+  timestamp: bigint,
+  numericValue: bigint,
+  extraData: string
+] & {
+  topicId: bigint;
+  timestamp: bigint;
+  numericValue: bigint;
+  extraData: string;
+};
+
+export type SignedNumericDataStruct = {
+  signature: BytesLike;
+  numericData: NumericDataStruct;
+};
+
+export type SignedNumericDataStructOutput = [
+  signature: string,
+  numericData: NumericDataStructOutput
+] & { signature: string; numericData: NumericDataStructOutput };
+
+export type AlloraAdapterNumericDataStruct = {
+  signedNumericData: SignedNumericDataStruct[];
+  extraData: BytesLike;
+};
+
+export type AlloraAdapterNumericDataStructOutput = [
+  signedNumericData: SignedNumericDataStructOutput[],
+  extraData: string
+] & { signedNumericData: SignedNumericDataStructOutput[]; extraData: string };
+
+export interface AlloraAdapterBringPredictionOnChainExampleInterface
+  extends Interface {
   getFunction(
     nameOrSignature:
       | "acceptOwnership"
+      | "alloraAdapter"
+      | "callProtocolFunctionWithAlloraAdapterPredictionValue"
+      | "callProtocolFunctionWithExistingIndexValue"
       | "owner"
       | "pendingOwner"
       | "renounceOwnership"
-      | "setUpshotAdapterContract"
+      | "setAlloraAdapterContract"
       | "transferOwnership"
-      | "upshotAdapter"
-      | "viewPredictionForTopic"
   ): FunctionFragment;
 
   getEvent(
@@ -43,6 +84,18 @@ export interface UpshotAdapterViewPredictionExampleInterface extends Interface {
   encodeFunctionData(
     functionFragment: "acceptOwnership",
     values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "alloraAdapter",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "callProtocolFunctionWithAlloraAdapterPredictionValue",
+    values: [BigNumberish, AlloraAdapterNumericDataStruct]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "callProtocolFunctionWithExistingIndexValue",
+    values: [BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(functionFragment: "owner", values?: undefined): string;
   encodeFunctionData(
@@ -54,24 +107,28 @@ export interface UpshotAdapterViewPredictionExampleInterface extends Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "setUpshotAdapterContract",
+    functionFragment: "setAlloraAdapterContract",
     values: [AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "transferOwnership",
     values: [AddressLike]
   ): string;
-  encodeFunctionData(
-    functionFragment: "upshotAdapter",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "viewPredictionForTopic",
-    values: [BigNumberish]
-  ): string;
 
   decodeFunctionResult(
     functionFragment: "acceptOwnership",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "alloraAdapter",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "callProtocolFunctionWithAlloraAdapterPredictionValue",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "callProtocolFunctionWithExistingIndexValue",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
@@ -84,19 +141,11 @@ export interface UpshotAdapterViewPredictionExampleInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "setUpshotAdapterContract",
+    functionFragment: "setAlloraAdapterContract",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
     functionFragment: "transferOwnership",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "upshotAdapter",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "viewPredictionForTopic",
     data: BytesLike
   ): Result;
 }
@@ -127,11 +176,14 @@ export namespace OwnershipTransferredEvent {
   export type LogDescription = TypedLogDescription<Event>;
 }
 
-export interface UpshotAdapterViewPredictionExample extends BaseContract {
-  connect(runner?: ContractRunner | null): UpshotAdapterViewPredictionExample;
+export interface AlloraAdapterBringPredictionOnChainExample
+  extends BaseContract {
+  connect(
+    runner?: ContractRunner | null
+  ): AlloraAdapterBringPredictionOnChainExample;
   waitForDeployment(): Promise<this>;
 
-  interface: UpshotAdapterViewPredictionExampleInterface;
+  interface: AlloraAdapterBringPredictionOnChainExampleInterface;
 
   queryFilter<TCEvent extends TypedContractEvent>(
     event: TCEvent,
@@ -172,14 +224,31 @@ export interface UpshotAdapterViewPredictionExample extends BaseContract {
 
   acceptOwnership: TypedContractMethod<[], [void], "nonpayable">;
 
+  alloraAdapter: TypedContractMethod<[], [string], "view">;
+
+  callProtocolFunctionWithAlloraAdapterPredictionValue: TypedContractMethod<
+    [
+      protocolFunctionArgument: BigNumberish,
+      alloraAdapterData: AlloraAdapterNumericDataStruct
+    ],
+    [void],
+    "payable"
+  >;
+
+  callProtocolFunctionWithExistingIndexValue: TypedContractMethod<
+    [protocolFunctionArgument: BigNumberish, topicId: BigNumberish],
+    [void],
+    "payable"
+  >;
+
   owner: TypedContractMethod<[], [string], "view">;
 
   pendingOwner: TypedContractMethod<[], [string], "view">;
 
   renounceOwnership: TypedContractMethod<[], [void], "nonpayable">;
 
-  setUpshotAdapterContract: TypedContractMethod<
-    [upshotAdapter_: AddressLike],
+  setAlloraAdapterContract: TypedContractMethod<
+    [alloraAdapter_: AddressLike],
     [void],
     "nonpayable"
   >;
@@ -190,14 +259,6 @@ export interface UpshotAdapterViewPredictionExample extends BaseContract {
     "nonpayable"
   >;
 
-  upshotAdapter: TypedContractMethod<[], [string], "view">;
-
-  viewPredictionForTopic: TypedContractMethod<
-    [topicId: BigNumberish],
-    [[bigint, bigint] & { prediction: bigint; predictionTimestamp: bigint }],
-    "view"
-  >;
-
   getFunction<T extends ContractMethod = ContractMethod>(
     key: string | FunctionFragment
   ): T;
@@ -205,6 +266,26 @@ export interface UpshotAdapterViewPredictionExample extends BaseContract {
   getFunction(
     nameOrSignature: "acceptOwnership"
   ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "alloraAdapter"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "callProtocolFunctionWithAlloraAdapterPredictionValue"
+  ): TypedContractMethod<
+    [
+      protocolFunctionArgument: BigNumberish,
+      alloraAdapterData: AlloraAdapterNumericDataStruct
+    ],
+    [void],
+    "payable"
+  >;
+  getFunction(
+    nameOrSignature: "callProtocolFunctionWithExistingIndexValue"
+  ): TypedContractMethod<
+    [protocolFunctionArgument: BigNumberish, topicId: BigNumberish],
+    [void],
+    "payable"
+  >;
   getFunction(
     nameOrSignature: "owner"
   ): TypedContractMethod<[], [string], "view">;
@@ -215,21 +296,11 @@ export interface UpshotAdapterViewPredictionExample extends BaseContract {
     nameOrSignature: "renounceOwnership"
   ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
-    nameOrSignature: "setUpshotAdapterContract"
-  ): TypedContractMethod<[upshotAdapter_: AddressLike], [void], "nonpayable">;
+    nameOrSignature: "setAlloraAdapterContract"
+  ): TypedContractMethod<[alloraAdapter_: AddressLike], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "transferOwnership"
   ): TypedContractMethod<[newOwner: AddressLike], [void], "nonpayable">;
-  getFunction(
-    nameOrSignature: "upshotAdapter"
-  ): TypedContractMethod<[], [string], "view">;
-  getFunction(
-    nameOrSignature: "viewPredictionForTopic"
-  ): TypedContractMethod<
-    [topicId: BigNumberish],
-    [[bigint, bigint] & { prediction: bigint; predictionTimestamp: bigint }],
-    "view"
-  >;
 
   getEvent(
     key: "OwnershipTransferStarted"

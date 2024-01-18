@@ -14,7 +14,7 @@ contract MedianAggregator is IAggregator {
     // * ========================= ERRORS ========================== *
     // ***************************************************************
 
-    error UpshotAdapterV2MedianAggregatorNoValuesToAggregate();
+    error AlloraAdapterV2MedianAggregatorNoValuesToAggregate();
 
     // ***************************************************************
     // * ===================== USER INTERFACE ====================== *
@@ -28,7 +28,7 @@ contract MedianAggregator is IAggregator {
         uint256 count = values.length;
 
         if (count == 0) {
-            revert UpshotAdapterV2MedianAggregatorNoValuesToAggregate();
+            revert AlloraAdapterV2MedianAggregatorNoValuesToAggregate();
         }
 
         uint256 value;

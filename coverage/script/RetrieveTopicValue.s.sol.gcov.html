@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Date:</td>
-            <td class="headerValue">2024-01-18 08:28:38</td>
+            <td class="headerValue">2024-01-18 10:43:56</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntry">0</td>
@@ -65,7 +65,7 @@
 <a name="3"><span class="lineNum">       3 </span>            : </a>
 <a name="4"><span class="lineNum">       4 </span>            : import '../lib/forge-std/src/Script.sol';</a>
 <a name="5"><span class="lineNum">       5 </span>            : </a>
-<a name="6"><span class="lineNum">       6 </span>            : import { IUpshotAdapter, Topic, TopicValue, TopicConfig, UpshotAdapterNumericData } from '../src/interface/IUpshotAdapter.sol';</a>
+<a name="6"><span class="lineNum">       6 </span>            : import { IAlloraAdapter, Topic, TopicValue, TopicConfig, AlloraAdapterNumericData } from '../src/interface/IAlloraAdapter.sol';</a>
 <a name="7"><span class="lineNum">       7 </span>            : import { Ownable2Step } from &quot;../lib/openzeppelin-contracts/contracts/access/Ownable2Step.sol&quot;;</a>
 <a name="8"><span class="lineNum">       8 </span>            : import { EnumerableSet } from &quot;../lib/openzeppelin-contracts/contracts/utils/structs/EnumerableSet.sol&quot;;</a>
 <a name="9"><span class="lineNum">       9 </span>            : </a>
@@ -78,7 +78,7 @@
 <a name="16"><span class="lineNum">      16 </span>            : contract RetrieveTopicValue is Script {</a>
 <a name="17"><span class="lineNum">      17 </span>            : </a>
 <a name="18"><span class="lineNum">      18 </span>            :     // Sepolia adapter Address</a>
-<a name="19"><span class="lineNum">      19 </span>            :     IUpshotAdapter constant UPSHOT_ADAPTER = IUpshotAdapter(0x238D0abD53fC68fAfa0CCD860446e381b400b5Be);</a>
+<a name="19"><span class="lineNum">      19 </span>            :     IAlloraAdapter constant UPSHOT_ADAPTER = IAlloraAdapter(0x238D0abD53fC68fAfa0CCD860446e381b400b5Be);</a>
 <a name="20"><span class="lineNum">      20 </span>            :     uint256 constant TOPIC_ID = 1;</a>
 <a name="21"><span class="lineNum">      21 </span>            : </a>
 <a name="22"><span class="lineNum">      22 </span>            :     function run() public virtual {</a>

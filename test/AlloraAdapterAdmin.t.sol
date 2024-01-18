@@ -3,19 +3,19 @@ pragma solidity ^0.8.13;
 
 import "../lib/forge-std/src/Test.sol";
 import { ECDSA } from "../lib/openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
-import { UpshotAdapter, UpshotAdapterConstructorArgs } from "../src/UpshotAdapter.sol";
-import { NumericData, Topic, TopicView, TopicConfig } from "../src/interface/IUpshotAdapter.sol";
+import { AlloraAdapter, AlloraAdapterConstructorArgs } from "../src/AlloraAdapter.sol";
+import { NumericData, Topic, TopicView, TopicConfig } from "../src/interface/IAlloraAdapter.sol";
 import { EvenFeeHandler, EvenFeeHandlerConstructorArgs } from "../src/feeHandler/EvenFeeHandler.sol";
 import { AverageAggregator } from "../src/aggregator/AverageAggregator.sol";
 import { MedianAggregator } from "../src/aggregator/MedianAggregator.sol";
 import { IAggregator } from "../src/interface/IAggregator.sol";
 import { IFeeHandler } from "../src/interface/IFeeHandler.sol";
 
-contract UpshotAdapterAdmin is Test {
+contract AlloraAdapterAdmin is Test {
 
     EvenFeeHandler public evenFeeHandler;
     IAggregator aggregator;
-    UpshotAdapter upshotAdapter;
+    AlloraAdapter alloraAdapter;
 
     address admin = address(100);
     address protocolFeeReceiver = address(101);
@@ -44,7 +44,7 @@ contract UpshotAdapterAdmin is Test {
         vm.warp(1 hours);
 
         aggregator = new AverageAggregator();
-        upshotAdapter = new UpshotAdapter(UpshotAdapterConstructorArgs({ admin: admin }));
+        alloraAdapter = new AlloraAdapter(AlloraAdapterConstructorArgs({ admin: admin }));
 
         signer0 = vm.addr(signer0pk);
         signer1 = vm.addr(signer1pk);
@@ -63,7 +63,7 @@ contract UpshotAdapterAdmin is Test {
         threeValidProviders[2] = signer2;
 
         vm.startPrank(topicOwner);
-        upshotAdapter.addTopic(_getBasicTopicView());
+        alloraAdapter.addTopic(_getBasicTopicView());
         vm.stopPrank();
     }
 
@@ -74,24 +74,24 @@ contract UpshotAdapterAdmin is Test {
     function test_imposterCantUpdateDataProviderQuorum() public {
         vm.startPrank(imposter);
 
-        vm.expectRevert(abi.encodeWithSignature("UpshotAdapterV2OnlyTopicOwner()"));
-        upshotAdapter.updateDataProviderQuorum(1, 3);
+        vm.expectRevert(abi.encodeWithSignature("AlloraAdapterV2OnlyTopicOwner()"));
+        alloraAdapter.updateDataProviderQuorum(1, 3);
     }
 
     function test_ownerCantUpdateDataProviderQuorumToZero() public {
         vm.startPrank(topicOwner);
 
-        vm.expectRevert(abi.encodeWithSignature("UpshotAdapterV2InvalidDataProviderQuorum()"));
-        upshotAdapter.updateDataProviderQuorum(1, 0);
+        vm.expectRevert(abi.encodeWithSignature("AlloraAdapterV2InvalidDataProviderQuorum()"));
+        alloraAdapter.updateDataProviderQuorum(1, 0);
     }
 
     function test_ownerCanUpdateDataProviderQuorum() public {
         vm.startPrank(topicOwner);
 
-        assertEq(upshotAdapter.getTopic(1).config.dataProviderQuorum, 1);
+        assertEq(alloraAdapter.getTopic(1).config.dataProviderQuorum, 1);
 
-        upshotAdapter.updateDataProviderQuorum(1, 2);
-        assertEq(upshotAdapter.getTopic(1).config.dataProviderQuorum, 2);
+        alloraAdapter.updateDataProviderQuorum(1, 2);
+        assertEq(alloraAdapter.getTopic(1).config.dataProviderQuorum, 2);
     }
 
     // ***************************************************************
@@ -101,24 +101,24 @@ contract UpshotAdapterAdmin is Test {
     function test_imposterCantUpdateDataValiditySeconds() public {
         vm.startPrank(imposter);
 
-        vm.expectRevert(abi.encodeWithSignature("UpshotAdapterV2OnlyTopicOwner()"));
-        upshotAdapter.updateDataValiditySeconds(1, 10 minutes);
+        vm.expectRevert(abi.encodeWithSignature("AlloraAdapterV2OnlyTopicOwner()"));
+        alloraAdapter.updateDataValiditySeconds(1, 10 minutes);
     }
 
     function test_ownerCantUpdateDataValiditySecondsToZero() public {
         vm.startPrank(topicOwner);
 
-        vm.expectRevert(abi.encodeWithSignature("UpshotAdapterV2InvalidDataValiditySeconds()"));
-        upshotAdapter.updateDataValiditySeconds(1, 0);
+        vm.expectRevert(abi.encodeWithSignature("AlloraAdapterV2InvalidDataValiditySeconds()"));
+        alloraAdapter.updateDataValiditySeconds(1, 0);
     }
 
     function test_ownerCanUpdateDataValiditySeconds() public {
         vm.startPrank(topicOwner);
 
-        assertEq(upshotAdapter.getTopic(1).config.dataValiditySeconds, 5 minutes);
+        assertEq(alloraAdapter.getTopic(1).config.dataValiditySeconds, 5 minutes);
 
-        upshotAdapter.updateDataValiditySeconds(1, 10 minutes);
-        assertEq(upshotAdapter.getTopic(1).config.dataValiditySeconds, 10 minutes);
+        alloraAdapter.updateDataValiditySeconds(1, 10 minutes);
+        assertEq(alloraAdapter.getTopic(1).config.dataValiditySeconds, 10 minutes);
     }
 
     // ***************************************************************
@@ -128,17 +128,17 @@ contract UpshotAdapterAdmin is Test {
     function test_imposterCantAddDataProvider() public {
         vm.startPrank(imposter);
 
-        vm.expectRevert(abi.encodeWithSignature("UpshotAdapterV2OnlyTopicOwner()"));
-        upshotAdapter.addDataProvider(1, imposter);
+        vm.expectRevert(abi.encodeWithSignature("AlloraAdapterV2OnlyTopicOwner()"));
+        alloraAdapter.addDataProvider(1, imposter);
     }
 
     function test_ownerCanAddDataProvider() public {
         vm.startPrank(topicOwner);
 
-        assertEq(_contains(newDataProvider, upshotAdapter.getTopic(1).validDataProviders), false);
+        assertEq(_contains(newDataProvider, alloraAdapter.getTopic(1).validDataProviders), false);
 
-        upshotAdapter.addDataProvider(1, newDataProvider);
-        assertEq(_contains(newDataProvider, upshotAdapter.getTopic(1).validDataProviders), true);
+        alloraAdapter.addDataProvider(1, newDataProvider);
+        assertEq(_contains(newDataProvider, alloraAdapter.getTopic(1).validDataProviders), true);
     }
 
     // ***************************************************************
@@ -148,18 +148,18 @@ contract UpshotAdapterAdmin is Test {
     function test_imposterCantRemoveDataProvider() public {
         vm.startPrank(imposter);
 
-        vm.expectRevert(abi.encodeWithSignature("UpshotAdapterV2OnlyTopicOwner()"));
-        upshotAdapter.removeDataProvider(1, imposter);
+        vm.expectRevert(abi.encodeWithSignature("AlloraAdapterV2OnlyTopicOwner()"));
+        alloraAdapter.removeDataProvider(1, imposter);
     }
 
     function test_ownerCanRemoveDataProvider() public {
         vm.startPrank(topicOwner);
-        upshotAdapter.addDataProvider(1, newDataProvider);
+        alloraAdapter.addDataProvider(1, newDataProvider);
 
-        assertEq(_contains(newDataProvider, upshotAdapter.getTopic(1).validDataProviders), true);
+        assertEq(_contains(newDataProvider, alloraAdapter.getTopic(1).validDataProviders), true);
 
-        upshotAdapter.removeDataProvider(1, newDataProvider);
-        assertEq(_contains(newDataProvider, upshotAdapter.getTopic(1).validDataProviders), false);
+        alloraAdapter.removeDataProvider(1, newDataProvider);
+        assertEq(_contains(newDataProvider, alloraAdapter.getTopic(1).validDataProviders), false);
     }
 
     // ***************************************************************
@@ -170,47 +170,47 @@ contract UpshotAdapterAdmin is Test {
 
         TopicView memory topicView = _getBasicTopicView();
         topicView.config.title = '';
-        vm.expectRevert(abi.encodeWithSignature("UpshotAdapterV2InvalidTopicTitle()"));
-        upshotAdapter.addTopic(topicView);
+        vm.expectRevert(abi.encodeWithSignature("AlloraAdapterV2InvalidTopicTitle()"));
+        alloraAdapter.addTopic(topicView);
     }
 
     function test_addingTopicWithValueSetIsIgnored() public {
         vm.startPrank(admin);
 
-        uint256 topicId = upshotAdapter.addTopic(_getBasicTopicView());
+        uint256 topicId = alloraAdapter.addTopic(_getBasicTopicView());
 
-        assertEq(upshotAdapter.getTopicValue(topicId, '').recentValue, 0);
-        assertEq(upshotAdapter.getTopicValue(topicId, '').recentValueTime, 0);
+        assertEq(alloraAdapter.getTopicValue(topicId, '').recentValue, 0);
+        assertEq(alloraAdapter.getTopicValue(topicId, '').recentValueTime, 0);
 
     }
 
     function test_ownerCanAddTopic() public {
         vm.startPrank(admin);
 
-        assertEq(upshotAdapter.getTopic(2).config.dataProviderQuorum, 0);
+        assertEq(alloraAdapter.getTopic(2).config.dataProviderQuorum, 0);
 
-        upshotAdapter.addTopic(_getBasicTopicView());
+        alloraAdapter.addTopic(_getBasicTopicView());
 
-        assertEq(upshotAdapter.getTopic(2).config.dataProviderQuorum, 1);
+        assertEq(alloraAdapter.getTopic(2).config.dataProviderQuorum, 1);
     }
 
     function test_anyoneCanAddTopic() public {
         vm.startPrank(imposter);
 
-        assertEq(upshotAdapter.getTopic(2).config.dataProviderQuorum, 0);
+        assertEq(alloraAdapter.getTopic(2).config.dataProviderQuorum, 0);
 
-        upshotAdapter.addTopic(_getBasicTopicView());
+        alloraAdapter.addTopic(_getBasicTopicView());
 
-        assertEq(upshotAdapter.getTopic(2).config.dataProviderQuorum, 1);
+        assertEq(alloraAdapter.getTopic(2).config.dataProviderQuorum, 1);
     }
 
     function test_anyoneCanAddMultipleTopics() public {
         vm.startPrank(imposter);
 
-        assertEq(upshotAdapter.getTopic(2).config.title, '');
-        assertEq(upshotAdapter.getTopic(3).config.title, '');
-        assertEq(upshotAdapter.getTopic(2).config.dataProviderQuorum, 0);
-        assertEq(upshotAdapter.getTopic(3).config.dataProviderQuorum, 0);
+        assertEq(alloraAdapter.getTopic(2).config.title, '');
+        assertEq(alloraAdapter.getTopic(3).config.title, '');
+        assertEq(alloraAdapter.getTopic(2).config.dataProviderQuorum, 0);
+        assertEq(alloraAdapter.getTopic(3).config.dataProviderQuorum, 0);
 
         TopicView[] memory topicViews = new TopicView[](2);
         topicViews[0] = _getBasicTopicView();
@@ -219,12 +219,12 @@ contract UpshotAdapterAdmin is Test {
         topicViews[1] = _getBasicTopicView();
         topicViews[1].config.title = 'newTopic2'; 
 
-        uint256[] memory topicIds = upshotAdapter.addTopics(topicViews);
+        uint256[] memory topicIds = alloraAdapter.addTopics(topicViews);
 
-        assertEq(upshotAdapter.getTopic(2).config.title, 'newTopic1');
-        assertEq(upshotAdapter.getTopic(3).config.title, 'newTopic2');
-        assertEq(upshotAdapter.getTopic(2).config.dataProviderQuorum, 1);
-        assertEq(upshotAdapter.getTopic(3).config.dataProviderQuorum, 1);
+        assertEq(alloraAdapter.getTopic(2).config.title, 'newTopic1');
+        assertEq(alloraAdapter.getTopic(3).config.title, 'newTopic2');
+        assertEq(alloraAdapter.getTopic(2).config.dataProviderQuorum, 1);
+        assertEq(alloraAdapter.getTopic(3).config.dataProviderQuorum, 1);
 
         assertEq(topicIds[0], 2);
         assertEq(topicIds[1], 3);
@@ -232,8 +232,8 @@ contract UpshotAdapterAdmin is Test {
 
     function test_addingTopicGivesProperId() public {
         vm.startPrank(admin);
-        uint256 secondTopicId = upshotAdapter.addTopic(_getBasicTopicView());
-        uint256 thirdTopicId = upshotAdapter.addTopic(_getBasicTopicView());
+        uint256 secondTopicId = alloraAdapter.addTopic(_getBasicTopicView());
+        uint256 thirdTopicId = alloraAdapter.addTopic(_getBasicTopicView());
 
         assertEq(secondTopicId, 2);
         assertEq(thirdTopicId, 3);
@@ -242,7 +242,7 @@ contract UpshotAdapterAdmin is Test {
     function test_addingTopicGivesAllCorrectData() public {
         vm.startPrank(admin);
 
-        assertEq(upshotAdapter.getTopic(2).config.dataProviderQuorum, 0);
+        assertEq(alloraAdapter.getTopic(2).config.dataProviderQuorum, 0);
 
         TopicView memory secondTopic = TopicView({
             config: TopicConfig({
@@ -257,10 +257,10 @@ contract UpshotAdapterAdmin is Test {
             validDataProviders: threeValidProviders
         });
 
-        uint256 secondTopicId = upshotAdapter.addTopic(secondTopic);
+        uint256 secondTopicId = alloraAdapter.addTopic(secondTopic);
         assertEq(secondTopicId, 2);
 
-        TopicView memory addedTopic = upshotAdapter.getTopic(secondTopicId);
+        TopicView memory addedTopic = alloraAdapter.getTopic(secondTopicId);
 
         assertEq(addedTopic.config.title, secondTopic.config.title);
         assertEq(addedTopic.config.owner, secondTopic.config.owner);
@@ -286,18 +286,18 @@ contract UpshotAdapterAdmin is Test {
     function test_imposterCantTurnOffTopic() public {
         vm.startPrank(imposter);
 
-        vm.expectRevert(abi.encodeWithSignature("UpshotAdapterV2OnlyTopicOwner()"));
-        upshotAdapter.turnOffTopic(1);
+        vm.expectRevert(abi.encodeWithSignature("AlloraAdapterV2OnlyTopicOwner()"));
+        alloraAdapter.turnOffTopic(1);
     }
 
     function test_ownerCanTurnOffTopic() public {
-        vm.startPrank(upshotAdapter.getTopic(1).config.owner);
+        vm.startPrank(alloraAdapter.getTopic(1).config.owner);
 
-        assertEq(upshotAdapter.getTopic(1).config.ownerSwitchedOn, true);
+        assertEq(alloraAdapter.getTopic(1).config.ownerSwitchedOn, true);
 
-        upshotAdapter.turnOffTopic(1);
+        alloraAdapter.turnOffTopic(1);
 
-        assertEq(upshotAdapter.getTopic(1).config.ownerSwitchedOn, false);
+        assertEq(alloraAdapter.getTopic(1).config.ownerSwitchedOn, false);
     }
 
     // ***************************************************************
@@ -307,20 +307,20 @@ contract UpshotAdapterAdmin is Test {
     function test_imposterCantTurnOnTopic() public {
         vm.startPrank(imposter);
 
-        vm.expectRevert(abi.encodeWithSignature("UpshotAdapterV2OnlyTopicOwner()"));
-        upshotAdapter.turnOnTopic(1);
+        vm.expectRevert(abi.encodeWithSignature("AlloraAdapterV2OnlyTopicOwner()"));
+        alloraAdapter.turnOnTopic(1);
     }
 
     function test_ownerCanTurnOnTopic() public {
-        vm.startPrank(upshotAdapter.getTopic(1).config.owner);
+        vm.startPrank(alloraAdapter.getTopic(1).config.owner);
 
-        upshotAdapter.turnOffTopic(1);
+        alloraAdapter.turnOffTopic(1);
 
-        assertEq(upshotAdapter.getTopic(1).config.ownerSwitchedOn, false);
+        assertEq(alloraAdapter.getTopic(1).config.ownerSwitchedOn, false);
 
-        upshotAdapter.turnOnTopic(1);
+        alloraAdapter.turnOnTopic(1);
 
-        assertEq(upshotAdapter.getTopic(1).config.ownerSwitchedOn, true);
+        assertEq(alloraAdapter.getTopic(1).config.ownerSwitchedOn, true);
     }
 
     // ***************************************************************
@@ -331,17 +331,17 @@ contract UpshotAdapterAdmin is Test {
         vm.startPrank(imposter);
 
         vm.expectRevert('Ownable: caller is not the owner');
-        upshotAdapter.adminTurnOffTopic(1);
+        alloraAdapter.adminTurnOffTopic(1);
     }
 
     function test_adminCanTurnOffTopic() public {
         vm.startPrank(admin);
 
-        assertEq(upshotAdapter.getTopic(1).config.adminSwitchedOn, true);
+        assertEq(alloraAdapter.getTopic(1).config.adminSwitchedOn, true);
 
-        upshotAdapter.adminTurnOffTopic(1);
+        alloraAdapter.adminTurnOffTopic(1);
 
-        assertEq(upshotAdapter.getTopic(1).config.adminSwitchedOn, false);
+        assertEq(alloraAdapter.getTopic(1).config.adminSwitchedOn, false);
     }
 
     // ***************************************************************
@@ -352,19 +352,19 @@ contract UpshotAdapterAdmin is Test {
         vm.startPrank(imposter);
 
         vm.expectRevert('Ownable: caller is not the owner');
-        upshotAdapter.adminTurnOnTopic(1);
+        alloraAdapter.adminTurnOnTopic(1);
     }
 
     function test_adminCanTurnOnTopic() public {
         vm.startPrank(admin);
 
-        upshotAdapter.adminTurnOffTopic(1);
+        alloraAdapter.adminTurnOffTopic(1);
 
-        assertEq(upshotAdapter.getTopic(1).config.adminSwitchedOn, false);
+        assertEq(alloraAdapter.getTopic(1).config.adminSwitchedOn, false);
 
-        upshotAdapter.adminTurnOnTopic(1);
+        alloraAdapter.adminTurnOnTopic(1);
 
-        assertEq(upshotAdapter.getTopic(1).config.adminSwitchedOn, true);
+        assertEq(alloraAdapter.getTopic(1).config.adminSwitchedOn, true);
     }
 
     // ***************************************************************
@@ -374,15 +374,15 @@ contract UpshotAdapterAdmin is Test {
     function test_imposterCantUpdateAggregator() public {
         vm.startPrank(imposter);
 
-        vm.expectRevert(abi.encodeWithSignature("UpshotAdapterV2OnlyTopicOwner()"));
-        upshotAdapter.updateAggregator(1, dummyAggregator);
+        vm.expectRevert(abi.encodeWithSignature("AlloraAdapterV2OnlyTopicOwner()"));
+        alloraAdapter.updateAggregator(1, dummyAggregator);
     }
 
     function test_ownerCantUpdateAggregatorToZeroAddress() public {
         vm.startPrank(topicOwner);
 
-        vm.expectRevert(abi.encodeWithSignature("UpshotAdapterV2InvalidAggregator()"));
-        upshotAdapter.updateAggregator(1, IAggregator(address(0)));
+        vm.expectRevert(abi.encodeWithSignature("AlloraAdapterV2InvalidAggregator()"));
+        alloraAdapter.updateAggregator(1, IAggregator(address(0)));
     }
 
     function test_ownerCanUpdateAggregator() public {
@@ -390,11 +390,11 @@ contract UpshotAdapterAdmin is Test {
 
         MedianAggregator medianAggregator = new MedianAggregator();
 
-        assertEq(address(upshotAdapter.getTopic(1).config.aggregator), address(aggregator));
+        assertEq(address(alloraAdapter.getTopic(1).config.aggregator), address(aggregator));
 
-        upshotAdapter.updateAggregator(1, medianAggregator);
+        alloraAdapter.updateAggregator(1, medianAggregator);
 
-        assertEq(address(upshotAdapter.getTopic(1).config.aggregator), address(medianAggregator));
+        assertEq(address(alloraAdapter.getTopic(1).config.aggregator), address(medianAggregator));
     }
 
     // ***************************************************************
@@ -404,18 +404,18 @@ contract UpshotAdapterAdmin is Test {
     function test_imposterCantUpdateTopicOwner() public {
         vm.startPrank(imposter);
 
-        vm.expectRevert(abi.encodeWithSignature("UpshotAdapterV2OnlyTopicOwner()"));
-        upshotAdapter.updateTopicOwner(1, topicOwner2);
+        vm.expectRevert(abi.encodeWithSignature("AlloraAdapterV2OnlyTopicOwner()"));
+        alloraAdapter.updateTopicOwner(1, topicOwner2);
     }
 
     function test_ownerCanUpdateTopicOwner() public {
         vm.startPrank(topicOwner);
 
-        assertEq(upshotAdapter.getTopic(1).config.owner, topicOwner);
+        assertEq(alloraAdapter.getTopic(1).config.owner, topicOwner);
 
-        upshotAdapter.updateTopicOwner(1, topicOwner2);
+        alloraAdapter.updateTopicOwner(1, topicOwner2);
 
-        assertEq(upshotAdapter.getTopic(1).config.owner, topicOwner2);
+        assertEq(alloraAdapter.getTopic(1).config.owner, topicOwner2);
     }
 
     // ***************************************************************
@@ -426,17 +426,17 @@ contract UpshotAdapterAdmin is Test {
         vm.startPrank(imposter);
 
         vm.expectRevert('Ownable: caller is not the owner');
-        upshotAdapter.adminTurnOffAdapter();
+        alloraAdapter.adminTurnOffAdapter();
     }
 
     function test_ownerCanTurnOffAdapter() public {
         vm.startPrank(admin);
 
-        assertEq(upshotAdapter.switchedOn(), true);
+        assertEq(alloraAdapter.switchedOn(), true);
 
-        upshotAdapter.adminTurnOffAdapter();
+        alloraAdapter.adminTurnOffAdapter();
 
-        assertEq(upshotAdapter.switchedOn(), false);
+        assertEq(alloraAdapter.switchedOn(), false);
     }
 
     // ***************************************************************
@@ -447,18 +447,18 @@ contract UpshotAdapterAdmin is Test {
         vm.startPrank(imposter);
 
         vm.expectRevert('Ownable: caller is not the owner');
-        upshotAdapter.adminTurnOnAdapter();
+        alloraAdapter.adminTurnOnAdapter();
     }
 
     function test_ownerCanTurnOnAdapter() public {
         vm.startPrank(admin);
-        upshotAdapter.adminTurnOffAdapter();
+        alloraAdapter.adminTurnOffAdapter();
 
-        assertEq(upshotAdapter.switchedOn(), false);
+        assertEq(alloraAdapter.switchedOn(), false);
 
-        upshotAdapter.adminTurnOnAdapter();
+        alloraAdapter.adminTurnOnAdapter();
 
-        assertEq(upshotAdapter.switchedOn(), true);
+        assertEq(alloraAdapter.switchedOn(), true);
     }
 
     // ***************************************************************

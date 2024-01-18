@@ -22,7 +22,7 @@ struct SignedNumericData {
     NumericData numericData;
 }
 
-struct UpshotAdapterNumericData {
+struct AlloraAdapterNumericData {
     SignedNumericData[] signedNumericData;
     bytes extraData;
 }
@@ -60,16 +60,16 @@ struct TopicView {
 // ***************************************************************
 
 /**
- * @title Upshot Adapter Interface
+ * @title Allora Adapter Interface
  */
-interface IUpshotAdapter {
+interface IAlloraAdapter {
 
     /**
      * @notice Get a verified piece of numeric data for a given topic
      * 
      * @param nd The numeric data to aggregate
      */
-    function verifyData(UpshotAdapterNumericData memory nd) external returns (
+    function verifyData(AlloraAdapterNumericData memory nd) external returns (
         uint256 numericValue, 
         uint256 topicId, 
         address[] memory dataProviders, 
@@ -81,7 +81,7 @@ interface IUpshotAdapter {
      * 
      * @param pd The numeric data to aggregate
      */
-    function verifyDataViewOnly(UpshotAdapterNumericData calldata pd) external view returns (
+    function verifyDataViewOnly(AlloraAdapterNumericData calldata pd) external view returns (
         uint256 numericValue, 
         uint256 topicId, 
         address[] memory dataProviders, 

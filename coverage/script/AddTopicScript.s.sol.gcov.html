@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Date:</td>
-            <td class="headerValue">2024-01-18 08:28:38</td>
+            <td class="headerValue">2024-01-18 10:43:56</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntry">0</td>
@@ -65,23 +65,23 @@
 <a name="3"><span class="lineNum">       3 </span>            : </a>
 <a name="4"><span class="lineNum">       4 </span>            : import '../lib/forge-std/src/Script.sol';</a>
 <a name="5"><span class="lineNum">       5 </span>            : </a>
-<a name="6"><span class="lineNum">       6 </span>            : import { UpshotAdapter } from '../src/UpshotAdapter.sol';</a>
-<a name="7"><span class="lineNum">       7 </span>            : import { TopicConfig, TopicView } from '../src/interface/IUpshotAdapter.sol';</a>
+<a name="6"><span class="lineNum">       6 </span>            : import { AlloraAdapter } from '../src/AlloraAdapter.sol';</a>
+<a name="7"><span class="lineNum">       7 </span>            : import { TopicConfig, TopicView } from '../src/interface/IAlloraAdapter.sol';</a>
 <a name="8"><span class="lineNum">       8 </span>            : import { IAggregator } from '../src/interface/IAggregator.sol';</a>
 <a name="9"><span class="lineNum">       9 </span>            : import { IFeeHandler } from '../src/interface/IFeeHandler.sol';</a>
-<a name="10"><span class="lineNum">      10 </span>            : import { NumericData } from '../src/interface/IUpshotAdapter.sol';</a>
+<a name="10"><span class="lineNum">      10 </span>            : import { NumericData } from '../src/interface/IAlloraAdapter.sol';</a>
 <a name="11"><span class="lineNum">      11 </span>            : import { ECDSA } from '../lib/openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol';</a>
 <a name="12"><span class="lineNum">      12 </span>            : </a>
 <a name="13"><span class="lineNum">      13 </span>            : // run with </a>
 <a name="14"><span class="lineNum">      14 </span>            : // forge script ./script/AddTopicScript.s.sol:AddTopicScript --rpc-url &lt;rpc url&gt; --etherscan-api-key &lt;etherscan api key&gt; --broadcast --verify -vvvv</a>
 <a name="15"><span class="lineNum">      15 </span>            : </a>
 <a name="16"><span class="lineNum">      16 </span>            : /**</a>
-<a name="17"><span class="lineNum">      17 </span>            :  * @title UpshotAdapterViewPredictionExample</a>
-<a name="18"><span class="lineNum">      18 </span>            :  * @notice Example contract adding topics to an UpshotAdapter</a>
+<a name="17"><span class="lineNum">      17 </span>            :  * @title AlloraAdapterViewPredictionExample</a>
+<a name="18"><span class="lineNum">      18 </span>            :  * @notice Example contract adding topics to an AlloraAdapter</a>
 <a name="19"><span class="lineNum">      19 </span>            :  */</a>
 <a name="20"><span class="lineNum">      20 </span>            : contract AddTopicScript is Script {</a>
 <a name="21"><span class="lineNum">      21 </span>            : </a>
-<a name="22"><span class="lineNum">      22 </span>            :     UpshotAdapter upshotAdapter = UpshotAdapter(0x9928f99dEf24e792cE8c20B7B67E64aafEC76c18);</a>
+<a name="22"><span class="lineNum">      22 </span>            :     AlloraAdapter alloraAdapter = AlloraAdapter(0x9928f99dEf24e792cE8c20B7B67E64aafEC76c18);</a>
 <a name="23"><span class="lineNum">      23 </span>            :     IAggregator aggregator = IAggregator(0x28bd0750FCAd5280464180b5Ac4860302dC7373c);</a>
 <a name="24"><span class="lineNum">      24 </span>            : </a>
 <a name="25"><span class="lineNum">      25 </span>            :     function run() public virtual {</a>
@@ -122,7 +122,7 @@
 <a name="60"><span class="lineNum">      60 </span>            :             });</a>
 <a name="61"><span class="lineNum">      61 </span>            :         }</a>
 <a name="62"><span class="lineNum">      62 </span>            : </a>
-<a name="63"><span class="lineNum">      63 </span><span class="lineNoCov">          0 :         uint256[] memory topicIds = upshotAdapter.addTopics(topicViews);</span></a>
+<a name="63"><span class="lineNum">      63 </span><span class="lineNoCov">          0 :         uint256[] memory topicIds = alloraAdapter.addTopics(topicViews);</span></a>
 <a name="64"><span class="lineNum">      64 </span>            : </a>
 <a name="65"><span class="lineNum">      65 </span><span class="lineNoCov">          0 :         for (uint256 i = 0; i &lt; topicTitles.length; i++) {</span></a>
 <a name="66"><span class="lineNum">      66 </span><span class="lineNoCov">          0 :             console.log('Topic &quot;%s&quot; added with id %s', topicTitles[i], topicIds[i]);</span></a>

@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 import '../lib/forge-std/src/Script.sol';
 
-import { IUpshotAdapter, Topic, TopicValue, TopicConfig, UpshotAdapterNumericData } from '../src/interface/IUpshotAdapter.sol';
+import { IAlloraAdapter, Topic, TopicValue, TopicConfig, AlloraAdapterNumericData } from '../src/interface/IAlloraAdapter.sol';
 import { Ownable2Step } from "../lib/openzeppelin-contracts/contracts/access/Ownable2Step.sol";
 import { EnumerableSet } from "../lib/openzeppelin-contracts/contracts/utils/structs/EnumerableSet.sol";
 
@@ -16,7 +16,7 @@ import { EnumerableSet } from "../lib/openzeppelin-contracts/contracts/utils/str
 contract RetrieveTopicValue is Script {
 
     // Sepolia adapter Address
-    IUpshotAdapter constant UPSHOT_ADAPTER = IUpshotAdapter(0x238D0abD53fC68fAfa0CCD860446e381b400b5Be);
+    IAlloraAdapter constant UPSHOT_ADAPTER = IAlloraAdapter(0x238D0abD53fC68fAfa0CCD860446e381b400b5Be);
     uint256 constant TOPIC_ID = 1;
 
     function run() public virtual {
