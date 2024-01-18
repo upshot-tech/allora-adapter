@@ -26,7 +26,7 @@ contract AlloraAdapterBringPredictionOnChainExample is Ownable2Step {
      * @param protocolFunctionArgument An argument for the protocol function
      * @param topicId The id of the topic to use the most recent stored value for
      */
-    function callProtocolFunctionWithExistingIndexValue(
+    function callProtocolFunctionWithExistingValue(
         uint256 protocolFunctionArgument,
         uint256 topicId
     ) external payable {
