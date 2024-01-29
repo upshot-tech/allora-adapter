@@ -339,7 +339,7 @@ contract AlloraAdapter is IAlloraAdapter, Ownable2Step, EIP712 {
     /**
      * @notice Internal helper to add a new topic
      * 
-     * @param topicView The topic data to add 
+     * @param topicView The topic data to add to the topic
      */
     function _addTopic(
         TopicView calldata topicView
