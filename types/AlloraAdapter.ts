@@ -23,49 +23,15 @@ import type {
   TypedContractMethod,
 } from "./common";
 
-export type AlloraAdapterConstructorArgsStruct = { admin: AddressLike };
-
-export type AlloraAdapterConstructorArgsStructOutput = [admin: string] & {
-  admin: string;
-};
-
-export type TopicConfigStruct = {
-  title: string;
+export type AlloraAdapterConstructorArgsStruct = {
   owner: AddressLike;
-  dataProviderQuorum: BigNumberish;
-  dataValiditySeconds: BigNumberish;
   aggregator: AddressLike;
-  ownerSwitchedOn: boolean;
-  adminSwitchedOn: boolean;
 };
 
-export type TopicConfigStructOutput = [
-  title: string,
+export type AlloraAdapterConstructorArgsStructOutput = [
   owner: string,
-  dataProviderQuorum: bigint,
-  dataValiditySeconds: bigint,
-  aggregator: string,
-  ownerSwitchedOn: boolean,
-  adminSwitchedOn: boolean
-] & {
-  title: string;
-  owner: string;
-  dataProviderQuorum: bigint;
-  dataValiditySeconds: bigint;
-  aggregator: string;
-  ownerSwitchedOn: boolean;
-  adminSwitchedOn: boolean;
-};
-
-export type TopicViewStruct = {
-  config: TopicConfigStruct;
-  validDataProviders: AddressLike[];
-};
-
-export type TopicViewStructOutput = [
-  config: TopicConfigStructOutput,
-  validDataProviders: string[]
-] & { config: TopicConfigStructOutput; validDataProviders: string[] };
+  aggregator: string
+] & { owner: string; aggregator: string };
 
 export type NumericDataStruct = {
   topicId: BigNumberish;
@@ -122,17 +88,11 @@ export interface AlloraAdapterInterface extends Interface {
       | "NUMERIC_DATA_TYPEHASH"
       | "acceptOwnership"
       | "addDataProvider"
-      | "addTopic"
-      | "addTopics"
-      | "adminTurnOffAdapter"
-      | "adminTurnOffTopic"
-      | "adminTurnOnAdapter"
-      | "adminTurnOnTopic"
+      | "aggregator"
+      | "dataValiditySeconds"
       | "eip712Domain"
       | "getMessage"
-      | "getTopic"
       | "getTopicValue"
-      | "nextTopicId"
       | "owner"
       | "pendingOwner"
       | "removeDataProvider"
@@ -140,32 +100,24 @@ export interface AlloraAdapterInterface extends Interface {
       | "switchedOn"
       | "topicValue"
       | "transferOwnership"
-      | "turnOffTopic"
-      | "turnOnTopic"
+      | "turnOffAdapter"
+      | "turnOnAdapter"
       | "updateAggregator"
-      | "updateDataProviderQuorum"
       | "updateDataValiditySeconds"
-      | "updateTopicOwner"
+      | "validDataProvider"
       | "verifyData"
       | "verifyDataViewOnly"
   ): FunctionFragment;
 
   getEvent(
     nameOrSignatureOrTopic:
-      | "AlloraAdapterV2AdapterAdminTopicTurnedOff"
-      | "AlloraAdapterV2AdapterAdminTopicTurnedOn"
       | "AlloraAdapterV2AdapterAdminTurnedOff"
       | "AlloraAdapterV2AdapterAdminTurnedOn"
-      | "AlloraAdapterV2AdapterTopicOwnerAddedDataProvider"
-      | "AlloraAdapterV2AdapterTopicOwnerRemovedDataProvider"
-      | "AlloraAdapterV2AdapterTopicOwnerTopicTurnedOff"
-      | "AlloraAdapterV2AdapterTopicOwnerTopicTurnedOn"
-      | "AlloraAdapterV2AdapterTopicOwnerUpdatedAggregator"
-      | "AlloraAdapterV2AdapterTopicOwnerUpdatedDataProviderQuorum"
-      | "AlloraAdapterV2AdapterTopicOwnerUpdatedDataValiditySeconds"
-      | "AlloraAdapterV2AdapterTopicOwnerUpdatedOwner"
+      | "AlloraAdapterV2AdapterOwnerAddedDataProvider"
+      | "AlloraAdapterV2AdapterOwnerRemovedDataProvider"
+      | "AlloraAdapterV2AdapterOwnerUpdatedAggregator"
+      | "AlloraAdapterV2AdapterOwnerUpdatedDataValiditySeconds"
       | "AlloraAdapterV2AdapterVerifiedData"
-      | "AlloraAdapterV2TopicAdded"
       | "EIP712DomainChanged"
       | "OwnershipTransferStarted"
       | "OwnershipTransferred"
@@ -181,31 +133,15 @@ export interface AlloraAdapterInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "addDataProvider",
-    values: [BigNumberish, AddressLike]
+    values: [AddressLike]
   ): string;
   encodeFunctionData(
-    functionFragment: "addTopic",
-    values: [TopicViewStruct]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "addTopics",
-    values: [TopicViewStruct[]]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "adminTurnOffAdapter",
+    functionFragment: "aggregator",
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "adminTurnOffTopic",
-    values: [BigNumberish]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "adminTurnOnAdapter",
+    functionFragment: "dataValiditySeconds",
     values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "adminTurnOnTopic",
-    values: [BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "eip712Domain",
@@ -216,16 +152,8 @@ export interface AlloraAdapterInterface extends Interface {
     values: [NumericDataStruct]
   ): string;
   encodeFunctionData(
-    functionFragment: "getTopic",
-    values: [BigNumberish]
-  ): string;
-  encodeFunctionData(
     functionFragment: "getTopicValue",
     values: [BigNumberish, BytesLike]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "nextTopicId",
-    values?: undefined
   ): string;
   encodeFunctionData(functionFragment: "owner", values?: undefined): string;
   encodeFunctionData(
@@ -234,7 +162,7 @@ export interface AlloraAdapterInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "removeDataProvider",
-    values: [BigNumberish, AddressLike]
+    values: [AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "renounceOwnership",
@@ -253,28 +181,24 @@ export interface AlloraAdapterInterface extends Interface {
     values: [AddressLike]
   ): string;
   encodeFunctionData(
-    functionFragment: "turnOffTopic",
-    values: [BigNumberish]
+    functionFragment: "turnOffAdapter",
+    values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "turnOnTopic",
-    values: [BigNumberish]
+    functionFragment: "turnOnAdapter",
+    values?: undefined
   ): string;
   encodeFunctionData(
     functionFragment: "updateAggregator",
-    values: [BigNumberish, AddressLike]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "updateDataProviderQuorum",
-    values: [BigNumberish, BigNumberish]
+    values: [AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "updateDataValiditySeconds",
-    values: [BigNumberish, BigNumberish]
+    values: [BigNumberish]
   ): string;
   encodeFunctionData(
-    functionFragment: "updateTopicOwner",
-    values: [BigNumberish, AddressLike]
+    functionFragment: "validDataProvider",
+    values: [AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "verifyData",
@@ -297,22 +221,9 @@ export interface AlloraAdapterInterface extends Interface {
     functionFragment: "addDataProvider",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "addTopic", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "addTopics", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "aggregator", data: BytesLike): Result;
   decodeFunctionResult(
-    functionFragment: "adminTurnOffAdapter",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "adminTurnOffTopic",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "adminTurnOnAdapter",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "adminTurnOnTopic",
+    functionFragment: "dataValiditySeconds",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -320,13 +231,8 @@ export interface AlloraAdapterInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "getMessage", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "getTopic", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "getTopicValue",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "nextTopicId",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
@@ -349,11 +255,11 @@ export interface AlloraAdapterInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "turnOffTopic",
+    functionFragment: "turnOffAdapter",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "turnOnTopic",
+    functionFragment: "turnOnAdapter",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -361,15 +267,11 @@ export interface AlloraAdapterInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "updateDataProviderQuorum",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
     functionFragment: "updateDataValiditySeconds",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "updateTopicOwner",
+    functionFragment: "validDataProvider",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "verifyData", data: BytesLike): Result;
@@ -377,30 +279,6 @@ export interface AlloraAdapterInterface extends Interface {
     functionFragment: "verifyDataViewOnly",
     data: BytesLike
   ): Result;
-}
-
-export namespace AlloraAdapterV2AdapterAdminTopicTurnedOffEvent {
-  export type InputTuple = [topicId: BigNumberish];
-  export type OutputTuple = [topicId: bigint];
-  export interface OutputObject {
-    topicId: bigint;
-  }
-  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
-  export type Filter = TypedDeferredTopicFilter<Event>;
-  export type Log = TypedEventLog<Event>;
-  export type LogDescription = TypedLogDescription<Event>;
-}
-
-export namespace AlloraAdapterV2AdapterAdminTopicTurnedOnEvent {
-  export type InputTuple = [topicId: BigNumberish];
-  export type OutputTuple = [topicId: bigint];
-  export interface OutputObject {
-    topicId: bigint;
-  }
-  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
-  export type Filter = TypedDeferredTopicFilter<Event>;
-  export type Log = TypedEventLog<Event>;
-  export type LogDescription = TypedLogDescription<Event>;
 }
 
 export namespace AlloraAdapterV2AdapterAdminTurnedOffEvent {
@@ -423,20 +301,7 @@ export namespace AlloraAdapterV2AdapterAdminTurnedOnEvent {
   export type LogDescription = TypedLogDescription<Event>;
 }
 
-export namespace AlloraAdapterV2AdapterTopicOwnerAddedDataProviderEvent {
-  export type InputTuple = [topicId: BigNumberish, dataProvider: AddressLike];
-  export type OutputTuple = [topicId: bigint, dataProvider: string];
-  export interface OutputObject {
-    topicId: bigint;
-    dataProvider: string;
-  }
-  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
-  export type Filter = TypedDeferredTopicFilter<Event>;
-  export type Log = TypedEventLog<Event>;
-  export type LogDescription = TypedLogDescription<Event>;
-}
-
-export namespace AlloraAdapterV2AdapterTopicOwnerRemovedDataProviderEvent {
+export namespace AlloraAdapterV2AdapterOwnerAddedDataProviderEvent {
   export type InputTuple = [dataProvider: AddressLike];
   export type OutputTuple = [dataProvider: string];
   export interface OutputObject {
@@ -448,11 +313,11 @@ export namespace AlloraAdapterV2AdapterTopicOwnerRemovedDataProviderEvent {
   export type LogDescription = TypedLogDescription<Event>;
 }
 
-export namespace AlloraAdapterV2AdapterTopicOwnerTopicTurnedOffEvent {
-  export type InputTuple = [topicId: BigNumberish];
-  export type OutputTuple = [topicId: bigint];
+export namespace AlloraAdapterV2AdapterOwnerRemovedDataProviderEvent {
+  export type InputTuple = [dataProvider: AddressLike];
+  export type OutputTuple = [dataProvider: string];
   export interface OutputObject {
-    topicId: bigint;
+    dataProvider: string;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -460,23 +325,10 @@ export namespace AlloraAdapterV2AdapterTopicOwnerTopicTurnedOffEvent {
   export type LogDescription = TypedLogDescription<Event>;
 }
 
-export namespace AlloraAdapterV2AdapterTopicOwnerTopicTurnedOnEvent {
-  export type InputTuple = [topicId: BigNumberish];
-  export type OutputTuple = [topicId: bigint];
+export namespace AlloraAdapterV2AdapterOwnerUpdatedAggregatorEvent {
+  export type InputTuple = [aggregator: AddressLike];
+  export type OutputTuple = [aggregator: string];
   export interface OutputObject {
-    topicId: bigint;
-  }
-  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
-  export type Filter = TypedDeferredTopicFilter<Event>;
-  export type Log = TypedEventLog<Event>;
-  export type LogDescription = TypedLogDescription<Event>;
-}
-
-export namespace AlloraAdapterV2AdapterTopicOwnerUpdatedAggregatorEvent {
-  export type InputTuple = [topicId: BigNumberish, aggregator: AddressLike];
-  export type OutputTuple = [topicId: bigint, aggregator: string];
-  export interface OutputObject {
-    topicId: bigint;
     aggregator: string;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
@@ -485,44 +337,11 @@ export namespace AlloraAdapterV2AdapterTopicOwnerUpdatedAggregatorEvent {
   export type LogDescription = TypedLogDescription<Event>;
 }
 
-export namespace AlloraAdapterV2AdapterTopicOwnerUpdatedDataProviderQuorumEvent {
-  export type InputTuple = [
-    topicId: BigNumberish,
-    dataProviderQuorum: BigNumberish
-  ];
-  export type OutputTuple = [topicId: bigint, dataProviderQuorum: bigint];
+export namespace AlloraAdapterV2AdapterOwnerUpdatedDataValiditySecondsEvent {
+  export type InputTuple = [dataValiditySeconds: BigNumberish];
+  export type OutputTuple = [dataValiditySeconds: bigint];
   export interface OutputObject {
-    topicId: bigint;
-    dataProviderQuorum: bigint;
-  }
-  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
-  export type Filter = TypedDeferredTopicFilter<Event>;
-  export type Log = TypedEventLog<Event>;
-  export type LogDescription = TypedLogDescription<Event>;
-}
-
-export namespace AlloraAdapterV2AdapterTopicOwnerUpdatedDataValiditySecondsEvent {
-  export type InputTuple = [
-    topicId: BigNumberish,
-    dataValiditySeconds: BigNumberish
-  ];
-  export type OutputTuple = [topicId: bigint, dataValiditySeconds: bigint];
-  export interface OutputObject {
-    topicId: bigint;
     dataValiditySeconds: bigint;
-  }
-  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
-  export type Filter = TypedDeferredTopicFilter<Event>;
-  export type Log = TypedEventLog<Event>;
-  export type LogDescription = TypedLogDescription<Event>;
-}
-
-export namespace AlloraAdapterV2AdapterTopicOwnerUpdatedOwnerEvent {
-  export type InputTuple = [topicId: BigNumberish, newOwner: AddressLike];
-  export type OutputTuple = [topicId: bigint, newOwner: string];
-  export interface OutputObject {
-    topicId: bigint;
-    newOwner: string;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -548,18 +367,6 @@ export namespace AlloraAdapterV2AdapterVerifiedDataEvent {
     numericData: bigint;
     dataProviders: string[];
     extraData: string;
-  }
-  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
-  export type Filter = TypedDeferredTopicFilter<Event>;
-  export type Log = TypedEventLog<Event>;
-  export type LogDescription = TypedLogDescription<Event>;
-}
-
-export namespace AlloraAdapterV2TopicAddedEvent {
-  export type InputTuple = [topicView: TopicViewStruct];
-  export type OutputTuple = [topicView: TopicViewStructOutput];
-  export interface OutputObject {
-    topicView: TopicViewStructOutput;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -651,38 +458,14 @@ export interface AlloraAdapter extends BaseContract {
   acceptOwnership: TypedContractMethod<[], [void], "nonpayable">;
 
   addDataProvider: TypedContractMethod<
-    [topicId: BigNumberish, dataProvider: AddressLike],
+    [dataProvider: AddressLike],
     [void],
     "nonpayable"
   >;
 
-  addTopic: TypedContractMethod<
-    [topicView: TopicViewStruct],
-    [bigint],
-    "nonpayable"
-  >;
+  aggregator: TypedContractMethod<[], [string], "view">;
 
-  addTopics: TypedContractMethod<
-    [topicViews: TopicViewStruct[]],
-    [bigint[]],
-    "nonpayable"
-  >;
-
-  adminTurnOffAdapter: TypedContractMethod<[], [void], "nonpayable">;
-
-  adminTurnOffTopic: TypedContractMethod<
-    [topicId: BigNumberish],
-    [void],
-    "nonpayable"
-  >;
-
-  adminTurnOnAdapter: TypedContractMethod<[], [void], "nonpayable">;
-
-  adminTurnOnTopic: TypedContractMethod<
-    [topicId: BigNumberish],
-    [void],
-    "nonpayable"
-  >;
+  dataValiditySeconds: TypedContractMethod<[], [bigint], "view">;
 
   eip712Domain: TypedContractMethod<
     [],
@@ -706,26 +489,18 @@ export interface AlloraAdapter extends BaseContract {
     "view"
   >;
 
-  getTopic: TypedContractMethod<
-    [topicId: BigNumberish],
-    [TopicViewStructOutput],
-    "view"
-  >;
-
   getTopicValue: TypedContractMethod<
     [topicId: BigNumberish, extraData: BytesLike],
     [TopicValueStructOutput],
     "view"
   >;
 
-  nextTopicId: TypedContractMethod<[], [bigint], "view">;
-
   owner: TypedContractMethod<[], [string], "view">;
 
   pendingOwner: TypedContractMethod<[], [string], "view">;
 
   removeDataProvider: TypedContractMethod<
-    [topicId: BigNumberish, dataProvider: AddressLike],
+    [dataProvider: AddressLike],
     [void],
     "nonpayable"
   >;
@@ -746,40 +521,26 @@ export interface AlloraAdapter extends BaseContract {
     "nonpayable"
   >;
 
-  turnOffTopic: TypedContractMethod<
-    [topicId: BigNumberish],
-    [void],
-    "nonpayable"
-  >;
+  turnOffAdapter: TypedContractMethod<[], [void], "nonpayable">;
 
-  turnOnTopic: TypedContractMethod<
-    [topicId: BigNumberish],
-    [void],
-    "nonpayable"
-  >;
+  turnOnAdapter: TypedContractMethod<[], [void], "nonpayable">;
 
   updateAggregator: TypedContractMethod<
-    [topicId: BigNumberish, aggregator: AddressLike],
-    [void],
-    "nonpayable"
-  >;
-
-  updateDataProviderQuorum: TypedContractMethod<
-    [topicId: BigNumberish, dataProviderQuorum: BigNumberish],
+    [_aggregator: AddressLike],
     [void],
     "nonpayable"
   >;
 
   updateDataValiditySeconds: TypedContractMethod<
-    [topicId: BigNumberish, dataValiditySeconds: BigNumberish],
+    [_dataValiditySeconds: BigNumberish],
     [void],
     "nonpayable"
   >;
 
-  updateTopicOwner: TypedContractMethod<
-    [topicId: BigNumberish, owner_: AddressLike],
-    [void],
-    "nonpayable"
+  validDataProvider: TypedContractMethod<
+    [dataProvider: AddressLike],
+    [boolean],
+    "view"
   >;
 
   verifyData: TypedContractMethod<
@@ -820,33 +581,13 @@ export interface AlloraAdapter extends BaseContract {
   ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "addDataProvider"
-  ): TypedContractMethod<
-    [topicId: BigNumberish, dataProvider: AddressLike],
-    [void],
-    "nonpayable"
-  >;
+  ): TypedContractMethod<[dataProvider: AddressLike], [void], "nonpayable">;
   getFunction(
-    nameOrSignature: "addTopic"
-  ): TypedContractMethod<[topicView: TopicViewStruct], [bigint], "nonpayable">;
+    nameOrSignature: "aggregator"
+  ): TypedContractMethod<[], [string], "view">;
   getFunction(
-    nameOrSignature: "addTopics"
-  ): TypedContractMethod<
-    [topicViews: TopicViewStruct[]],
-    [bigint[]],
-    "nonpayable"
-  >;
-  getFunction(
-    nameOrSignature: "adminTurnOffAdapter"
-  ): TypedContractMethod<[], [void], "nonpayable">;
-  getFunction(
-    nameOrSignature: "adminTurnOffTopic"
-  ): TypedContractMethod<[topicId: BigNumberish], [void], "nonpayable">;
-  getFunction(
-    nameOrSignature: "adminTurnOnAdapter"
-  ): TypedContractMethod<[], [void], "nonpayable">;
-  getFunction(
-    nameOrSignature: "adminTurnOnTopic"
-  ): TypedContractMethod<[topicId: BigNumberish], [void], "nonpayable">;
+    nameOrSignature: "dataValiditySeconds"
+  ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
     nameOrSignature: "eip712Domain"
   ): TypedContractMethod<
@@ -868,22 +609,12 @@ export interface AlloraAdapter extends BaseContract {
     nameOrSignature: "getMessage"
   ): TypedContractMethod<[numericData: NumericDataStruct], [string], "view">;
   getFunction(
-    nameOrSignature: "getTopic"
-  ): TypedContractMethod<
-    [topicId: BigNumberish],
-    [TopicViewStructOutput],
-    "view"
-  >;
-  getFunction(
     nameOrSignature: "getTopicValue"
   ): TypedContractMethod<
     [topicId: BigNumberish, extraData: BytesLike],
     [TopicValueStructOutput],
     "view"
   >;
-  getFunction(
-    nameOrSignature: "nextTopicId"
-  ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
     nameOrSignature: "owner"
   ): TypedContractMethod<[], [string], "view">;
@@ -892,11 +623,7 @@ export interface AlloraAdapter extends BaseContract {
   ): TypedContractMethod<[], [string], "view">;
   getFunction(
     nameOrSignature: "removeDataProvider"
-  ): TypedContractMethod<
-    [topicId: BigNumberish, dataProvider: AddressLike],
-    [void],
-    "nonpayable"
-  >;
+  ): TypedContractMethod<[dataProvider: AddressLike], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "renounceOwnership"
   ): TypedContractMethod<[], [void], "nonpayable">;
@@ -914,39 +641,24 @@ export interface AlloraAdapter extends BaseContract {
     nameOrSignature: "transferOwnership"
   ): TypedContractMethod<[newOwner: AddressLike], [void], "nonpayable">;
   getFunction(
-    nameOrSignature: "turnOffTopic"
-  ): TypedContractMethod<[topicId: BigNumberish], [void], "nonpayable">;
+    nameOrSignature: "turnOffAdapter"
+  ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
-    nameOrSignature: "turnOnTopic"
-  ): TypedContractMethod<[topicId: BigNumberish], [void], "nonpayable">;
+    nameOrSignature: "turnOnAdapter"
+  ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "updateAggregator"
-  ): TypedContractMethod<
-    [topicId: BigNumberish, aggregator: AddressLike],
-    [void],
-    "nonpayable"
-  >;
-  getFunction(
-    nameOrSignature: "updateDataProviderQuorum"
-  ): TypedContractMethod<
-    [topicId: BigNumberish, dataProviderQuorum: BigNumberish],
-    [void],
-    "nonpayable"
-  >;
+  ): TypedContractMethod<[_aggregator: AddressLike], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "updateDataValiditySeconds"
   ): TypedContractMethod<
-    [topicId: BigNumberish, dataValiditySeconds: BigNumberish],
+    [_dataValiditySeconds: BigNumberish],
     [void],
     "nonpayable"
   >;
   getFunction(
-    nameOrSignature: "updateTopicOwner"
-  ): TypedContractMethod<
-    [topicId: BigNumberish, owner_: AddressLike],
-    [void],
-    "nonpayable"
-  >;
+    nameOrSignature: "validDataProvider"
+  ): TypedContractMethod<[dataProvider: AddressLike], [boolean], "view">;
   getFunction(
     nameOrSignature: "verifyData"
   ): TypedContractMethod<
@@ -977,20 +689,6 @@ export interface AlloraAdapter extends BaseContract {
   >;
 
   getEvent(
-    key: "AlloraAdapterV2AdapterAdminTopicTurnedOff"
-  ): TypedContractEvent<
-    AlloraAdapterV2AdapterAdminTopicTurnedOffEvent.InputTuple,
-    AlloraAdapterV2AdapterAdminTopicTurnedOffEvent.OutputTuple,
-    AlloraAdapterV2AdapterAdminTopicTurnedOffEvent.OutputObject
-  >;
-  getEvent(
-    key: "AlloraAdapterV2AdapterAdminTopicTurnedOn"
-  ): TypedContractEvent<
-    AlloraAdapterV2AdapterAdminTopicTurnedOnEvent.InputTuple,
-    AlloraAdapterV2AdapterAdminTopicTurnedOnEvent.OutputTuple,
-    AlloraAdapterV2AdapterAdminTopicTurnedOnEvent.OutputObject
-  >;
-  getEvent(
     key: "AlloraAdapterV2AdapterAdminTurnedOff"
   ): TypedContractEvent<
     AlloraAdapterV2AdapterAdminTurnedOffEvent.InputTuple,
@@ -1005,60 +703,32 @@ export interface AlloraAdapter extends BaseContract {
     AlloraAdapterV2AdapterAdminTurnedOnEvent.OutputObject
   >;
   getEvent(
-    key: "AlloraAdapterV2AdapterTopicOwnerAddedDataProvider"
+    key: "AlloraAdapterV2AdapterOwnerAddedDataProvider"
   ): TypedContractEvent<
-    AlloraAdapterV2AdapterTopicOwnerAddedDataProviderEvent.InputTuple,
-    AlloraAdapterV2AdapterTopicOwnerAddedDataProviderEvent.OutputTuple,
-    AlloraAdapterV2AdapterTopicOwnerAddedDataProviderEvent.OutputObject
+    AlloraAdapterV2AdapterOwnerAddedDataProviderEvent.InputTuple,
+    AlloraAdapterV2AdapterOwnerAddedDataProviderEvent.OutputTuple,
+    AlloraAdapterV2AdapterOwnerAddedDataProviderEvent.OutputObject
   >;
   getEvent(
-    key: "AlloraAdapterV2AdapterTopicOwnerRemovedDataProvider"
+    key: "AlloraAdapterV2AdapterOwnerRemovedDataProvider"
   ): TypedContractEvent<
-    AlloraAdapterV2AdapterTopicOwnerRemovedDataProviderEvent.InputTuple,
-    AlloraAdapterV2AdapterTopicOwnerRemovedDataProviderEvent.OutputTuple,
-    AlloraAdapterV2AdapterTopicOwnerRemovedDataProviderEvent.OutputObject
+    AlloraAdapterV2AdapterOwnerRemovedDataProviderEvent.InputTuple,
+    AlloraAdapterV2AdapterOwnerRemovedDataProviderEvent.OutputTuple,
+    AlloraAdapterV2AdapterOwnerRemovedDataProviderEvent.OutputObject
   >;
   getEvent(
-    key: "AlloraAdapterV2AdapterTopicOwnerTopicTurnedOff"
+    key: "AlloraAdapterV2AdapterOwnerUpdatedAggregator"
   ): TypedContractEvent<
-    AlloraAdapterV2AdapterTopicOwnerTopicTurnedOffEvent.InputTuple,
-    AlloraAdapterV2AdapterTopicOwnerTopicTurnedOffEvent.OutputTuple,
-    AlloraAdapterV2AdapterTopicOwnerTopicTurnedOffEvent.OutputObject
+    AlloraAdapterV2AdapterOwnerUpdatedAggregatorEvent.InputTuple,
+    AlloraAdapterV2AdapterOwnerUpdatedAggregatorEvent.OutputTuple,
+    AlloraAdapterV2AdapterOwnerUpdatedAggregatorEvent.OutputObject
   >;
   getEvent(
-    key: "AlloraAdapterV2AdapterTopicOwnerTopicTurnedOn"
+    key: "AlloraAdapterV2AdapterOwnerUpdatedDataValiditySeconds"
   ): TypedContractEvent<
-    AlloraAdapterV2AdapterTopicOwnerTopicTurnedOnEvent.InputTuple,
-    AlloraAdapterV2AdapterTopicOwnerTopicTurnedOnEvent.OutputTuple,
-    AlloraAdapterV2AdapterTopicOwnerTopicTurnedOnEvent.OutputObject
-  >;
-  getEvent(
-    key: "AlloraAdapterV2AdapterTopicOwnerUpdatedAggregator"
-  ): TypedContractEvent<
-    AlloraAdapterV2AdapterTopicOwnerUpdatedAggregatorEvent.InputTuple,
-    AlloraAdapterV2AdapterTopicOwnerUpdatedAggregatorEvent.OutputTuple,
-    AlloraAdapterV2AdapterTopicOwnerUpdatedAggregatorEvent.OutputObject
-  >;
-  getEvent(
-    key: "AlloraAdapterV2AdapterTopicOwnerUpdatedDataProviderQuorum"
-  ): TypedContractEvent<
-    AlloraAdapterV2AdapterTopicOwnerUpdatedDataProviderQuorumEvent.InputTuple,
-    AlloraAdapterV2AdapterTopicOwnerUpdatedDataProviderQuorumEvent.OutputTuple,
-    AlloraAdapterV2AdapterTopicOwnerUpdatedDataProviderQuorumEvent.OutputObject
-  >;
-  getEvent(
-    key: "AlloraAdapterV2AdapterTopicOwnerUpdatedDataValiditySeconds"
-  ): TypedContractEvent<
-    AlloraAdapterV2AdapterTopicOwnerUpdatedDataValiditySecondsEvent.InputTuple,
-    AlloraAdapterV2AdapterTopicOwnerUpdatedDataValiditySecondsEvent.OutputTuple,
-    AlloraAdapterV2AdapterTopicOwnerUpdatedDataValiditySecondsEvent.OutputObject
-  >;
-  getEvent(
-    key: "AlloraAdapterV2AdapterTopicOwnerUpdatedOwner"
-  ): TypedContractEvent<
-    AlloraAdapterV2AdapterTopicOwnerUpdatedOwnerEvent.InputTuple,
-    AlloraAdapterV2AdapterTopicOwnerUpdatedOwnerEvent.OutputTuple,
-    AlloraAdapterV2AdapterTopicOwnerUpdatedOwnerEvent.OutputObject
+    AlloraAdapterV2AdapterOwnerUpdatedDataValiditySecondsEvent.InputTuple,
+    AlloraAdapterV2AdapterOwnerUpdatedDataValiditySecondsEvent.OutputTuple,
+    AlloraAdapterV2AdapterOwnerUpdatedDataValiditySecondsEvent.OutputObject
   >;
   getEvent(
     key: "AlloraAdapterV2AdapterVerifiedData"
@@ -1066,13 +736,6 @@ export interface AlloraAdapter extends BaseContract {
     AlloraAdapterV2AdapterVerifiedDataEvent.InputTuple,
     AlloraAdapterV2AdapterVerifiedDataEvent.OutputTuple,
     AlloraAdapterV2AdapterVerifiedDataEvent.OutputObject
-  >;
-  getEvent(
-    key: "AlloraAdapterV2TopicAdded"
-  ): TypedContractEvent<
-    AlloraAdapterV2TopicAddedEvent.InputTuple,
-    AlloraAdapterV2TopicAddedEvent.OutputTuple,
-    AlloraAdapterV2TopicAddedEvent.OutputObject
   >;
   getEvent(
     key: "EIP712DomainChanged"
@@ -1097,28 +760,6 @@ export interface AlloraAdapter extends BaseContract {
   >;
 
   filters: {
-    "AlloraAdapterV2AdapterAdminTopicTurnedOff(uint256)": TypedContractEvent<
-      AlloraAdapterV2AdapterAdminTopicTurnedOffEvent.InputTuple,
-      AlloraAdapterV2AdapterAdminTopicTurnedOffEvent.OutputTuple,
-      AlloraAdapterV2AdapterAdminTopicTurnedOffEvent.OutputObject
-    >;
-    AlloraAdapterV2AdapterAdminTopicTurnedOff: TypedContractEvent<
-      AlloraAdapterV2AdapterAdminTopicTurnedOffEvent.InputTuple,
-      AlloraAdapterV2AdapterAdminTopicTurnedOffEvent.OutputTuple,
-      AlloraAdapterV2AdapterAdminTopicTurnedOffEvent.OutputObject
-    >;
-
-    "AlloraAdapterV2AdapterAdminTopicTurnedOn(uint256)": TypedContractEvent<
-      AlloraAdapterV2AdapterAdminTopicTurnedOnEvent.InputTuple,
-      AlloraAdapterV2AdapterAdminTopicTurnedOnEvent.OutputTuple,
-      AlloraAdapterV2AdapterAdminTopicTurnedOnEvent.OutputObject
-    >;
-    AlloraAdapterV2AdapterAdminTopicTurnedOn: TypedContractEvent<
-      AlloraAdapterV2AdapterAdminTopicTurnedOnEvent.InputTuple,
-      AlloraAdapterV2AdapterAdminTopicTurnedOnEvent.OutputTuple,
-      AlloraAdapterV2AdapterAdminTopicTurnedOnEvent.OutputObject
-    >;
-
     "AlloraAdapterV2AdapterAdminTurnedOff()": TypedContractEvent<
       AlloraAdapterV2AdapterAdminTurnedOffEvent.InputTuple,
       AlloraAdapterV2AdapterAdminTurnedOffEvent.OutputTuple,
@@ -1141,92 +782,48 @@ export interface AlloraAdapter extends BaseContract {
       AlloraAdapterV2AdapterAdminTurnedOnEvent.OutputObject
     >;
 
-    "AlloraAdapterV2AdapterTopicOwnerAddedDataProvider(uint256,address)": TypedContractEvent<
-      AlloraAdapterV2AdapterTopicOwnerAddedDataProviderEvent.InputTuple,
-      AlloraAdapterV2AdapterTopicOwnerAddedDataProviderEvent.OutputTuple,
-      AlloraAdapterV2AdapterTopicOwnerAddedDataProviderEvent.OutputObject
+    "AlloraAdapterV2AdapterOwnerAddedDataProvider(address)": TypedContractEvent<
+      AlloraAdapterV2AdapterOwnerAddedDataProviderEvent.InputTuple,
+      AlloraAdapterV2AdapterOwnerAddedDataProviderEvent.OutputTuple,
+      AlloraAdapterV2AdapterOwnerAddedDataProviderEvent.OutputObject
     >;
-    AlloraAdapterV2AdapterTopicOwnerAddedDataProvider: TypedContractEvent<
-      AlloraAdapterV2AdapterTopicOwnerAddedDataProviderEvent.InputTuple,
-      AlloraAdapterV2AdapterTopicOwnerAddedDataProviderEvent.OutputTuple,
-      AlloraAdapterV2AdapterTopicOwnerAddedDataProviderEvent.OutputObject
-    >;
-
-    "AlloraAdapterV2AdapterTopicOwnerRemovedDataProvider(address)": TypedContractEvent<
-      AlloraAdapterV2AdapterTopicOwnerRemovedDataProviderEvent.InputTuple,
-      AlloraAdapterV2AdapterTopicOwnerRemovedDataProviderEvent.OutputTuple,
-      AlloraAdapterV2AdapterTopicOwnerRemovedDataProviderEvent.OutputObject
-    >;
-    AlloraAdapterV2AdapterTopicOwnerRemovedDataProvider: TypedContractEvent<
-      AlloraAdapterV2AdapterTopicOwnerRemovedDataProviderEvent.InputTuple,
-      AlloraAdapterV2AdapterTopicOwnerRemovedDataProviderEvent.OutputTuple,
-      AlloraAdapterV2AdapterTopicOwnerRemovedDataProviderEvent.OutputObject
+    AlloraAdapterV2AdapterOwnerAddedDataProvider: TypedContractEvent<
+      AlloraAdapterV2AdapterOwnerAddedDataProviderEvent.InputTuple,
+      AlloraAdapterV2AdapterOwnerAddedDataProviderEvent.OutputTuple,
+      AlloraAdapterV2AdapterOwnerAddedDataProviderEvent.OutputObject
     >;
 
-    "AlloraAdapterV2AdapterTopicOwnerTopicTurnedOff(uint256)": TypedContractEvent<
-      AlloraAdapterV2AdapterTopicOwnerTopicTurnedOffEvent.InputTuple,
-      AlloraAdapterV2AdapterTopicOwnerTopicTurnedOffEvent.OutputTuple,
-      AlloraAdapterV2AdapterTopicOwnerTopicTurnedOffEvent.OutputObject
+    "AlloraAdapterV2AdapterOwnerRemovedDataProvider(address)": TypedContractEvent<
+      AlloraAdapterV2AdapterOwnerRemovedDataProviderEvent.InputTuple,
+      AlloraAdapterV2AdapterOwnerRemovedDataProviderEvent.OutputTuple,
+      AlloraAdapterV2AdapterOwnerRemovedDataProviderEvent.OutputObject
     >;
-    AlloraAdapterV2AdapterTopicOwnerTopicTurnedOff: TypedContractEvent<
-      AlloraAdapterV2AdapterTopicOwnerTopicTurnedOffEvent.InputTuple,
-      AlloraAdapterV2AdapterTopicOwnerTopicTurnedOffEvent.OutputTuple,
-      AlloraAdapterV2AdapterTopicOwnerTopicTurnedOffEvent.OutputObject
-    >;
-
-    "AlloraAdapterV2AdapterTopicOwnerTopicTurnedOn(uint256)": TypedContractEvent<
-      AlloraAdapterV2AdapterTopicOwnerTopicTurnedOnEvent.InputTuple,
-      AlloraAdapterV2AdapterTopicOwnerTopicTurnedOnEvent.OutputTuple,
-      AlloraAdapterV2AdapterTopicOwnerTopicTurnedOnEvent.OutputObject
-    >;
-    AlloraAdapterV2AdapterTopicOwnerTopicTurnedOn: TypedContractEvent<
-      AlloraAdapterV2AdapterTopicOwnerTopicTurnedOnEvent.InputTuple,
-      AlloraAdapterV2AdapterTopicOwnerTopicTurnedOnEvent.OutputTuple,
-      AlloraAdapterV2AdapterTopicOwnerTopicTurnedOnEvent.OutputObject
+    AlloraAdapterV2AdapterOwnerRemovedDataProvider: TypedContractEvent<
+      AlloraAdapterV2AdapterOwnerRemovedDataProviderEvent.InputTuple,
+      AlloraAdapterV2AdapterOwnerRemovedDataProviderEvent.OutputTuple,
+      AlloraAdapterV2AdapterOwnerRemovedDataProviderEvent.OutputObject
     >;
 
-    "AlloraAdapterV2AdapterTopicOwnerUpdatedAggregator(uint256,address)": TypedContractEvent<
-      AlloraAdapterV2AdapterTopicOwnerUpdatedAggregatorEvent.InputTuple,
-      AlloraAdapterV2AdapterTopicOwnerUpdatedAggregatorEvent.OutputTuple,
-      AlloraAdapterV2AdapterTopicOwnerUpdatedAggregatorEvent.OutputObject
+    "AlloraAdapterV2AdapterOwnerUpdatedAggregator(address)": TypedContractEvent<
+      AlloraAdapterV2AdapterOwnerUpdatedAggregatorEvent.InputTuple,
+      AlloraAdapterV2AdapterOwnerUpdatedAggregatorEvent.OutputTuple,
+      AlloraAdapterV2AdapterOwnerUpdatedAggregatorEvent.OutputObject
     >;
-    AlloraAdapterV2AdapterTopicOwnerUpdatedAggregator: TypedContractEvent<
-      AlloraAdapterV2AdapterTopicOwnerUpdatedAggregatorEvent.InputTuple,
-      AlloraAdapterV2AdapterTopicOwnerUpdatedAggregatorEvent.OutputTuple,
-      AlloraAdapterV2AdapterTopicOwnerUpdatedAggregatorEvent.OutputObject
-    >;
-
-    "AlloraAdapterV2AdapterTopicOwnerUpdatedDataProviderQuorum(uint256,uint48)": TypedContractEvent<
-      AlloraAdapterV2AdapterTopicOwnerUpdatedDataProviderQuorumEvent.InputTuple,
-      AlloraAdapterV2AdapterTopicOwnerUpdatedDataProviderQuorumEvent.OutputTuple,
-      AlloraAdapterV2AdapterTopicOwnerUpdatedDataProviderQuorumEvent.OutputObject
-    >;
-    AlloraAdapterV2AdapterTopicOwnerUpdatedDataProviderQuorum: TypedContractEvent<
-      AlloraAdapterV2AdapterTopicOwnerUpdatedDataProviderQuorumEvent.InputTuple,
-      AlloraAdapterV2AdapterTopicOwnerUpdatedDataProviderQuorumEvent.OutputTuple,
-      AlloraAdapterV2AdapterTopicOwnerUpdatedDataProviderQuorumEvent.OutputObject
+    AlloraAdapterV2AdapterOwnerUpdatedAggregator: TypedContractEvent<
+      AlloraAdapterV2AdapterOwnerUpdatedAggregatorEvent.InputTuple,
+      AlloraAdapterV2AdapterOwnerUpdatedAggregatorEvent.OutputTuple,
+      AlloraAdapterV2AdapterOwnerUpdatedAggregatorEvent.OutputObject
     >;
 
-    "AlloraAdapterV2AdapterTopicOwnerUpdatedDataValiditySeconds(uint256,uint48)": TypedContractEvent<
-      AlloraAdapterV2AdapterTopicOwnerUpdatedDataValiditySecondsEvent.InputTuple,
-      AlloraAdapterV2AdapterTopicOwnerUpdatedDataValiditySecondsEvent.OutputTuple,
-      AlloraAdapterV2AdapterTopicOwnerUpdatedDataValiditySecondsEvent.OutputObject
+    "AlloraAdapterV2AdapterOwnerUpdatedDataValiditySeconds(uint48)": TypedContractEvent<
+      AlloraAdapterV2AdapterOwnerUpdatedDataValiditySecondsEvent.InputTuple,
+      AlloraAdapterV2AdapterOwnerUpdatedDataValiditySecondsEvent.OutputTuple,
+      AlloraAdapterV2AdapterOwnerUpdatedDataValiditySecondsEvent.OutputObject
     >;
-    AlloraAdapterV2AdapterTopicOwnerUpdatedDataValiditySeconds: TypedContractEvent<
-      AlloraAdapterV2AdapterTopicOwnerUpdatedDataValiditySecondsEvent.InputTuple,
-      AlloraAdapterV2AdapterTopicOwnerUpdatedDataValiditySecondsEvent.OutputTuple,
-      AlloraAdapterV2AdapterTopicOwnerUpdatedDataValiditySecondsEvent.OutputObject
-    >;
-
-    "AlloraAdapterV2AdapterTopicOwnerUpdatedOwner(uint256,address)": TypedContractEvent<
-      AlloraAdapterV2AdapterTopicOwnerUpdatedOwnerEvent.InputTuple,
-      AlloraAdapterV2AdapterTopicOwnerUpdatedOwnerEvent.OutputTuple,
-      AlloraAdapterV2AdapterTopicOwnerUpdatedOwnerEvent.OutputObject
-    >;
-    AlloraAdapterV2AdapterTopicOwnerUpdatedOwner: TypedContractEvent<
-      AlloraAdapterV2AdapterTopicOwnerUpdatedOwnerEvent.InputTuple,
-      AlloraAdapterV2AdapterTopicOwnerUpdatedOwnerEvent.OutputTuple,
-      AlloraAdapterV2AdapterTopicOwnerUpdatedOwnerEvent.OutputObject
+    AlloraAdapterV2AdapterOwnerUpdatedDataValiditySeconds: TypedContractEvent<
+      AlloraAdapterV2AdapterOwnerUpdatedDataValiditySecondsEvent.InputTuple,
+      AlloraAdapterV2AdapterOwnerUpdatedDataValiditySecondsEvent.OutputTuple,
+      AlloraAdapterV2AdapterOwnerUpdatedDataValiditySecondsEvent.OutputObject
     >;
 
     "AlloraAdapterV2AdapterVerifiedData(uint256,uint256,address[],bytes)": TypedContractEvent<
@@ -1238,17 +835,6 @@ export interface AlloraAdapter extends BaseContract {
       AlloraAdapterV2AdapterVerifiedDataEvent.InputTuple,
       AlloraAdapterV2AdapterVerifiedDataEvent.OutputTuple,
       AlloraAdapterV2AdapterVerifiedDataEvent.OutputObject
-    >;
-
-    "AlloraAdapterV2TopicAdded(tuple)": TypedContractEvent<
-      AlloraAdapterV2TopicAddedEvent.InputTuple,
-      AlloraAdapterV2TopicAddedEvent.OutputTuple,
-      AlloraAdapterV2TopicAddedEvent.OutputObject
-    >;
-    AlloraAdapterV2TopicAdded: TypedContractEvent<
-      AlloraAdapterV2TopicAddedEvent.InputTuple,
-      AlloraAdapterV2TopicAddedEvent.OutputTuple,
-      AlloraAdapterV2TopicAddedEvent.OutputObject
     >;
 
     "EIP712DomainChanged()": TypedContractEvent<
