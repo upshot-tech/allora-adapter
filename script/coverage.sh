@@ -10,6 +10,8 @@ mkdir -p coverage
 # create coverage report
 forge coverage --report summary --report lcov 
 
+lcov --remove lcov.info 'script/**' 'src/examples/**' -o lcov.info
+
 # create html viewable coverage report
 genhtml lcov.info --dark-mode -o coverage
 
