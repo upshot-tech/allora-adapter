@@ -4,10 +4,9 @@ pragma solidity 0.8.21;
 import '../lib/forge-std/src/Script.sol';
 
 import { AlloraAdapter } from '../src/AlloraAdapter.sol';
-import { TopicConfig, TopicView } from '../src/interface/IAlloraAdapter.sol';
 import { IAggregator } from '../src/interface/IAggregator.sol';
 import { IFeeHandler } from '../src/interface/IFeeHandler.sol';
-import { NumericData, SignedNumericData, AlloraAdapterNumericData } from '../src/interface/IAlloraAdapter.sol';
+import { NumericData, AlloraAdapterNumericData, SignedNumericData } from '../src/interface/IAlloraAdapter.sol';
 import { ECDSA } from '../lib/openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol';
 
 // run with 

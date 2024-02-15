@@ -58,39 +58,19 @@ export interface AlloraAdapterAdminInterface extends Interface {
       | "targetInterfaces"
       | "targetSelectors"
       | "targetSenders"
-      | "test_addingTopicGivesAllCorrectData"
-      | "test_addingTopicGivesProperId"
-      | "test_addingTopicWithValueSetIsIgnored"
-      | "test_adminCanTurnOffTopic"
-      | "test_adminCanTurnOnTopic"
-      | "test_adminImposterCantTurnOffTopic"
-      | "test_adminImposterCantTurnOnTopic"
-      | "test_anyoneCanAddMultipleTopics"
-      | "test_anyoneCanAddTopic"
       | "test_imposterCantAddDataProvider"
       | "test_imposterCantRemoveDataProvider"
       | "test_imposterCantTurnOffAdapter"
-      | "test_imposterCantTurnOffTopic"
       | "test_imposterCantTurnOnAdapter"
-      | "test_imposterCantTurnOnTopic"
       | "test_imposterCantUpdateAggregator"
-      | "test_imposterCantUpdateDataProviderQuorum"
       | "test_imposterCantUpdateDataValiditySeconds"
-      | "test_imposterCantUpdateTopicOwner"
       | "test_ownerCanAddDataProvider"
-      | "test_ownerCanAddTopic"
       | "test_ownerCanRemoveDataProvider"
       | "test_ownerCanTurnOffAdapter"
-      | "test_ownerCanTurnOffTopic"
       | "test_ownerCanTurnOnAdapter"
-      | "test_ownerCanTurnOnTopic"
       | "test_ownerCanUpdateAggregator"
-      | "test_ownerCanUpdateDataProviderQuorum"
       | "test_ownerCanUpdateDataValiditySeconds"
-      | "test_ownerCanUpdateTopicOwner"
-      | "test_ownerCantAddTopicWithEmptyTitle"
       | "test_ownerCantUpdateAggregatorToZeroAddress"
-      | "test_ownerCantUpdateDataProviderQuorumToZero"
       | "test_ownerCantUpdateDataValiditySecondsToZero"
   ): FunctionFragment;
 
@@ -164,42 +144,6 @@ export interface AlloraAdapterAdminInterface extends Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "test_addingTopicGivesAllCorrectData",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "test_addingTopicGivesProperId",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "test_addingTopicWithValueSetIsIgnored",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "test_adminCanTurnOffTopic",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "test_adminCanTurnOnTopic",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "test_adminImposterCantTurnOffTopic",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "test_adminImposterCantTurnOnTopic",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "test_anyoneCanAddMultipleTopics",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "test_anyoneCanAddTopic",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
     functionFragment: "test_imposterCantAddDataProvider",
     values?: undefined
   ): string;
@@ -212,15 +156,7 @@ export interface AlloraAdapterAdminInterface extends Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "test_imposterCantTurnOffTopic",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
     functionFragment: "test_imposterCantTurnOnAdapter",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "test_imposterCantTurnOnTopic",
     values?: undefined
   ): string;
   encodeFunctionData(
@@ -228,23 +164,11 @@ export interface AlloraAdapterAdminInterface extends Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "test_imposterCantUpdateDataProviderQuorum",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
     functionFragment: "test_imposterCantUpdateDataValiditySeconds",
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "test_imposterCantUpdateTopicOwner",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
     functionFragment: "test_ownerCanAddDataProvider",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "test_ownerCanAddTopic",
     values?: undefined
   ): string;
   encodeFunctionData(
@@ -256,15 +180,7 @@ export interface AlloraAdapterAdminInterface extends Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "test_ownerCanTurnOffTopic",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
     functionFragment: "test_ownerCanTurnOnAdapter",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "test_ownerCanTurnOnTopic",
     values?: undefined
   ): string;
   encodeFunctionData(
@@ -272,27 +188,11 @@ export interface AlloraAdapterAdminInterface extends Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "test_ownerCanUpdateDataProviderQuorum",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
     functionFragment: "test_ownerCanUpdateDataValiditySeconds",
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "test_ownerCanUpdateTopicOwner",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "test_ownerCantAddTopicWithEmptyTitle",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
     functionFragment: "test_ownerCantUpdateAggregatorToZeroAddress",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "test_ownerCantUpdateDataProviderQuorumToZero",
     values?: undefined
   ): string;
   encodeFunctionData(
@@ -344,42 +244,6 @@ export interface AlloraAdapterAdminInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "test_addingTopicGivesAllCorrectData",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "test_addingTopicGivesProperId",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "test_addingTopicWithValueSetIsIgnored",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "test_adminCanTurnOffTopic",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "test_adminCanTurnOnTopic",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "test_adminImposterCantTurnOffTopic",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "test_adminImposterCantTurnOnTopic",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "test_anyoneCanAddMultipleTopics",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "test_anyoneCanAddTopic",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
     functionFragment: "test_imposterCantAddDataProvider",
     data: BytesLike
   ): Result;
@@ -392,15 +256,7 @@ export interface AlloraAdapterAdminInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "test_imposterCantTurnOffTopic",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
     functionFragment: "test_imposterCantTurnOnAdapter",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "test_imposterCantTurnOnTopic",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -408,23 +264,11 @@ export interface AlloraAdapterAdminInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "test_imposterCantUpdateDataProviderQuorum",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
     functionFragment: "test_imposterCantUpdateDataValiditySeconds",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "test_imposterCantUpdateTopicOwner",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
     functionFragment: "test_ownerCanAddDataProvider",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "test_ownerCanAddTopic",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -436,15 +280,7 @@ export interface AlloraAdapterAdminInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "test_ownerCanTurnOffTopic",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
     functionFragment: "test_ownerCanTurnOnAdapter",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "test_ownerCanTurnOnTopic",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -452,27 +288,11 @@ export interface AlloraAdapterAdminInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "test_ownerCanUpdateDataProviderQuorum",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
     functionFragment: "test_ownerCanUpdateDataValiditySeconds",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "test_ownerCanUpdateTopicOwner",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "test_ownerCantAddTopicWithEmptyTitle",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
     functionFragment: "test_ownerCantUpdateAggregatorToZeroAddress",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "test_ownerCantUpdateDataProviderQuorumToZero",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -847,44 +667,6 @@ export interface AlloraAdapterAdmin extends BaseContract {
 
   targetSenders: TypedContractMethod<[], [string[]], "view">;
 
-  test_addingTopicGivesAllCorrectData: TypedContractMethod<
-    [],
-    [void],
-    "nonpayable"
-  >;
-
-  test_addingTopicGivesProperId: TypedContractMethod<[], [void], "nonpayable">;
-
-  test_addingTopicWithValueSetIsIgnored: TypedContractMethod<
-    [],
-    [void],
-    "nonpayable"
-  >;
-
-  test_adminCanTurnOffTopic: TypedContractMethod<[], [void], "nonpayable">;
-
-  test_adminCanTurnOnTopic: TypedContractMethod<[], [void], "nonpayable">;
-
-  test_adminImposterCantTurnOffTopic: TypedContractMethod<
-    [],
-    [void],
-    "nonpayable"
-  >;
-
-  test_adminImposterCantTurnOnTopic: TypedContractMethod<
-    [],
-    [void],
-    "nonpayable"
-  >;
-
-  test_anyoneCanAddMultipleTopics: TypedContractMethod<
-    [],
-    [void],
-    "nonpayable"
-  >;
-
-  test_anyoneCanAddTopic: TypedContractMethod<[], [void], "nonpayable">;
-
   test_imposterCantAddDataProvider: TypedContractMethod<
     [],
     [void],
@@ -903,19 +685,9 @@ export interface AlloraAdapterAdmin extends BaseContract {
     "nonpayable"
   >;
 
-  test_imposterCantTurnOffTopic: TypedContractMethod<[], [void], "nonpayable">;
-
   test_imposterCantTurnOnAdapter: TypedContractMethod<[], [void], "nonpayable">;
 
-  test_imposterCantTurnOnTopic: TypedContractMethod<[], [void], "nonpayable">;
-
   test_imposterCantUpdateAggregator: TypedContractMethod<
-    [],
-    [void],
-    "nonpayable"
-  >;
-
-  test_imposterCantUpdateDataProviderQuorum: TypedContractMethod<
     [],
     [void],
     "nonpayable"
@@ -927,15 +699,7 @@ export interface AlloraAdapterAdmin extends BaseContract {
     "nonpayable"
   >;
 
-  test_imposterCantUpdateTopicOwner: TypedContractMethod<
-    [],
-    [void],
-    "nonpayable"
-  >;
-
   test_ownerCanAddDataProvider: TypedContractMethod<[], [void], "nonpayable">;
-
-  test_ownerCanAddTopic: TypedContractMethod<[], [void], "nonpayable">;
 
   test_ownerCanRemoveDataProvider: TypedContractMethod<
     [],
@@ -945,19 +709,9 @@ export interface AlloraAdapterAdmin extends BaseContract {
 
   test_ownerCanTurnOffAdapter: TypedContractMethod<[], [void], "nonpayable">;
 
-  test_ownerCanTurnOffTopic: TypedContractMethod<[], [void], "nonpayable">;
-
   test_ownerCanTurnOnAdapter: TypedContractMethod<[], [void], "nonpayable">;
 
-  test_ownerCanTurnOnTopic: TypedContractMethod<[], [void], "nonpayable">;
-
   test_ownerCanUpdateAggregator: TypedContractMethod<[], [void], "nonpayable">;
-
-  test_ownerCanUpdateDataProviderQuorum: TypedContractMethod<
-    [],
-    [void],
-    "nonpayable"
-  >;
 
   test_ownerCanUpdateDataValiditySeconds: TypedContractMethod<
     [],
@@ -965,21 +719,7 @@ export interface AlloraAdapterAdmin extends BaseContract {
     "nonpayable"
   >;
 
-  test_ownerCanUpdateTopicOwner: TypedContractMethod<[], [void], "nonpayable">;
-
-  test_ownerCantAddTopicWithEmptyTitle: TypedContractMethod<
-    [],
-    [void],
-    "nonpayable"
-  >;
-
   test_ownerCantUpdateAggregatorToZeroAddress: TypedContractMethod<
-    [],
-    [void],
-    "nonpayable"
-  >;
-
-  test_ownerCantUpdateDataProviderQuorumToZero: TypedContractMethod<
     [],
     [void],
     "nonpayable"
@@ -1039,33 +779,6 @@ export interface AlloraAdapterAdmin extends BaseContract {
     nameOrSignature: "targetSenders"
   ): TypedContractMethod<[], [string[]], "view">;
   getFunction(
-    nameOrSignature: "test_addingTopicGivesAllCorrectData"
-  ): TypedContractMethod<[], [void], "nonpayable">;
-  getFunction(
-    nameOrSignature: "test_addingTopicGivesProperId"
-  ): TypedContractMethod<[], [void], "nonpayable">;
-  getFunction(
-    nameOrSignature: "test_addingTopicWithValueSetIsIgnored"
-  ): TypedContractMethod<[], [void], "nonpayable">;
-  getFunction(
-    nameOrSignature: "test_adminCanTurnOffTopic"
-  ): TypedContractMethod<[], [void], "nonpayable">;
-  getFunction(
-    nameOrSignature: "test_adminCanTurnOnTopic"
-  ): TypedContractMethod<[], [void], "nonpayable">;
-  getFunction(
-    nameOrSignature: "test_adminImposterCantTurnOffTopic"
-  ): TypedContractMethod<[], [void], "nonpayable">;
-  getFunction(
-    nameOrSignature: "test_adminImposterCantTurnOnTopic"
-  ): TypedContractMethod<[], [void], "nonpayable">;
-  getFunction(
-    nameOrSignature: "test_anyoneCanAddMultipleTopics"
-  ): TypedContractMethod<[], [void], "nonpayable">;
-  getFunction(
-    nameOrSignature: "test_anyoneCanAddTopic"
-  ): TypedContractMethod<[], [void], "nonpayable">;
-  getFunction(
     nameOrSignature: "test_imposterCantAddDataProvider"
   ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
@@ -1075,31 +788,16 @@ export interface AlloraAdapterAdmin extends BaseContract {
     nameOrSignature: "test_imposterCantTurnOffAdapter"
   ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
-    nameOrSignature: "test_imposterCantTurnOffTopic"
-  ): TypedContractMethod<[], [void], "nonpayable">;
-  getFunction(
     nameOrSignature: "test_imposterCantTurnOnAdapter"
-  ): TypedContractMethod<[], [void], "nonpayable">;
-  getFunction(
-    nameOrSignature: "test_imposterCantTurnOnTopic"
   ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "test_imposterCantUpdateAggregator"
   ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
-    nameOrSignature: "test_imposterCantUpdateDataProviderQuorum"
-  ): TypedContractMethod<[], [void], "nonpayable">;
-  getFunction(
     nameOrSignature: "test_imposterCantUpdateDataValiditySeconds"
   ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
-    nameOrSignature: "test_imposterCantUpdateTopicOwner"
-  ): TypedContractMethod<[], [void], "nonpayable">;
-  getFunction(
     nameOrSignature: "test_ownerCanAddDataProvider"
-  ): TypedContractMethod<[], [void], "nonpayable">;
-  getFunction(
-    nameOrSignature: "test_ownerCanAddTopic"
   ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "test_ownerCanRemoveDataProvider"
@@ -1108,34 +806,16 @@ export interface AlloraAdapterAdmin extends BaseContract {
     nameOrSignature: "test_ownerCanTurnOffAdapter"
   ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
-    nameOrSignature: "test_ownerCanTurnOffTopic"
-  ): TypedContractMethod<[], [void], "nonpayable">;
-  getFunction(
     nameOrSignature: "test_ownerCanTurnOnAdapter"
-  ): TypedContractMethod<[], [void], "nonpayable">;
-  getFunction(
-    nameOrSignature: "test_ownerCanTurnOnTopic"
   ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "test_ownerCanUpdateAggregator"
   ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
-    nameOrSignature: "test_ownerCanUpdateDataProviderQuorum"
-  ): TypedContractMethod<[], [void], "nonpayable">;
-  getFunction(
     nameOrSignature: "test_ownerCanUpdateDataValiditySeconds"
   ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
-    nameOrSignature: "test_ownerCanUpdateTopicOwner"
-  ): TypedContractMethod<[], [void], "nonpayable">;
-  getFunction(
-    nameOrSignature: "test_ownerCantAddTopicWithEmptyTitle"
-  ): TypedContractMethod<[], [void], "nonpayable">;
-  getFunction(
     nameOrSignature: "test_ownerCantUpdateAggregatorToZeroAddress"
-  ): TypedContractMethod<[], [void], "nonpayable">;
-  getFunction(
-    nameOrSignature: "test_ownerCantUpdateDataProviderQuorumToZero"
   ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "test_ownerCantUpdateDataValiditySecondsToZero"

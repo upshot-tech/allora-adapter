@@ -8,7 +8,6 @@ import type {
   FunctionFragment,
   Result,
   Interface,
-  AddressLike,
   ContractRunner,
   ContractMethod,
   Listener,
@@ -20,44 +19,6 @@ import type {
   TypedListener,
   TypedContractMethod,
 } from "./common";
-
-export type TopicConfigStruct = {
-  title: string;
-  owner: AddressLike;
-  dataProviderQuorum: BigNumberish;
-  dataValiditySeconds: BigNumberish;
-  aggregator: AddressLike;
-  ownerSwitchedOn: boolean;
-  adminSwitchedOn: boolean;
-};
-
-export type TopicConfigStructOutput = [
-  title: string,
-  owner: string,
-  dataProviderQuorum: bigint,
-  dataValiditySeconds: bigint,
-  aggregator: string,
-  ownerSwitchedOn: boolean,
-  adminSwitchedOn: boolean
-] & {
-  title: string;
-  owner: string;
-  dataProviderQuorum: bigint;
-  dataValiditySeconds: bigint;
-  aggregator: string;
-  ownerSwitchedOn: boolean;
-  adminSwitchedOn: boolean;
-};
-
-export type TopicViewStruct = {
-  config: TopicConfigStruct;
-  validDataProviders: AddressLike[];
-};
-
-export type TopicViewStructOutput = [
-  config: TopicConfigStructOutput,
-  validDataProviders: string[]
-] & { config: TopicConfigStructOutput; validDataProviders: string[] };
 
 export type TopicValueStruct = {
   recentValue: BigNumberish;
@@ -110,17 +71,9 @@ export type AlloraAdapterNumericDataStructOutput = [
 
 export interface IAlloraAdapterInterface extends Interface {
   getFunction(
-    nameOrSignature:
-      | "getTopic"
-      | "getTopicValue"
-      | "verifyData"
-      | "verifyDataViewOnly"
+    nameOrSignature: "getTopicValue" | "verifyData" | "verifyDataViewOnly"
   ): FunctionFragment;
 
-  encodeFunctionData(
-    functionFragment: "getTopic",
-    values: [BigNumberish]
-  ): string;
   encodeFunctionData(
     functionFragment: "getTopicValue",
     values: [BigNumberish, BytesLike]
@@ -134,7 +87,6 @@ export interface IAlloraAdapterInterface extends Interface {
     values: [AlloraAdapterNumericDataStruct]
   ): string;
 
-  decodeFunctionResult(functionFragment: "getTopic", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "getTopicValue",
     data: BytesLike
@@ -189,12 +141,6 @@ export interface IAlloraAdapter extends BaseContract {
     event?: TCEvent
   ): Promise<this>;
 
-  getTopic: TypedContractMethod<
-    [topicId: BigNumberish],
-    [TopicViewStructOutput],
-    "view"
-  >;
-
   getTopicValue: TypedContractMethod<
     [topicId: BigNumberish, extraData: BytesLike],
     [TopicValueStructOutput],
@@ -231,13 +177,6 @@ export interface IAlloraAdapter extends BaseContract {
     key: string | FunctionFragment
   ): T;
 
-  getFunction(
-    nameOrSignature: "getTopic"
-  ): TypedContractMethod<
-    [topicId: BigNumberish],
-    [TopicViewStructOutput],
-    "view"
-  >;
   getFunction(
     nameOrSignature: "getTopicValue"
   ): TypedContractMethod<
