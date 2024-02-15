@@ -7,8 +7,6 @@ import { AlloraAdapter, AlloraAdapterConstructorArgs } from "../src/AlloraAdapte
 import { 
     SignedNumericData, 
     NumericData, 
-    TopicView, 
-    TopicConfig, 
     AlloraAdapterNumericData
 } from "../src/interface/IAlloraAdapter.sol";
 import { AverageAggregator } from "../src/aggregator/AverageAggregator.sol";
@@ -45,7 +43,8 @@ contract AlloraAdapterTest is Test {
 
         aggregator = new AverageAggregator();
         alloraAdapter = new AlloraAdapter(AlloraAdapterConstructorArgs({
-            admin: admin
+            owner: admin,
+            aggregator: aggregator
         }));
 
         signer0 = vm.addr(signer0pk);
@@ -71,7 +70,7 @@ contract AlloraAdapterTest is Test {
     function test_cantCallVerifyDataWhenContractSwitchedOff() public {
         vm.startPrank(admin);
         vm.deal(admin, 2^128);
-        alloraAdapter.adminTurnOffAdapter();
+        alloraAdapter.turnOffAdapter();
         
         SignedNumericData[] memory numericData = new SignedNumericData[](0);
 
@@ -86,32 +85,9 @@ contract AlloraAdapterTest is Test {
         alloraAdapter.verifyData(_packageNumericData(numericData, ''));
     }
 
-    function test_cantCallVerifyDAtaWithLessThanThresholdData() public {
-        vm.startPrank(admin);
-        TopicView memory topicView = _getBasicTopicView();
-        topicView.config.dataProviderQuorum = 2;
-        alloraAdapter.addTopic(topicView);
-        vm.stopPrank();
-
-        SignedNumericData[] memory numericData = new SignedNumericData[](1);
-
-        numericData[0] = _signNumericData(
-            NumericData({
-                topicId: 1,
-                timestamp: uint64(block.timestamp - 1 minutes),
-                numericValue: 1 ether,
-                extraData: ''
-            }),
-            signer0pk
-        );
-
-        vm.expectRevert(abi.encodeWithSignature("AlloraAdapterV2NotEnoughData()"));
-        alloraAdapter.verifyData(_packageNumericData(numericData, ''));
-    }
-
     function test_canCallVerifyDataWithValidSignature() public {
         vm.startPrank(admin);
-        alloraAdapter.addTopic(_getBasicTopicView());
+        alloraAdapter.addDataProvider(signer0);
         vm.stopPrank();
 
         SignedNumericData[] memory numericData = new SignedNumericData[](1);
@@ -130,11 +106,11 @@ contract AlloraAdapterTest is Test {
     }
 
     function test_valueIsSavedWhenCallingVerifyDataWithValidSignature() public {
-        vm.startPrank(admin);
-        alloraAdapter.addTopic(_getBasicTopicView());
-        vm.stopPrank();
-
         SignedNumericData[] memory numericData = new SignedNumericData[](1);
+
+        vm.startPrank(admin);
+        alloraAdapter.addDataProvider(signer0);
+        vm.stopPrank();
 
         uint48 timestamp = 1672527600;
         vm.warp(timestamp);
@@ -164,7 +140,11 @@ contract AlloraAdapterTest is Test {
         assertEq(recentValue1, 1 ether);
     }
 
-    function test_cantCallVerifyDataWithoutValidTopicId() public {
+    function test_canCallVerifyDataWithoutValidTopicId() public {
+        vm.startPrank(admin);
+        alloraAdapter.addDataProvider(signer0);
+        vm.stopPrank();
+
         SignedNumericData[] memory numericData = new SignedNumericData[](1);
 
         numericData[0] = _signNumericData(
@@ -177,60 +157,12 @@ contract AlloraAdapterTest is Test {
             signer0pk
         );
 
-        vm.expectRevert(abi.encodeWithSignature("AlloraAdapterV2OwnerTurnedTopicOff()"));
-        alloraAdapter.verifyData(_packageNumericData(numericData, ''));
-    }
-
-    function test_cantCallVerifyDataWhenTopicIsTurnedOffByOwner() public {
-        vm.startPrank(topicOwner);
-        uint topicId = alloraAdapter.addTopic(_getBasicTopicView());
-        alloraAdapter.turnOffTopic(topicId);
-        vm.stopPrank();
-
-        SignedNumericData[] memory numericData = new SignedNumericData[](1);
-
-        numericData[0] = _signNumericData(
-            NumericData({
-                topicId: uint64(topicId),
-                timestamp: uint64(block.timestamp - 1 minutes),
-                numericValue: 1 ether,
-                extraData: ''
-            }),
-            signer0pk
-        );
-
-        vm.expectRevert(abi.encodeWithSignature("AlloraAdapterV2OwnerTurnedTopicOff()"));
-        alloraAdapter.verifyData(_packageNumericData(numericData, ''));
-    }
-
-    function test_cantCallVerifyDataWhenTopicIsTurnedOffByAdmin() public {
-        vm.startPrank(topicOwner);
-        uint topicId = alloraAdapter.addTopic(_getBasicTopicView());
-        vm.stopPrank();
-
-        vm.startPrank(admin);
-        alloraAdapter.adminTurnOffTopic(topicId);
-        vm.stopPrank();
-
-        SignedNumericData[] memory numericData = new SignedNumericData[](1);
-
-        numericData[0] = _signNumericData(
-            NumericData({
-                topicId: uint64(topicId),
-                timestamp: uint64(block.timestamp - 1 minutes),
-                numericValue: 1 ether,
-                extraData: ''
-            }),
-            signer0pk
-        );
-
-        vm.expectRevert(abi.encodeWithSignature("AlloraAdapterV2AdminTurnedTopicOff()"));
         alloraAdapter.verifyData(_packageNumericData(numericData, ''));
     }
 
     function test_cantCallVerifyDataWithMismatchedTopics() public {
         vm.startPrank(admin);
-        alloraAdapter.addTopic(_getBasicTopicView());
+        alloraAdapter.addDataProvider(signer0);
         vm.stopPrank();
 
         SignedNumericData[] memory numericData = new SignedNumericData[](2);
@@ -262,7 +194,7 @@ contract AlloraAdapterTest is Test {
 
     function test_cantCallVerifyDataWithMismatchedExtraData() public {
         vm.startPrank(admin);
-        alloraAdapter.addTopic(_getBasicTopicView());
+        alloraAdapter.addDataProvider(signer0);
         vm.stopPrank();
 
         SignedNumericData[] memory numericData = new SignedNumericData[](2);
@@ -294,7 +226,7 @@ contract AlloraAdapterTest is Test {
 
     function test_cantCallVerifyDataWithMismatchedExtraData2() public {
         vm.startPrank(admin);
-        alloraAdapter.addTopic(_getBasicTopicView());
+        alloraAdapter.addDataProvider(signer0);
         vm.stopPrank();
 
         SignedNumericData[] memory numericData = new SignedNumericData[](2);
@@ -326,7 +258,7 @@ contract AlloraAdapterTest is Test {
 
     function test_cantCallVerifyDataWithFutureTime() public {
         vm.startPrank(admin);
-        alloraAdapter.addTopic(_getBasicTopicView());
+        alloraAdapter.addDataProvider(signer0);
         vm.stopPrank();
 
         SignedNumericData[] memory numericData = new SignedNumericData[](1);
@@ -347,7 +279,7 @@ contract AlloraAdapterTest is Test {
 
     function test_cantCallVerifyDataWithExpiredTime() public {
         vm.startPrank(admin);
-        alloraAdapter.addTopic(_getBasicTopicView());
+        alloraAdapter.updateDataValiditySeconds(30 minutes);
         vm.stopPrank();
 
         SignedNumericData[] memory numericData = new SignedNumericData[](1);
@@ -355,7 +287,7 @@ contract AlloraAdapterTest is Test {
         numericData[0] = _signNumericData(
             NumericData({
                 topicId: 1,
-                timestamp: uint64((block.timestamp - alloraAdapter.getTopic(1).config.dataValiditySeconds) - 1),
+                timestamp: uint64((block.timestamp - alloraAdapter.dataValiditySeconds()) - 1),
                 numericValue: 1 ether,
                 extraData: ''
             }),
@@ -367,10 +299,6 @@ contract AlloraAdapterTest is Test {
     }
 
     function test_cantCallVerifyDataWithInvalidDataProvider() public {
-        vm.startPrank(admin);
-        alloraAdapter.addTopic(_getBasicTopicViewNoDataProviders());
-        vm.stopPrank();
-
         SignedNumericData[] memory numericData = new SignedNumericData[](1);
 
         numericData[0] = _signNumericData(
@@ -389,7 +317,7 @@ contract AlloraAdapterTest is Test {
 
     function test_cantCallVerifyDataWithDuplicateDataProvider() public {
         vm.startPrank(admin);
-        alloraAdapter.addTopic(_getBasicTopicView());
+        alloraAdapter.addDataProvider(signer0);
         vm.stopPrank();
 
         SignedNumericData[] memory numericData = new SignedNumericData[](2);
@@ -420,7 +348,8 @@ contract AlloraAdapterTest is Test {
 
     function test_dataAverageAggregationWorksCorrectly() public {
         vm.startPrank(admin);
-        alloraAdapter.addTopic(_getBasicTopicViewTwoDataProviders());
+        alloraAdapter.addDataProvider(signer0);
+        alloraAdapter.addDataProvider(signer1);
         vm.stopPrank();
 
         SignedNumericData[] memory numericData = new SignedNumericData[](2);
@@ -451,7 +380,8 @@ contract AlloraAdapterTest is Test {
 
     function test_viewAndNonViewFunctionsGiveSameResult() public {
         vm.startPrank(admin);
-        alloraAdapter.addTopic(_getBasicTopicViewTwoDataProviders());
+        alloraAdapter.addDataProvider(signer0);
+        alloraAdapter.addDataProvider(signer1);
         vm.stopPrank();
 
         SignedNumericData[] memory numericData = new SignedNumericData[](2);
@@ -484,11 +414,11 @@ contract AlloraAdapterTest is Test {
 
     function test_valueIsSavedWhenCallingVerifyDataWithMultipleValidSignatures() public {
         vm.startPrank(admin);
-        alloraAdapter.addTopic(_getBasicTopicViewTwoDataProviders());
+        alloraAdapter.addDataProvider(signer0);
+        alloraAdapter.addDataProvider(signer1);
         vm.stopPrank();
 
         SignedNumericData[] memory numericData = new SignedNumericData[](2);
-
 
         uint256 recentValue0 = alloraAdapter.getTopicValue(1, '').recentValue;
 
@@ -522,11 +452,11 @@ contract AlloraAdapterTest is Test {
 
     function test_valueIsSavedWhenCallingVerifyDataWithExtraDataSet() public {
         vm.startPrank(admin);
-        alloraAdapter.addTopic(_getBasicTopicViewTwoDataProviders());
+        alloraAdapter.addDataProvider(signer0);
+        alloraAdapter.addDataProvider(signer1);
         vm.stopPrank();
 
         SignedNumericData[] memory numericData = new SignedNumericData[](2);
-
 
         uint256 recentValueEmptyExtraData0 = alloraAdapter.getTopicValue(1, '').recentValue;
         uint256 recentValue0 = alloraAdapter.getTopicValue(1, '123').recentValue;
@@ -564,12 +494,15 @@ contract AlloraAdapterTest is Test {
 
 
     function test_dataMedianAggregationWorksCorrectly() public {
+        vm.startPrank(admin);
+        alloraAdapter.addDataProvider(signer0);
+        alloraAdapter.addDataProvider(signer1);
+        vm.stopPrank();
+
         MedianAggregator medianAggregator = new MedianAggregator();
 
         vm.startPrank(admin);
-        TopicView memory topicView = _getBasicTopicViewTwoDataProviders();
-        topicView.config.aggregator = medianAggregator;
-        alloraAdapter.addTopic(topicView);
+        alloraAdapter.updateAggregator(medianAggregator);
         vm.stopPrank();
 
         SignedNumericData[] memory numericData = new SignedNumericData[](2);
@@ -602,10 +535,10 @@ contract AlloraAdapterTest is Test {
         MedianAggregator medianAggregator = new MedianAggregator();
 
         vm.startPrank(admin);
-
-        TopicView memory topicView = _getBasicTopicViewThreeDataProviders();
-        topicView.config.aggregator = medianAggregator;
-        alloraAdapter.addTopic(topicView);
+        alloraAdapter.updateAggregator(medianAggregator);
+        alloraAdapter.addDataProvider(signer0);
+        alloraAdapter.addDataProvider(signer1);
+        alloraAdapter.addDataProvider(signer2);
         vm.stopPrank();
 
         SignedNumericData[] memory numericData = new SignedNumericData[](3);
@@ -645,7 +578,11 @@ contract AlloraAdapterTest is Test {
     }
 
     function test_dataAggregationWorksCorrectlyAfterUpdatingAggregator() public {
-        uint256 topicId = alloraAdapter.addTopic(_getBasicTopicViewThreeDataProviders());
+        vm.startPrank(admin);
+        alloraAdapter.addDataProvider(signer0);
+        alloraAdapter.addDataProvider(signer1);
+        alloraAdapter.addDataProvider(signer2);
+        vm.stopPrank();
 
         SignedNumericData[] memory numericData = new SignedNumericData[](3);
 
@@ -679,8 +616,8 @@ contract AlloraAdapterTest is Test {
 
         MedianAggregator medianAggregator = new MedianAggregator();
 
-        vm.startPrank(topicOwner);
-        alloraAdapter.updateAggregator(topicId, medianAggregator);
+        vm.startPrank(admin);
+        alloraAdapter.updateAggregator(medianAggregator);
         vm.stopPrank();
 
         numericData[0] = _signNumericData(rawNumericData0, signer0pk);
@@ -710,36 +647,6 @@ contract AlloraAdapterTest is Test {
             signature: signature,
             numericData: numericData
         });
-    }
-
-    function _getBasicTopicView() internal view returns (TopicView memory topicView) {
-        return TopicView({
-            config: TopicConfig({
-                title: 'Initial topic',
-                owner: topicOwner,
-                aggregator: aggregator,
-                ownerSwitchedOn: true,
-                adminSwitchedOn: true,
-                dataProviderQuorum: 1,
-                dataValiditySeconds: 5 minutes
-            }),
-            validDataProviders: oneValidSigner
-        });
-    }
-
-    function _getBasicTopicViewNoDataProviders() internal view returns (TopicView memory topicView) {
-        topicView = _getBasicTopicView();
-        topicView.validDataProviders = emptyValidSigners;
-    }
-
-    function _getBasicTopicViewTwoDataProviders() internal view returns (TopicView memory topicView) {
-        topicView = _getBasicTopicView();
-        topicView.validDataProviders = twoValidSigners;
-    }
-
-    function _getBasicTopicViewThreeDataProviders() internal view returns (TopicView memory topicView) {
-        topicView = _getBasicTopicView();
-        topicView.validDataProviders = threeValidSigners;
     }
 
     function _packageNumericData(

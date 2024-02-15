@@ -4,39 +4,42 @@ pragma solidity ^0.8.13;
 
 import { IAggregator } from './interface/IAggregator.sol';
 import { IFeeHandler } from './interface/IFeeHandler.sol';
-import { AlloraAdapterNumericData, NumericData, IAlloraAdapter, Topic, TopicView, TopicValue } from './interface/IAlloraAdapter.sol';
+import { AlloraAdapterNumericData, NumericData, IAlloraAdapter, TopicValue } from './interface/IAlloraAdapter.sol';
 import { ECDSA } from "../lib/openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
 import { Math } from "../lib/openzeppelin-contracts/contracts/utils/math/Math.sol";
 import { Ownable2Step } from "../lib/openzeppelin-contracts/contracts/access/Ownable2Step.sol";
 import { EIP712 } from "../lib/openzeppelin-contracts/contracts/utils/cryptography/EIP712.sol";
-import { EnumerableSet } from "../lib/openzeppelin-contracts/contracts/utils/structs/EnumerableSet.sol";
 
 struct AlloraAdapterConstructorArgs {
-    address admin;
+    address owner;
+    IAggregator aggregator;
 }
 
-contract AlloraAdapter is IAlloraAdapter, Ownable2Step, EIP712 {
 
-    /// @dev The data for each topic. Call getTopic function for access to structured data
-    mapping(uint256 topicId => Topic) internal topic;
+contract AlloraAdapter is IAlloraAdapter, Ownable2Step, EIP712 {
 
     /// @dev The value for each topic
     mapping(uint256 topicId => mapping(bytes extraData => TopicValue)) public topicValue;
 
-    /// @dev The next topicId to use
-    uint256 public nextTopicId = 1;
-
     /// @dev Whether the AlloraAdapter contract is switched on and usable
     bool public switchedOn = true;
+
+    mapping(address dataProvider => bool) public validDataProvider;
 
     bytes32 public constant NUMERIC_DATA_TYPEHASH = keccak256(
         "NumericData(uint256 topicId,uint256 timestamp,uint256 numericValue,bytes extraData)"
     );
 
+    IAggregator public aggregator;
+
+    uint48 public dataValiditySeconds = 1 hours;
+
     constructor(AlloraAdapterConstructorArgs memory args) 
         EIP712("AlloraAdapter", "1") 
     {
-        _transferOwnership(args.admin);
+        _transferOwnership(args.owner);
+
+        aggregator = args.aggregator;
     }
 
     // ***************************************************************
@@ -45,23 +48,14 @@ contract AlloraAdapter is IAlloraAdapter, Ownable2Step, EIP712 {
 
     // main interface events
     event AlloraAdapterV2AdapterVerifiedData(uint256 topicId, uint256 numericData, address[] dataProviders, bytes extraData);
-    
-    // topic owner update events
-    event AlloraAdapterV2TopicAdded(TopicView topicView);
-    event AlloraAdapterV2AdapterTopicOwnerUpdatedDataProviderQuorum(uint256 topicId, uint48 dataProviderQuorum);
-    event AlloraAdapterV2AdapterTopicOwnerUpdatedDataValiditySeconds(uint256 topicId, uint48 dataValiditySeconds);
-    event AlloraAdapterV2AdapterTopicOwnerAddedDataProvider(uint256 topicId, address dataProvider);
-    event AlloraAdapterV2AdapterTopicOwnerRemovedDataProvider(address dataProvider);
-    event AlloraAdapterV2AdapterTopicOwnerUpdatedAggregator(uint256 topicId, IAggregator aggregator);
-    event AlloraAdapterV2AdapterTopicOwnerUpdatedOwner(uint256 topicId, address newOwner);
-    event AlloraAdapterV2AdapterTopicOwnerTopicTurnedOff(uint256 topicId);
-    event AlloraAdapterV2AdapterTopicOwnerTopicTurnedOn(uint256 topicId);
 
     // adapter admin updates
-    event AlloraAdapterV2AdapterAdminTopicTurnedOff(uint256 topicId);
-    event AlloraAdapterV2AdapterAdminTopicTurnedOn(uint256 topicId);
     event AlloraAdapterV2AdapterAdminTurnedOff();
     event AlloraAdapterV2AdapterAdminTurnedOn();
+    event AlloraAdapterV2AdapterOwnerAddedDataProvider(address dataProvider);
+    event AlloraAdapterV2AdapterOwnerRemovedDataProvider(address dataProvider);
+    event AlloraAdapterV2AdapterOwnerUpdatedDataValiditySeconds(uint48 dataValiditySeconds);
+    event AlloraAdapterV2AdapterOwnerUpdatedAggregator(IAggregator aggregator);
 
     // ***************************************************************
     // * ========================= ERRORS ========================== *
@@ -70,9 +64,6 @@ contract AlloraAdapter is IAlloraAdapter, Ownable2Step, EIP712 {
     // verification errors
     error AlloraAdapterV2NotSwitchedOn();
     error AlloraAdapterV2NoDataProvided();
-    error AlloraAdapterV2OwnerTurnedTopicOff();
-    error AlloraAdapterV2AdminTurnedTopicOff();
-    error AlloraAdapterV2NotEnoughData();
     error AlloraAdapterV2TopicMismatch();
     error AlloraAdapterV2ExtraDataMismatch();
     error AlloraAdapterV2InvalidDataTime();
@@ -80,10 +71,7 @@ contract AlloraAdapter is IAlloraAdapter, Ownable2Step, EIP712 {
     error AlloraAdapterV2DuplicateDataProvider();
 
     // parameter update errors
-    error AlloraAdapterV2InvalidTopicTitle();
-    error AlloraAdapterV2OnlyTopicOwner();
     error AlloraAdapterV2InvalidAggregator();
-    error AlloraAdapterV2InvalidDataProviderQuorum();
     error AlloraAdapterV2InvalidDataValiditySeconds();
 
     // casting errors
@@ -149,21 +137,10 @@ contract AlloraAdapter is IAlloraAdapter, Ownable2Step, EIP712 {
         topicId = nd.signedNumericData[0].numericData.topicId;
         extraData = nd.signedNumericData[0].numericData.extraData;
 
-        if (!topic[topicId].config.ownerSwitchedOn) {
-            revert AlloraAdapterV2OwnerTurnedTopicOff();
-        }
-
-        if (!topic[topicId].config.adminSwitchedOn) {
-            revert AlloraAdapterV2AdminTurnedTopicOff();
-        }
-
-        if (dataCount < topic[topicId].config.dataProviderQuorum) {
-            revert AlloraAdapterV2NotEnoughData();
-        }
-
         uint256[] memory dataList = new uint256[](dataCount);
         dataProviders = new address[](dataCount);
         NumericData memory numericData;
+        uint64 _dataValiditySeconds = dataValiditySeconds;
 
         for(uint256 i = 0; i < dataCount;) {
             numericData = nd.signedNumericData[i].numericData;
@@ -178,7 +155,7 @@ contract AlloraAdapter is IAlloraAdapter, Ownable2Step, EIP712 {
 
             if (
                 block.timestamp < numericData.timestamp ||
-                numericData.timestamp + topic[topicId].config.dataValiditySeconds < block.timestamp
+                numericData.timestamp + _dataValiditySeconds < block.timestamp
             ) {
                 revert AlloraAdapterV2InvalidDataTime();
             }
@@ -188,7 +165,7 @@ contract AlloraAdapter is IAlloraAdapter, Ownable2Step, EIP712 {
                 nd.signedNumericData[i].signature
             );
 
-            if (!EnumerableSet.contains(topic[topicId].validDataProviders, dataProvider)) {
+            if (!_isOwnerOrValidDataProvider(dataProvider)) {
                 revert AlloraAdapterV2InvalidDataProvider();
             }
 
@@ -211,7 +188,7 @@ contract AlloraAdapter is IAlloraAdapter, Ownable2Step, EIP712 {
             }
         }
 
-        numericValue = topic[topicId].config.aggregator.aggregate(dataList, nd.extraData);
+        numericValue = aggregator.aggregate(dataList, nd.extraData);
     }
 
     // ***************************************************************
@@ -239,19 +216,6 @@ contract AlloraAdapter is IAlloraAdapter, Ownable2Step, EIP712 {
      * @notice Get the topic data for a given topicId
      * 
      * @param topicId The topicId to get the topic data for
-     * @return topicView The topic data
-     */
-    function getTopic(uint256 topicId) external view override returns (TopicView memory topicView) {
-        topicView = TopicView({
-            config: topic[topicId].config,
-            validDataProviders: EnumerableSet.values(topic[topicId].validDataProviders)
-        });
-    }
-
-    /**
-     * @notice Get the topic data for a given topicId
-     * 
-     * @param topicId The topicId to get the topic data for
      * @param extraData The extraData to get the topic data for
      * @return topicValue The topic data
      */
@@ -263,18 +227,91 @@ contract AlloraAdapter is IAlloraAdapter, Ownable2Step, EIP712 {
     }
 
     // ***************************************************************
+    // * ========================= ADMIN =========================== *
+    // ***************************************************************
+    /**
+     * @notice Admin function to switch off the adapter contract
+     */
+    function turnOffAdapter() external onlyOwner {
+        switchedOn = false;
+
+        emit AlloraAdapterV2AdapterAdminTurnedOff();
+    }
+
+    /**
+     * @notice Admin function to switch on the adapter contract
+     */
+    function turnOnAdapter() external onlyOwner {
+        switchedOn = true;
+
+        emit AlloraAdapterV2AdapterAdminTurnedOn();
+    }
+
+    /**
+     * @notice Topic owner function to update the number of seconds data is valid for
+     * 
+     * @param _dataValiditySeconds The number of seconds data is valid for
+     */
+    function updateDataValiditySeconds(
+        uint48 _dataValiditySeconds
+    ) external onlyOwner {
+        if (_dataValiditySeconds == 0) { 
+            revert AlloraAdapterV2InvalidDataValiditySeconds();
+        }
+
+        dataValiditySeconds = _dataValiditySeconds;
+
+        emit AlloraAdapterV2AdapterOwnerUpdatedDataValiditySeconds(dataValiditySeconds);
+    }
+
+    /**
+     * @notice Topic owner function to update the aggregator to use for aggregating numeric data
+     * 
+     * @param _aggregator The aggregator to use for aggregating numeric data
+     */
+    function updateAggregator(IAggregator _aggregator) external onlyOwner {
+        if (address(_aggregator) == address(0)) {
+            revert AlloraAdapterV2InvalidAggregator();
+        }
+
+        aggregator = _aggregator;
+
+        emit AlloraAdapterV2AdapterOwnerUpdatedAggregator(aggregator);
+    }
+
+    /**
+     * @notice Topic owner function to add a data provider
+     * 
+     * @param dataProvider The data provider to add
+     */
+    function addDataProvider(address dataProvider) external onlyOwner {
+        validDataProvider[dataProvider] = true;
+
+        emit AlloraAdapterV2AdapterOwnerAddedDataProvider(dataProvider);
+    }
+
+    /**
+     * @notice Topic owner function to remove a data provider
+     * 
+     * @param dataProvider the data provider to remove
+     */
+    function removeDataProvider(address dataProvider) external onlyOwner {
+        validDataProvider[dataProvider] = false;
+
+        emit AlloraAdapterV2AdapterOwnerRemovedDataProvider(dataProvider);
+    }
+
+    // ***************************************************************
     // * ==================== INTERNAL HELPERS ===================== *
     // ***************************************************************
     /**
-     * @dev Modifier to check that the caller is the owner of the topic
+     * @notice Check if the data provider is valid or the owner
      * 
-     * @param topicId The topicId to validate the owner for
+     * @param dataProvider The data provider to check
+     * @return Whether the data provider is valid or the owner
      */
-    modifier onlyTopicOwner(uint256 topicId) {
-        if (msg.sender != topic[topicId].config.owner) {
-            revert AlloraAdapterV2OnlyTopicOwner();
-        }
-        _;
+    function _isOwnerOrValidDataProvider(address dataProvider) internal view returns (bool) {
+        return dataProvider == owner() || validDataProvider[dataProvider];
     }
 
     /**
@@ -334,213 +371,5 @@ contract AlloraAdapter is IAlloraAdapter, Ownable2Step, EIP712 {
             revert SafeCastOverflowedUintDowncast(64, value);
         }
         return uint64(value);
-    }
-
-    /**
-     * @notice Internal helper to add a new topic
-     * 
-     * @param topicView The topic data to add  to the topic
-     */
-    function _addTopic(
-        TopicView calldata topicView
-    ) internal returns (uint256 newTopicId) {
-        if (bytes(topicView.config.title).length == 0) {
-            revert AlloraAdapterV2InvalidTopicTitle();
-        }
-        newTopicId = nextTopicId++;
-        topic[newTopicId].config = topicView.config;
-
-        for (uint256 i = 0; i < topicView.validDataProviders.length;) {
-            EnumerableSet.add(topic[newTopicId].validDataProviders, topicView.validDataProviders[i]);
-            unchecked { ++i; }
-        }
-
-        emit AlloraAdapterV2TopicAdded(topicView);
-    }
-
-    // ***************************************************************
-    // * ==================== TOPIC MANAGEMENT ===================== *
-    // ***************************************************************
-
-    /**
-     * @notice Function to add a new topic, can be called by anyone
-     * 
-     * @param topicView The topic data to add
-     */
-    function addTopic(
-        TopicView calldata topicView
-    ) external returns (uint256 newTopicId) {
-        return _addTopic(topicView);
-    }
-
-    /**
-     * @notice Function to add multiple new topics in order, can be called by anyone
-     * 
-     * @param topicViews The data for the topics to add
-     */
-    function addTopics(
-        TopicView[] calldata topicViews
-    ) external returns (uint256[] memory newTopicIds) {
-        newTopicIds = new uint256[](topicViews.length);
-
-        for (uint256 i = 0; i < topicViews.length;) {
-            newTopicIds[i] = _addTopic(topicViews[i]);
-            unchecked { ++i; }
-        }
-    }
-
-    /**
-     * @notice Topic owner function to update the minimum number of data providers needed to verify data
-     * 
-     * @param topicId The topicId to update the minimum number of data providers required
-     * @param dataProviderQuorum The minimum number of data providers required
-     */
-    function updateDataProviderQuorum(
-        uint256 topicId, 
-        uint48 dataProviderQuorum
-    ) external onlyTopicOwner(topicId) {
-        if (dataProviderQuorum == 0) {
-            revert AlloraAdapterV2InvalidDataProviderQuorum();
-        }
-
-        topic[topicId].config.dataProviderQuorum = dataProviderQuorum;
-
-        emit AlloraAdapterV2AdapterTopicOwnerUpdatedDataProviderQuorum(topicId, dataProviderQuorum);
-    }
-
-    /**
-     * @notice Topic owner function to update the number of seconds data is valid for
-     * 
-     * @param topicId The topicId to update the number of seconds data is valid for
-     * @param dataValiditySeconds The number of seconds data is valid for
-     */
-    function updateDataValiditySeconds(
-        uint256 topicId, 
-        uint48 dataValiditySeconds
-    ) external onlyTopicOwner(topicId) {
-        if (dataValiditySeconds == 0) { 
-            revert AlloraAdapterV2InvalidDataValiditySeconds();
-        }
-
-        topic[topicId].config.dataValiditySeconds = dataValiditySeconds;
-
-        emit AlloraAdapterV2AdapterTopicOwnerUpdatedDataValiditySeconds(topicId, dataValiditySeconds);
-    }
-
-  /**
-     * @notice Topic owner function to add a data provider
-     * 
-     * @param topicId The topicId to add the data provider to
-     * @param dataProvider The data provider to add
-     */
-    function addDataProvider(uint256 topicId, address dataProvider) external onlyTopicOwner(topicId) {
-        EnumerableSet.add(topic[topicId].validDataProviders, dataProvider);
-
-        emit AlloraAdapterV2AdapterTopicOwnerAddedDataProvider(topicId, dataProvider);
-    }
-
-    /**
-     * @notice Topic owner function to remove a data provider
-     * 
-     * @param topicId The topicId to remove the data provider from
-     * @param dataProvider the data provider to remove
-     */
-    function removeDataProvider(uint256 topicId, address dataProvider) external onlyTopicOwner(topicId) {
-        EnumerableSet.remove(topic[topicId].validDataProviders, dataProvider);
-
-        emit AlloraAdapterV2AdapterTopicOwnerRemovedDataProvider(dataProvider);
-    }
-
-    /**
-     * @notice Topic owner function to turn off a topic
-     * 
-     * @param topicId The topicId of the topic to turn off
-     */
-    function turnOffTopic(uint256 topicId) external onlyTopicOwner(topicId) {
-        topic[topicId].config.ownerSwitchedOn = false;
-        
-        emit AlloraAdapterV2AdapterTopicOwnerTopicTurnedOff(topicId);
-    }
-
-    /**
-     * @notice Topic owner function to turn on a topic
-     * 
-     * @param topicId The topicId of the topic to turn on
-     */
-    function turnOnTopic(uint256 topicId) external onlyTopicOwner(topicId) {
-        topic[topicId].config.ownerSwitchedOn = true;
-        
-        emit AlloraAdapterV2AdapterTopicOwnerTopicTurnedOn(topicId);
-    }
-
-    /**
-     * @notice Topic owner function to update the aggregator to use for aggregating numeric data
-     * 
-     * @param topicId The topicId to update the aggregator for
-     * @param aggregator The aggregator to use for aggregating numeric data
-     */
-    function updateAggregator(uint256 topicId, IAggregator aggregator) external onlyTopicOwner(topicId) {
-        if (address(aggregator) == address(0)) {
-            revert AlloraAdapterV2InvalidAggregator();
-        }
-
-        topic[topicId].config.aggregator = aggregator;
-
-        emit AlloraAdapterV2AdapterTopicOwnerUpdatedAggregator(topicId, aggregator);
-    }
-
-    /**
-     * @notice Topic owner function to update the owner of the topic 
-     * 
-     * @param topicId The topicId to update the fee handler for
-     * @param owner_ The new owner of the topic
-     */
-    function updateTopicOwner(uint256 topicId, address owner_) external onlyTopicOwner(topicId) {
-        topic[topicId].config.owner = owner_;
-
-        emit AlloraAdapterV2AdapterTopicOwnerUpdatedOwner(topicId, owner_);
-    } 
-
-    // ***************************************************************
-    // * ========================= ADMIN =========================== *
-    // ***************************************************************
-    /**
-     * @notice Admin function to switch off the adapter contract
-     */
-    function adminTurnOffAdapter() external onlyOwner {
-        switchedOn = false;
-
-        emit AlloraAdapterV2AdapterAdminTurnedOff();
-    }
-
-    /**
-     * @notice Admin function to switch on the adapter contract
-     */
-    function adminTurnOnAdapter() external onlyOwner {
-        switchedOn = true;
-
-        emit AlloraAdapterV2AdapterAdminTurnedOn();
-    }
-    
-    /**
-     * @notice Admin function to turn off a topic
-     * 
-     * @param topicId The topicId of the topic to turn off
-     */
-    function adminTurnOffTopic(uint256 topicId) external onlyOwner {
-        topic[topicId].config.adminSwitchedOn = false;
-        
-        emit AlloraAdapterV2AdapterAdminTopicTurnedOff(topicId);
-    }
-
-    /**
-     * @notice Admin function to turn on a topic
-     * 
-     * @param topicId The topicId of the topic to turn on
-     */
-    function adminTurnOnTopic(uint256 topicId) external onlyOwner {
-        topic[topicId].config.adminSwitchedOn = true;
-        
-        emit AlloraAdapterV2AdapterAdminTopicTurnedOn(topicId);
     }
 }

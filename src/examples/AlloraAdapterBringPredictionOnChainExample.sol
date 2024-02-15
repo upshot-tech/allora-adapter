@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import { IAlloraAdapter, Topic, TopicView, TopicValue, AlloraAdapterNumericData } from '../interface/IAlloraAdapter.sol';
+import { IAlloraAdapter, TopicValue, AlloraAdapterNumericData } from '../interface/IAlloraAdapter.sol';
 import { Ownable2Step } from "../../lib/openzeppelin-contracts/contracts/access/Ownable2Step.sol";
 import { EnumerableSet } from "../../lib/openzeppelin-contracts/contracts/utils/structs/EnumerableSet.sol";
 

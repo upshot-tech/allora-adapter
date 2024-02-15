@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 
 import { IAggregator } from '../interface/IAggregator.sol';
-import { EnumerableSet } from "../../lib/openzeppelin-contracts/contracts/utils/structs/EnumerableSet.sol";
 
 
 pragma solidity ^0.8.0;
@@ -27,32 +26,9 @@ struct AlloraAdapterNumericData {
     bytes extraData;
 }
 
-struct TopicConfig {
-    string title;
-    address owner;
-    uint48 dataProviderQuorum;
-    uint48 dataValiditySeconds;
-    IAggregator aggregator;
-    bool ownerSwitchedOn;
-    bool adminSwitchedOn;
-}
-
-/// @dev The struct for a topic, using a set for valid data providers 
-struct Topic { 
-    TopicConfig config;
-    EnumerableSet.AddressSet validDataProviders;
-}
-
 struct TopicValue { 
     uint192 recentValue;
     uint64 recentValueTime;
-}
-
-// TODO reduce data structure size
-/// @dev The struct for viewing a topic, which can be loaded into memory and returned
-struct TopicView { 
-    TopicConfig config;
-    address[] validDataProviders;
 }
 
 // ***************************************************************
@@ -87,14 +63,6 @@ interface IAlloraAdapter {
         address[] memory dataProviders, 
         bytes memory extraData
     );
-
-    /**
-     * @notice Get the topic data for a given topicId
-     * 
-     * @param topicId The topicId to get the topic data for
-     * @return topicView The topic data
-     */
-    function getTopic(uint256 topicId) external view returns (TopicView memory topicView);
 
     /**
      * @notice Get the topic data for a given topicId
