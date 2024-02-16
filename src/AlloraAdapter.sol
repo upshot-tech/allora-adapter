@@ -27,7 +27,7 @@ contract AlloraAdapter is IAlloraAdapter, Ownable2Step, EIP712 {
     mapping(address dataProvider => bool) public validDataProvider;
 
     bytes32 public constant NUMERIC_DATA_TYPEHASH = keccak256(
-        "NumericData(uint256 topicId,uint256 timestamp,uint256 numericValue,bytes extraData)"
+        "NumericData(uint256 topicId,uint256 timestamp,bytes extraData,uint256[] numericValues)"
     );
 
     IAggregator public aggregator;
@@ -85,18 +85,21 @@ contract AlloraAdapter is IAlloraAdapter, Ownable2Step, EIP712 {
         AlloraAdapterNumericData memory nd
     ) external override returns (
         uint256 numericValue, 
-        uint256 topicId, 
-        address dataProvider, 
-        bytes memory extraData
+        address dataProvider 
     ) {
-        (numericValue, topicId, dataProvider, extraData) = _verifyData(nd);
+        (numericValue, dataProvider) = _verifyData(nd);
 
-        topicValue[topicId][extraData] = TopicValue({
+        topicValue[nd.numericData.topicId][nd.numericData.extraData] = TopicValue({
             recentValue: _toUint192(numericValue),
             recentValueTime: _toUint64(block.timestamp)
         });
 
-        emit AlloraAdapterV2AdapterVerifiedData(topicId, numericValue, dataProvider, extraData);
+        emit AlloraAdapterV2AdapterVerifiedData(
+            nd.numericData.topicId, 
+            numericValue, 
+            dataProvider, 
+            nd.numericData.extraData
+        );
     }
 
     ///@inheritdoc IAlloraAdapter
@@ -104,11 +107,9 @@ contract AlloraAdapter is IAlloraAdapter, Ownable2Step, EIP712 {
         AlloraAdapterNumericData memory nd
     ) external view override returns (
         uint256 numericValue, 
-        uint256 topicId, 
-        address dataProvider, 
-        bytes memory extraData
+        address dataProvider
     ) {
-        (numericValue, topicId, dataProvider, extraData) = _verifyData(nd);
+        (numericValue, dataProvider) = _verifyData(nd);
     }
 
     /**
@@ -120,12 +121,23 @@ contract AlloraAdapter is IAlloraAdapter, Ownable2Step, EIP712 {
         AlloraAdapterNumericData memory nd
     ) internal view returns (
         uint256 numericValue, 
-        uint256 topicId, 
-        address dataProvider, 
-        bytes memory extraData
+        address dataProvider
     ) {
         if (!switchedOn) {
             revert AlloraAdapterV2NotSwitchedOn();
+        }
+
+        uint256 dataCount = nd.numericData.numericValues.length;
+
+        if (dataCount == 0) {
+            revert AlloraAdapterV2NoDataProvided();
+        }
+
+        if (
+            block.timestamp < nd.numericData.timestamp ||
+            nd.numericData.timestamp + dataValiditySeconds < block.timestamp
+        ) {
+            revert AlloraAdapterV2InvalidDataTime();
         }
 
         dataProvider = ECDSA.recover(
@@ -137,45 +149,9 @@ contract AlloraAdapter is IAlloraAdapter, Ownable2Step, EIP712 {
             revert AlloraAdapterV2InvalidDataProvider();
         }
 
-        uint256 dataCount = nd.numericData.length;
-
-        if (dataCount == 0) {
-            revert AlloraAdapterV2NoDataProvided();
-        }
-
-        topicId = nd.numericData[0].topicId;
-        extraData = nd.numericData[0].extraData;
-
-        uint256[] memory dataList = new uint256[](dataCount);
-        NumericData memory _nd;
-        uint64 _dataValiditySeconds = dataValiditySeconds;
-
-        for(uint256 i = 0; i < dataCount;) {
-            _nd = nd.numericData[i];
-
-            if (_nd.topicId != topicId) {
-                revert AlloraAdapterV2TopicMismatch();
-            }
-
-            if (!_equalBytes(_nd.extraData, extraData)) {
-                revert AlloraAdapterV2ExtraDataMismatch();
-            }
-
-            if (
-                block.timestamp < _nd.timestamp ||
-                _nd.timestamp + _dataValiditySeconds < block.timestamp
-            ) {
-                revert AlloraAdapterV2InvalidDataTime();
-            }
-
-            dataList[i] = _nd.numericValue;
-
-            unchecked {
-                ++i;
-            }
-        }
-
-        numericValue = aggregator.aggregate(dataList, nd.extraData);
+        numericValue = dataCount == 1
+            ? nd.numericData.numericValues[0]
+            : aggregator.aggregate(nd.numericData.numericValues, nd.extraData);
     }
 
     // ***************************************************************
@@ -187,32 +163,15 @@ contract AlloraAdapter is IAlloraAdapter, Ownable2Step, EIP712 {
      * 
      * @param numericData The numerical data to verify
      */
-    function getMessage(
-        NumericData[] memory numericData
-    ) public view returns (bytes32) {
-        bytes memory encodedData = abi.encode(
-            keccak256("NumericData(uint256 topicId,uint256 timestamp,uint256 numericValue,bytes extraData)"),
-            _encodeNumericDataArray(numericData)
-        );
 
-         return _hashTypedDataV4(keccak256(encodedData));
-    }
-
-    function _encodeNumericDataArray(NumericData[] memory numericData) private pure returns (bytes memory) {
-        bytes memory dataArray;
-        for (uint i = 0; i < numericData.length;) {
-            dataArray = abi.encodePacked(dataArray, abi.encode(
-                numericData[i].topicId,
-                numericData[i].timestamp,
-                numericData[i].numericValue,
-                keccak256(numericData[i].extraData) // Hash the extraData since it's dynamic
-            ));
-
-            unchecked {
-                ++i;
-            }
-        }
-        return dataArray;
+    function getMessage(NumericData memory numericData) public view returns (bytes32) {
+        return _hashTypedDataV4(keccak256(abi.encode(
+            NUMERIC_DATA_TYPEHASH,
+            numericData.topicId,
+            numericData.timestamp,
+            numericData.extraData,
+            keccak256(abi.encodePacked(numericData.numericValues))
+        )));
     }
 
     /**
