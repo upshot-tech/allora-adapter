@@ -24,16 +24,21 @@ contract AlloraAdapter is IAlloraAdapter, Ownable2Step, EIP712 {
     /// @dev Whether the AlloraAdapter contract is switched on and usable
     bool public switchedOn = true;
 
+    /// @dev The valid data providers
     mapping(address dataProvider => bool) public validDataProvider;
 
+    /// @dev The typehash for the numeric data
     bytes32 public constant NUMERIC_DATA_TYPEHASH = keccak256(
         "NumericData(uint256 topicId,uint256 timestamp,bytes extraData,uint256[] numericValues)"
     );
 
+    /// @dev The aggregator to use for aggregating numeric data
     IAggregator public aggregator;
 
+    /// @dev The number of seconds data is valid for  
     uint48 public dataValiditySeconds = 1 hours;
 
+    /// @dev The constructor
     constructor(AlloraAdapterConstructorArgs memory args) 
         EIP712("AlloraAdapter", "1") 
     {
@@ -64,11 +69,8 @@ contract AlloraAdapter is IAlloraAdapter, Ownable2Step, EIP712 {
     // verification errors
     error AlloraAdapterV2NotSwitchedOn();
     error AlloraAdapterV2NoDataProvided();
-    error AlloraAdapterV2TopicMismatch();
-    error AlloraAdapterV2ExtraDataMismatch();
     error AlloraAdapterV2InvalidDataTime();
     error AlloraAdapterV2InvalidDataProvider();
-    error AlloraAdapterV2DuplicateDataProvider();
 
     // parameter update errors
     error AlloraAdapterV2InvalidAggregator();

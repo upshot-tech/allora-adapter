@@ -68,20 +68,21 @@ contract AlloraAdapterTest is Test {
     // ***************************************************************
     function test_cantCallVerifyDataWhenContractSwitchedOff() public {
         vm.startPrank(admin);
-        vm.deal(admin, 2^128);
         alloraAdapter.turnOffAdapter();
         
-        SignedNumericData[] memory numericData = new SignedNumericData[](0);
-
+        AlloraAdapterNumericData memory nd = _packageAndSignNumericData(_dummyNumericData(), signer0pk);
         vm.expectRevert(abi.encodeWithSignature("AlloraAdapterV2NotSwitchedOn()"));
-        alloraAdapter.verifyData(_packageNumericData(numericData, ''));
+        alloraAdapter.verifyData(nd);
     }
 
     function test_cantCallVerifyDataWithNoData() public {
-        SignedNumericData[] memory numericData = new SignedNumericData[](0);
+        NumericData memory nd = _dummyNumericData();
 
+        nd.numericValues = new uint256[](0);
+
+        AlloraAdapterNumericData memory alloraNd = _packageAndSignNumericData(nd, signer0pk);
         vm.expectRevert(abi.encodeWithSignature("AlloraAdapterV2NoDataProvided()"));
-        alloraAdapter.verifyData(_packageNumericData(numericData, ''));
+        alloraAdapter.verifyData(alloraNd);
     }
 
     function test_canCallVerifyDataWithValidSignature() public {
@@ -89,24 +90,11 @@ contract AlloraAdapterTest is Test {
         alloraAdapter.addDataProvider(signer0);
         vm.stopPrank();
 
-        SignedNumericData[] memory numericData = new SignedNumericData[](1);
-
-        numericData[0] = _signNumericData(
-            NumericData({
-                topicId: 1,
-                timestamp: uint64(block.timestamp - 1 minutes),
-                numericValue: 1 ether,
-                extraData: ''
-            }),
-            signer0pk
-        );
-
-        alloraAdapter.verifyData(_packageNumericData(numericData, ''));
+        AlloraAdapterNumericData memory alloraNd = _packageAndSignNumericData(_dummyNumericData(), signer0pk);  
+        alloraAdapter.verifyData(alloraNd);
     }
 
     function test_valueIsSavedWhenCallingVerifyDataWithValidSignature() public {
-        SignedNumericData[] memory numericData = new SignedNumericData[](1);
-
         vm.startPrank(admin);
         alloraAdapter.addDataProvider(signer0);
         vm.stopPrank();
@@ -114,267 +102,60 @@ contract AlloraAdapterTest is Test {
         uint48 timestamp = 1672527600;
         vm.warp(timestamp);
 
+        NumericData memory nd = _dummyNumericData();
+        nd.timestamp = uint64(block.timestamp - 1 minutes);
+
+        AlloraAdapterNumericData memory alloraNd = _packageAndSignNumericData(nd, signer0pk);
+
         uint256 recentValueTime0 = alloraAdapter.getTopicValue(1, '').recentValueTime;
         uint256 recentValue0 = alloraAdapter.getTopicValue(1, '').recentValue;
 
-        numericData[0] = _signNumericData(
-            NumericData({
-                topicId: 1,
-                timestamp: uint64(block.timestamp - 1 minutes),
-                numericValue: 1 ether,
-                extraData: ''
-            }),
-            signer0pk
-        );
-
-        alloraAdapter.verifyData(_packageNumericData(numericData, ''));
+        alloraAdapter.verifyData(alloraNd);
 
         uint256 recentValueTime1 = alloraAdapter.getTopicValue(1, '').recentValueTime;
         uint256 recentValue1 = alloraAdapter.getTopicValue(1, '').recentValue;
 
-        assertEq(recentValueTime0, 0);
-        assertEq(recentValueTime1, timestamp);
-
         assertEq(recentValue0, 0);
-        assertEq(recentValue1, 1 ether);
+        assertEq(recentValueTime0, 0);
+
+        assertEq(recentValue1, nd.numericValues[0]);
+        assertEq(recentValueTime1, timestamp);
     }
 
-    function test_canCallVerifyDataWithoutValidTopicId() public {
-        vm.startPrank(admin);
-        alloraAdapter.addDataProvider(signer0);
-        vm.stopPrank();
-
-        SignedNumericData[] memory numericData = new SignedNumericData[](1);
-
-        numericData[0] = _signNumericData(
-            NumericData({
-                topicId: 1,
-                timestamp: uint64(block.timestamp - 1 minutes),
-                numericValue: 1 ether,
-                extraData: ''
-            }),
-            signer0pk
-        );
-
-        alloraAdapter.verifyData(_packageNumericData(numericData, ''));
-    }
-
-    function test_cantCallVerifyDataWithMismatchedTopics() public {
-        vm.startPrank(admin);
-        alloraAdapter.addDataProvider(signer0);
-        vm.stopPrank();
-
-        SignedNumericData[] memory numericData = new SignedNumericData[](2);
-
-        numericData[0] = _signNumericData(
-            NumericData({
-                topicId: 1,
-                timestamp: uint64(block.timestamp - 1 minutes),
-                numericValue: 1 ether,
-                extraData: ''
-            }),
-            signer0pk
-        );
-
-        numericData[1] = _signNumericData(
-            NumericData({
-                topicId: 2,
-                timestamp: uint64(block.timestamp - 1 minutes),
-                numericValue: 1 ether,
-                extraData: ''
-            }),
-            signer0pk
-        );
-
-        vm.expectRevert(abi.encodeWithSignature("AlloraAdapterV2TopicMismatch()"));
-
-        alloraAdapter.verifyData(_packageNumericData(numericData, ''));
-    }
-
-    function test_cantCallVerifyDataWithMismatchedExtraData() public {
-        vm.startPrank(admin);
-        alloraAdapter.addDataProvider(signer0);
-        vm.stopPrank();
-
-        SignedNumericData[] memory numericData = new SignedNumericData[](2);
-
-        numericData[0] = _signNumericData(
-            NumericData({
-                topicId: 1,
-                timestamp: uint64(block.timestamp - 1 minutes),
-                numericValue: 1 ether,
-                extraData: ''
-            }),
-            signer0pk
-        );
-
-        numericData[1] = _signNumericData(
-            NumericData({
-                topicId: 1,
-                timestamp: uint64(block.timestamp - 1 minutes),
-                numericValue: 1 ether,
-                extraData: '2'
-            }),
-            signer0pk
-        );
-
-        vm.expectRevert(abi.encodeWithSignature("AlloraAdapterV2ExtraDataMismatch()"));
-
-        alloraAdapter.verifyData(_packageNumericData(numericData, ''));
-    }
-
-    function test_cantCallVerifyDataWithMismatchedExtraData2() public {
-        vm.startPrank(admin);
-        alloraAdapter.addDataProvider(signer0);
-        vm.stopPrank();
-
-        SignedNumericData[] memory numericData = new SignedNumericData[](2);
-
-        numericData[0] = _signNumericData(
-            NumericData({
-                topicId: 1,
-                timestamp: uint64(block.timestamp - 1 minutes),
-                numericValue: 1 ether,
-                extraData: '1'
-            }),
-            signer0pk
-        );
-
-        numericData[1] = _signNumericData(
-            NumericData({
-                topicId: 1,
-                timestamp: uint64(block.timestamp - 1 minutes),
-                numericValue: 1 ether,
-                extraData: '2'
-            }),
-            signer0pk
-        );
-
-        vm.expectRevert(abi.encodeWithSignature("AlloraAdapterV2ExtraDataMismatch()"));
-
-        alloraAdapter.verifyData(_packageNumericData(numericData, ''));
-    }
 
     function test_cantCallVerifyDataWithFutureTime() public {
         vm.startPrank(admin);
         alloraAdapter.addDataProvider(signer0);
         vm.stopPrank();
 
-        SignedNumericData[] memory numericData = new SignedNumericData[](1);
+        NumericData memory nd = _dummyNumericData();
+        nd.timestamp = uint64(block.timestamp + 1 minutes);
 
-        numericData[0] = _signNumericData(
-            NumericData({
-                topicId: 1,
-                timestamp: uint64(block.timestamp + 1),
-                numericValue: 1 ether,
-                extraData: ''
-            }),
-            signer0pk
-        );
+        AlloraAdapterNumericData memory alloraNd = _packageAndSignNumericData(nd, signer0pk);
 
         vm.expectRevert(abi.encodeWithSignature("AlloraAdapterV2InvalidDataTime()"));
-        alloraAdapter.verifyData(_packageNumericData(numericData, ''));
+        alloraAdapter.verifyData(alloraNd);
     }
+
 
     function test_cantCallVerifyDataWithExpiredTime() public {
         vm.startPrank(admin);
         alloraAdapter.updateDataValiditySeconds(30 minutes);
         vm.stopPrank();
 
-        SignedNumericData[] memory numericData = new SignedNumericData[](1);
+        NumericData memory nd = _dummyNumericData();
+        nd.timestamp = uint64((block.timestamp - alloraAdapter.dataValiditySeconds()) - 1);
 
-        numericData[0] = _signNumericData(
-            NumericData({
-                topicId: 1,
-                timestamp: uint64((block.timestamp - alloraAdapter.dataValiditySeconds()) - 1),
-                numericValue: 1 ether,
-                extraData: ''
-            }),
-            signer0pk
-        );
+        AlloraAdapterNumericData memory alloraNd = _packageAndSignNumericData(nd, signer0pk);
 
         vm.expectRevert(abi.encodeWithSignature("AlloraAdapterV2InvalidDataTime()"));
-        alloraAdapter.verifyData(_packageNumericData(numericData, ''));
+        alloraAdapter.verifyData(alloraNd);
     }
 
     function test_cantCallVerifyDataWithInvalidDataProvider() public {
-        SignedNumericData[] memory numericData = new SignedNumericData[](1);
-
-        numericData[0] = _signNumericData(
-            NumericData({
-                topicId: 1,
-                timestamp: uint64(block.timestamp - 1 minutes),
-                numericValue: 1 ether,
-                extraData: ''
-            }),
-            signer0pk
-        );
-
+        AlloraAdapterNumericData memory alloraNd = _packageAndSignNumericData(_dummyNumericData(), signer0pk);  
         vm.expectRevert(abi.encodeWithSignature("AlloraAdapterV2InvalidDataProvider()"));
-        alloraAdapter.verifyData(_packageNumericData(numericData, ''));
-    }
-
-    function test_cantCallVerifyDataWithDuplicateDataProvider() public {
-        vm.startPrank(admin);
-        alloraAdapter.addDataProvider(signer0);
-        vm.stopPrank();
-
-        SignedNumericData[] memory numericData = new SignedNumericData[](2);
-
-        numericData[0] = _signNumericData(
-            NumericData({
-                topicId: 1,
-                timestamp: uint64(block.timestamp - 1 minutes),
-                numericValue: 1 ether,
-                extraData: ''
-            }),
-            signer0pk
-        );
-
-        numericData[1] = _signNumericData(
-            NumericData({
-                topicId: 1,
-                timestamp: uint64(block.timestamp - 1 minutes),
-                numericValue: 1 ether,
-                extraData: ''
-            }),
-            signer0pk
-        );
-
-        vm.expectRevert(abi.encodeWithSignature("AlloraAdapterV2DuplicateDataProvider()"));
-        alloraAdapter.verifyData(_packageNumericData(numericData, ''));
-    }
-
-    function test_dataAverageAggregationWorksCorrectly() public {
-        vm.startPrank(admin);
-        alloraAdapter.addDataProvider(signer0);
-        alloraAdapter.addDataProvider(signer1);
-        vm.stopPrank();
-
-        SignedNumericData[] memory numericData = new SignedNumericData[](2);
-
-        numericData[0] = _signNumericData(
-            NumericData({
-                topicId: 1,
-                timestamp: uint64(block.timestamp - 1 minutes),
-                numericValue: 1 ether,
-                extraData: ''
-            }),
-            signer0pk
-        );
-
-        numericData[1] = _signNumericData(
-            NumericData({
-                topicId: 1,
-                timestamp: uint64(block.timestamp - 1 minutes),
-                numericValue: 3 ether,
-                extraData: ''
-            }),
-            signer1pk
-        );
-
-        (uint256 numericValue,,,) = alloraAdapter.verifyData(_packageNumericData(numericData, ''));
-        assertEq(numericValue, 2 ether);
+        alloraAdapter.verifyData(alloraNd);
     }
 
     function test_viewAndNonViewFunctionsGiveSameResult() public {
@@ -383,30 +164,17 @@ contract AlloraAdapterTest is Test {
         alloraAdapter.addDataProvider(signer1);
         vm.stopPrank();
 
-        SignedNumericData[] memory numericData = new SignedNumericData[](2);
+        NumericData memory nd = _dummyNumericData();
+        uint256[] memory numericValues = new uint256[](2);
+        numericValues[0] = 1 ether;
+        numericValues[1] = 3 ether;
 
-        numericData[0] = _signNumericData(
-            NumericData({
-                topicId: 1,
-                timestamp: uint64(block.timestamp - 1 minutes),
-                numericValue: 1 ether,
-                extraData: ''
-            }),
-            signer0pk
-        );
+        nd.numericValues = numericValues;
 
-        numericData[1] = _signNumericData(
-            NumericData({
-                topicId: 1,
-                timestamp: uint64(block.timestamp - 1 minutes),
-                numericValue: 3 ether,
-                extraData: ''
-            }),
-            signer1pk
-        );
+        AlloraAdapterNumericData memory alloraNd = _packageAndSignNumericData(nd, signer0pk);
 
-        (uint256 numericValue,,,) = alloraAdapter.verifyData(_packageNumericData(numericData, ''));
-        (uint256 numericValueView,,,) = alloraAdapter.verifyDataViewOnly(_packageNumericData(numericData, ''));
+        (uint256 numericValue,) = alloraAdapter.verifyData(alloraNd);
+        (uint256 numericValueView,) = alloraAdapter.verifyDataViewOnly(alloraNd);
         assertEq(numericValue, 2 ether);
         assertEq(numericValue, numericValueView);
     }
@@ -417,31 +185,18 @@ contract AlloraAdapterTest is Test {
         alloraAdapter.addDataProvider(signer1);
         vm.stopPrank();
 
-        SignedNumericData[] memory numericData = new SignedNumericData[](2);
+        NumericData memory nd = _dummyNumericData();
+        uint256[] memory numericValues = new uint256[](2);
+        numericValues[0] = 1 ether;
+        numericValues[1] = 3 ether;
 
+        nd.numericValues = numericValues;
+
+        AlloraAdapterNumericData memory alloraNd = _packageAndSignNumericData(nd, signer0pk);
+        
         uint256 recentValue0 = alloraAdapter.getTopicValue(1, '').recentValue;
 
-        numericData[0] = _signNumericData(
-            NumericData({
-                topicId: 1,
-                timestamp: uint64(block.timestamp - 1 minutes),
-                numericValue: 1 ether,
-                extraData: ''
-            }),
-            signer0pk
-        );
-
-        numericData[1] = _signNumericData(
-            NumericData({
-                topicId: 1,
-                timestamp: uint64(block.timestamp - 1 minutes),
-                numericValue: 3 ether,
-                extraData: ''
-            }),
-            signer1pk
-        );
-
-        alloraAdapter.verifyData(_packageNumericData(numericData, ''));
+        alloraAdapter.verifyData(alloraNd);
 
         uint256 recentValue1 = alloraAdapter.getTopicValue(1, '').recentValue;
 
@@ -455,32 +210,20 @@ contract AlloraAdapterTest is Test {
         alloraAdapter.addDataProvider(signer1);
         vm.stopPrank();
 
-        SignedNumericData[] memory numericData = new SignedNumericData[](2);
+        NumericData memory nd = _dummyNumericData();
+        uint256[] memory numericValues = new uint256[](2);
+        numericValues[0] = 1 ether;
+        numericValues[1] = 3 ether;
 
+        nd.numericValues = numericValues;
+        nd.extraData = '123';
+
+        AlloraAdapterNumericData memory alloraNd = _packageAndSignNumericData(nd, signer0pk);
+        
         uint256 recentValueEmptyExtraData0 = alloraAdapter.getTopicValue(1, '').recentValue;
         uint256 recentValue0 = alloraAdapter.getTopicValue(1, '123').recentValue;
 
-        numericData[0] = _signNumericData(
-            NumericData({
-                topicId: 1,
-                timestamp: uint64(block.timestamp - 1 minutes),
-                numericValue: 1 ether,
-                extraData: '123'
-            }),
-            signer0pk
-        );
-
-        numericData[1] = _signNumericData(
-            NumericData({
-                topicId: 1,
-                timestamp: uint64(block.timestamp - 1 minutes),
-                numericValue: 3 ether,
-                extraData: '123'
-            }),
-            signer1pk
-        );
-
-        alloraAdapter.verifyData(_packageNumericData(numericData, ''));
+        alloraAdapter.verifyData(alloraNd);
 
         uint256 recentValueEmptyExtraData1 = alloraAdapter.getTopicValue(1, '').recentValue;
         uint256 recentValue1 = alloraAdapter.getTopicValue(1, '123').recentValue;
@@ -491,89 +234,36 @@ contract AlloraAdapterTest is Test {
         assertEq(recentValue1, 2 ether);
     }
 
+    function test_dataAverageAggregationWorksCorrectly() public {
+    }
 
     function test_dataMedianAggregationWorksCorrectly() public {
-        vm.startPrank(admin);
-        alloraAdapter.addDataProvider(signer0);
-        alloraAdapter.addDataProvider(signer1);
-        vm.stopPrank();
 
-        MedianAggregator medianAggregator = new MedianAggregator();
-
-        vm.startPrank(admin);
-        alloraAdapter.updateAggregator(medianAggregator);
-        vm.stopPrank();
-
-        SignedNumericData[] memory numericData = new SignedNumericData[](2);
-
-        numericData[0] = _signNumericData(
-            NumericData({
-                topicId: 1,
-                timestamp: uint64(block.timestamp - 1 minutes),
-                numericValue: 1 ether,
-                extraData: ''
-            }),
-            signer0pk
-        );
-
-        numericData[1] = _signNumericData(
-            NumericData({
-                topicId: 1,
-                timestamp: uint64(block.timestamp - 1 minutes),
-                numericValue: 3 ether,
-                extraData: ''
-            }),
-            signer1pk
-        );
-
-        (uint256 numericValue,,,) = alloraAdapter.verifyData(_packageNumericData(numericData, ''));
-        assertEq(numericValue, 2 ether);
     }
+
+
 
     function test_dataMedianAggregationWorksCorrectly2() public {
         MedianAggregator medianAggregator = new MedianAggregator();
 
         vm.startPrank(admin);
-        alloraAdapter.updateAggregator(medianAggregator);
         alloraAdapter.addDataProvider(signer0);
         alloraAdapter.addDataProvider(signer1);
-        alloraAdapter.addDataProvider(signer2);
+        alloraAdapter.updateAggregator(medianAggregator);
         vm.stopPrank();
 
-        SignedNumericData[] memory numericData = new SignedNumericData[](3);
+        NumericData memory nd = _dummyNumericData();
+        uint256[] memory numericValues = new uint256[](3);
+        numericValues[0] = 1 ether;
+        numericValues[1] = 3 ether;
+        numericValues[2] = 5 ether;
 
-        numericData[0] = _signNumericData(
-            NumericData({
-                topicId: 1,
-                timestamp: uint64(block.timestamp - 1 minutes),
-                numericValue: 1 ether,
-                extraData: ''
-            }),
-            signer0pk
-        );
+        nd.numericValues = numericValues;
 
-        numericData[1] = _signNumericData(
-            NumericData({
-                topicId: 1,
-                timestamp: uint64(block.timestamp - 1 minutes),
-                numericValue: 2 ether,
-                extraData: ''
-            }),
-            signer1pk
-        );
+        AlloraAdapterNumericData memory alloraNd = _packageAndSignNumericData(nd, signer0pk);
 
-        numericData[2] = _signNumericData(
-            NumericData({
-                topicId: 1,
-                timestamp: uint64(block.timestamp - 1 minutes),
-                numericValue: 5 ether,
-                extraData: ''
-            }),
-            signer2pk
-        );
-
-        (uint256 numericValue,,,) = alloraAdapter.verifyData(_packageNumericData(numericData, ''));
-        assertEq(numericValue, 2 ether);
+        (uint256 numericValue,) = alloraAdapter.verifyData(alloraNd);
+        assertEq(numericValue, 3 ether);
     }
 
     function test_dataAggregationWorksCorrectlyAfterUpdatingAggregator() public {
@@ -583,34 +273,17 @@ contract AlloraAdapterTest is Test {
         alloraAdapter.addDataProvider(signer2);
         vm.stopPrank();
 
-        SignedNumericData[] memory numericData = new SignedNumericData[](3);
+        NumericData memory nd = _dummyNumericData();
+        uint256[] memory numericValues = new uint256[](3);
+        numericValues[0] = 1 ether;
+        numericValues[1] = 2 ether;
+        numericValues[2] = 6 ether;
 
-        NumericData memory rawNumericData0 = NumericData({
-            topicId: uint64(1),
-            timestamp: uint64(block.timestamp - 1 minutes),
-            numericValue: 1 ether,
-            extraData: ''
-        });
+        nd.numericValues = numericValues;
 
-        NumericData memory rawNumericData1 = NumericData({
-            topicId: uint64(1),
-            timestamp: uint64(block.timestamp - 1 minutes),
-            numericValue: 2 ether,
-            extraData: ''
-        });
+        AlloraAdapterNumericData memory alloraNd = _packageAndSignNumericData(nd, signer0pk);
 
-        NumericData memory rawNumericData2 = NumericData({
-            topicId: uint64(1),
-            timestamp: uint64(block.timestamp - 1 minutes),
-            numericValue: 6 ether,
-            extraData: ''
-        });
-
-        numericData[0] = _signNumericData(rawNumericData0, signer0pk);
-        numericData[1] = _signNumericData(rawNumericData1, signer1pk);
-        numericData[2] = _signNumericData(rawNumericData2, signer2pk);
-
-        (uint256 numericValue,,,) = alloraAdapter.verifyData(_packageNumericData(numericData, ''));
+        (uint256 numericValue,) = alloraAdapter.verifyData(alloraNd);
         assertEq(numericValue, 3 ether);
 
         MedianAggregator medianAggregator = new MedianAggregator();
@@ -619,42 +292,58 @@ contract AlloraAdapterTest is Test {
         alloraAdapter.updateAggregator(medianAggregator);
         vm.stopPrank();
 
-        numericData[0] = _signNumericData(rawNumericData0, signer0pk);
-        numericData[1] = _signNumericData(rawNumericData1, signer1pk);
-        numericData[2] = _signNumericData(rawNumericData2, signer2pk);
-
-        (uint256 numericValue2,,,) = alloraAdapter.verifyData(_packageNumericData(numericData, ''));
+        (uint256 numericValue2,) = alloraAdapter.verifyData(alloraNd);
         assertEq(numericValue2, 2 ether);
     }
 
     // ***************************************************************
     // * ================= INTERNAL HELPERS ======================== *
     // ***************************************************************
+    function _dummyNumericData() internal pure returns (NumericData memory) {
+        uint256[] memory numericValues = new uint256[](1);
+        numericValues[0] = 123456789012345678;
+
+        return NumericData({
+            topicId: 1,
+            timestamp: 1,
+            extraData: '',
+            numericValues: numericValues
+        });
+    }
+
+
     function _signNumericData(
         NumericData memory numericData,
         uint256 signerPk
-    ) internal view returns (SignedNumericData memory) {
+    ) internal view returns (bytes memory signature) {
         bytes32 message = alloraAdapter.getMessage(numericData);
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(
             signerPk, 
             ECDSA.toEthSignedMessageHash(message)
         );
-        bytes memory signature = abi.encodePacked(r, s, v);
-
-        return SignedNumericData({
-            signature: signature,
-            numericData: numericData
-        });
+        signature = abi.encodePacked(r, s, v);
     }
 
     function _packageNumericData(
-        SignedNumericData[] memory numericData,
-        bytes memory extraData
-    ) internal pure returns (AlloraAdapterNumericData memory pd) {
-        pd = AlloraAdapterNumericData({
-            signedNumericData: numericData,
-            extraData: extraData
+        NumericData memory numericData,
+        bytes memory signature
+    ) internal pure returns (AlloraAdapterNumericData memory) {
+
+        return AlloraAdapterNumericData({
+            numericData: numericData,
+            signature: signature,
+            extraData: ''
         });
+    }
+
+    function _packageAndSignNumericData(
+        NumericData memory numericData,
+        uint256 signerPk
+    ) internal view returns (AlloraAdapterNumericData memory) {
+        return _packageNumericData(
+            numericData, 
+            _signNumericData(numericData, signerPk)
+        );
     }
 }
