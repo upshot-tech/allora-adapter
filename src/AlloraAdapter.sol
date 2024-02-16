@@ -279,31 +279,6 @@ contract AlloraAdapter is IAlloraAdapter, Ownable2Step, EIP712 {
     }
 
     /**
-     * @notice Check if two bytes calldata are equal
-     * 
-     * @param a The first bytes calldata
-     * @param b The second bytes calldata
-     * @return Whether the bytes calldata are equal
-     */
-    function _equalBytes(bytes memory a, bytes memory b) internal pure returns (bool) {
-        uint256 aLength = a.length;
-        // Check if their lengths are equal
-        if (aLength != b.length) {
-            return false;
-        }
-
-        // Compare byte-by-byte
-        for (uint i = 0; i < aLength; i++) {
-            if (a[i] != b[i]) {
-                return false;
-            }
-        }
-
-        // Return true if all bytes are equal
-        return true;
-    }
-
-    /**
      * @dev Returns the downcasted uint192 from uint256, reverting on
      * overflow (when the input is greater than largest uint192).
      *
