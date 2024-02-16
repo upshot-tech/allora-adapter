@@ -26,41 +26,37 @@ import type {
 export type NumericDataStruct = {
   topicId: BigNumberish;
   timestamp: BigNumberish;
-  numericValue: BigNumberish;
   extraData: BytesLike;
+  numericValues: BigNumberish[];
 };
 
 export type NumericDataStructOutput = [
   topicId: bigint,
   timestamp: bigint,
-  numericValue: bigint,
-  extraData: string
+  extraData: string,
+  numericValues: bigint[]
 ] & {
   topicId: bigint;
   timestamp: bigint;
-  numericValue: bigint;
   extraData: string;
+  numericValues: bigint[];
 };
-
-export type SignedNumericDataStruct = {
-  signature: BytesLike;
-  numericData: NumericDataStruct;
-};
-
-export type SignedNumericDataStructOutput = [
-  signature: string,
-  numericData: NumericDataStructOutput
-] & { signature: string; numericData: NumericDataStructOutput };
 
 export type AlloraAdapterNumericDataStruct = {
-  signedNumericData: SignedNumericDataStruct[];
+  signature: BytesLike;
+  numericData: NumericDataStruct;
   extraData: BytesLike;
 };
 
 export type AlloraAdapterNumericDataStructOutput = [
-  signedNumericData: SignedNumericDataStructOutput[],
+  signature: string,
+  numericData: NumericDataStructOutput,
   extraData: string
-] & { signedNumericData: SignedNumericDataStructOutput[]; extraData: string };
+] & {
+  signature: string;
+  numericData: NumericDataStructOutput;
+  extraData: string;
+};
 
 export interface AlloraAdapterBringPredictionOnChainExampleInterface
   extends Interface {
