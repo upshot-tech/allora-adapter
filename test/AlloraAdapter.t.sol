@@ -5,7 +5,6 @@ import "../lib/forge-std/src/Test.sol";
 import { ECDSA } from "../lib/openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
 import { AlloraAdapter, AlloraAdapterConstructorArgs } from "../src/AlloraAdapter.sol";
 import { 
-    SignedNumericData, 
     NumericData, 
     AlloraAdapterNumericData
 } from "../src/interface/IAlloraAdapter.sol";

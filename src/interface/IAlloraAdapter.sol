@@ -16,13 +16,9 @@ struct NumericData {
     bytes extraData;
 }
 
-struct SignedNumericData { 
-    bytes signature;
-    NumericData numericData;
-}
-
 struct AlloraAdapterNumericData {
-    SignedNumericData[] signedNumericData;
+    bytes signature;
+    NumericData[] numericData;
     bytes extraData;
 }
 
@@ -48,7 +44,7 @@ interface IAlloraAdapter {
     function verifyData(AlloraAdapterNumericData memory nd) external returns (
         uint256 numericValue, 
         uint256 topicId, 
-        address[] memory dataProviders, 
+        address dataProvider, 
         bytes memory extraData
     );
 
@@ -60,7 +56,7 @@ interface IAlloraAdapter {
     function verifyDataViewOnly(AlloraAdapterNumericData calldata pd) external view returns (
         uint256 numericValue, 
         uint256 topicId, 
-        address[] memory dataProviders, 
+        address dataProvider, 
         bytes memory extraData
     );
 

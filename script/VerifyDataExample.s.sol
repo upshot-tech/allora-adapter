@@ -6,7 +6,7 @@ import '../lib/forge-std/src/Script.sol';
 import { AlloraAdapter } from '../src/AlloraAdapter.sol';
 import { IAggregator } from '../src/interface/IAggregator.sol';
 import { IFeeHandler } from '../src/interface/IFeeHandler.sol';
-import { NumericData, AlloraAdapterNumericData, SignedNumericData } from '../src/interface/IAlloraAdapter.sol';
+import { NumericData, AlloraAdapterNumericData } from '../src/interface/IAlloraAdapter.sol';
 import { ECDSA } from '../lib/openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol';
 
 // run with 
