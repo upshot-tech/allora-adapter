@@ -36,20 +36,20 @@ export type AlloraAdapterConstructorArgsStructOutput = [
 export type NumericDataStruct = {
   topicId: BigNumberish;
   timestamp: BigNumberish;
-  numericValue: BigNumberish;
   extraData: BytesLike;
+  numericValues: BigNumberish[];
 };
 
 export type NumericDataStructOutput = [
   topicId: bigint,
   timestamp: bigint,
-  numericValue: bigint,
-  extraData: string
+  extraData: string,
+  numericValues: bigint[]
 ] & {
   topicId: bigint;
   timestamp: bigint;
-  numericValue: bigint;
   extraData: string;
+  numericValues: bigint[];
 };
 
 export type TopicValueStruct = {
@@ -62,25 +62,21 @@ export type TopicValueStructOutput = [
   recentValueTime: bigint
 ] & { recentValue: bigint; recentValueTime: bigint };
 
-export type SignedNumericDataStruct = {
+export type AlloraAdapterNumericDataStruct = {
   signature: BytesLike;
   numericData: NumericDataStruct;
-};
-
-export type SignedNumericDataStructOutput = [
-  signature: string,
-  numericData: NumericDataStructOutput
-] & { signature: string; numericData: NumericDataStructOutput };
-
-export type AlloraAdapterNumericDataStruct = {
-  signedNumericData: SignedNumericDataStruct[];
   extraData: BytesLike;
 };
 
 export type AlloraAdapterNumericDataStructOutput = [
-  signedNumericData: SignedNumericDataStructOutput[],
+  signature: string,
+  numericData: NumericDataStructOutput,
   extraData: string
-] & { signedNumericData: SignedNumericDataStructOutput[]; extraData: string };
+] & {
+  signature: string;
+  numericData: NumericDataStructOutput;
+  extraData: string;
+};
 
 export interface AlloraAdapterInterface extends Interface {
   getFunction(
@@ -353,19 +349,19 @@ export namespace AlloraAdapterV2AdapterVerifiedDataEvent {
   export type InputTuple = [
     topicId: BigNumberish,
     numericData: BigNumberish,
-    dataProviders: AddressLike[],
+    dataProvider: AddressLike,
     extraData: BytesLike
   ];
   export type OutputTuple = [
     topicId: bigint,
     numericData: bigint,
-    dataProviders: string[],
+    dataProvider: string,
     extraData: string
   ];
   export interface OutputObject {
     topicId: bigint;
     numericData: bigint;
-    dataProviders: string[];
+    dataProvider: string;
     extraData: string;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
@@ -545,27 +541,13 @@ export interface AlloraAdapter extends BaseContract {
 
   verifyData: TypedContractMethod<
     [nd: AlloraAdapterNumericDataStruct],
-    [
-      [bigint, bigint, string[], string] & {
-        numericValue: bigint;
-        topicId: bigint;
-        dataProviders: string[];
-        extraData: string;
-      }
-    ],
+    [[bigint, string] & { numericValue: bigint; dataProvider: string }],
     "nonpayable"
   >;
 
   verifyDataViewOnly: TypedContractMethod<
     [nd: AlloraAdapterNumericDataStruct],
-    [
-      [bigint, bigint, string[], string] & {
-        numericValue: bigint;
-        topicId: bigint;
-        dataProviders: string[];
-        extraData: string;
-      }
-    ],
+    [[bigint, string] & { numericValue: bigint; dataProvider: string }],
     "view"
   >;
 
@@ -663,28 +645,14 @@ export interface AlloraAdapter extends BaseContract {
     nameOrSignature: "verifyData"
   ): TypedContractMethod<
     [nd: AlloraAdapterNumericDataStruct],
-    [
-      [bigint, bigint, string[], string] & {
-        numericValue: bigint;
-        topicId: bigint;
-        dataProviders: string[];
-        extraData: string;
-      }
-    ],
+    [[bigint, string] & { numericValue: bigint; dataProvider: string }],
     "nonpayable"
   >;
   getFunction(
     nameOrSignature: "verifyDataViewOnly"
   ): TypedContractMethod<
     [nd: AlloraAdapterNumericDataStruct],
-    [
-      [bigint, bigint, string[], string] & {
-        numericValue: bigint;
-        topicId: bigint;
-        dataProviders: string[];
-        extraData: string;
-      }
-    ],
+    [[bigint, string] & { numericValue: bigint; dataProvider: string }],
     "view"
   >;
 
@@ -826,7 +794,7 @@ export interface AlloraAdapter extends BaseContract {
       AlloraAdapterV2AdapterOwnerUpdatedDataValiditySecondsEvent.OutputObject
     >;
 
-    "AlloraAdapterV2AdapterVerifiedData(uint256,uint256,address[],bytes)": TypedContractEvent<
+    "AlloraAdapterV2AdapterVerifiedData(uint256,uint256,address,bytes)": TypedContractEvent<
       AlloraAdapterV2AdapterVerifiedDataEvent.InputTuple,
       AlloraAdapterV2AdapterVerifiedDataEvent.OutputTuple,
       AlloraAdapterV2AdapterVerifiedDataEvent.OutputObject

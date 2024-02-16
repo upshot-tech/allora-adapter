@@ -6,7 +6,7 @@ import '../lib/forge-std/src/Script.sol';
 import { AlloraAdapter } from '../src/AlloraAdapter.sol';
 import { IAggregator } from '../src/interface/IAggregator.sol';
 import { IFeeHandler } from '../src/interface/IFeeHandler.sol';
-import { NumericData, AlloraAdapterNumericData, SignedNumericData } from '../src/interface/IAlloraAdapter.sol';
+import { NumericData, AlloraAdapterNumericData } from '../src/interface/IAlloraAdapter.sol';
 import { ECDSA } from '../lib/openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol';
 
 // run with 
@@ -23,10 +23,13 @@ contract VerifyDataExample is Script {
         vm.startBroadcast(scriptRunnerPrivateKey);
         console.log('Broadcast started by %s', scriptRunner);
 
+        uint256[] memory numericValues = new uint256[](1);
+        numericValues[0] = 123456789012345678;
+
         NumericData memory numericData = NumericData({
             topicId: 1,
             timestamp: block.timestamp - 5 minutes,
-            numericValue: 123456789012345678,
+            numericValues: numericValues,
             extraData: ''
         });
 
@@ -37,15 +40,9 @@ contract VerifyDataExample is Script {
             ECDSA.toEthSignedMessageHash(message)
         );
 
-        SignedNumericData[] memory signedNumericData = new SignedNumericData[](1);
-
-        signedNumericData[0] = SignedNumericData({
-            signature: abi.encodePacked(r, s, v),
-            numericData: numericData
-        });
-
         alloraAdapter.verifyData(AlloraAdapterNumericData({
-            signedNumericData: signedNumericData,
+            signature: abi.encodePacked(r, s, v),
+            numericData: numericData,
             extraData: ''
         }));
 

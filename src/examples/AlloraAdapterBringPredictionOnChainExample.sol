@@ -49,7 +49,7 @@ contract AlloraAdapterBringPredictionOnChainExample is Ownable2Step {
         uint256 protocolFunctionArgument,
         AlloraAdapterNumericData calldata alloraAdapterData
     ) external payable {
-        (uint256 value,,,) = IAlloraAdapter(0x4341a3F0a350C2428184a727BAb86e16D4ba7018).verifyData(alloraAdapterData);
+        (uint256 value,) = IAlloraAdapter(0x4341a3F0a350C2428184a727BAb86e16D4ba7018).verifyData(alloraAdapterData);
 
         _protocolFunctionRequiringPredictionValue(protocolFunctionArgument, value);
     }

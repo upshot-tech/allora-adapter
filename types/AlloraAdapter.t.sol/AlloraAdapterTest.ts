@@ -58,15 +58,10 @@ export interface AlloraAdapterTestInterface extends Interface {
       | "targetSelectors"
       | "targetSenders"
       | "test_canCallVerifyDataWithValidSignature"
-      | "test_canCallVerifyDataWithoutValidTopicId"
       | "test_cantCallVerifyDataWhenContractSwitchedOff"
-      | "test_cantCallVerifyDataWithDuplicateDataProvider"
       | "test_cantCallVerifyDataWithExpiredTime"
       | "test_cantCallVerifyDataWithFutureTime"
       | "test_cantCallVerifyDataWithInvalidDataProvider"
-      | "test_cantCallVerifyDataWithMismatchedExtraData"
-      | "test_cantCallVerifyDataWithMismatchedExtraData2"
-      | "test_cantCallVerifyDataWithMismatchedTopics"
       | "test_cantCallVerifyDataWithNoData"
       | "test_dataAggregationWorksCorrectlyAfterUpdatingAggregator"
       | "test_dataAverageAggregationWorksCorrectly"
@@ -148,15 +143,7 @@ export interface AlloraAdapterTestInterface extends Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "test_canCallVerifyDataWithoutValidTopicId",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
     functionFragment: "test_cantCallVerifyDataWhenContractSwitchedOff",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "test_cantCallVerifyDataWithDuplicateDataProvider",
     values?: undefined
   ): string;
   encodeFunctionData(
@@ -169,18 +156,6 @@ export interface AlloraAdapterTestInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "test_cantCallVerifyDataWithInvalidDataProvider",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "test_cantCallVerifyDataWithMismatchedExtraData",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "test_cantCallVerifyDataWithMismatchedExtraData2",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "test_cantCallVerifyDataWithMismatchedTopics",
     values?: undefined
   ): string;
   encodeFunctionData(
@@ -264,15 +239,7 @@ export interface AlloraAdapterTestInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "test_canCallVerifyDataWithoutValidTopicId",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
     functionFragment: "test_cantCallVerifyDataWhenContractSwitchedOff",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "test_cantCallVerifyDataWithDuplicateDataProvider",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -285,18 +252,6 @@ export interface AlloraAdapterTestInterface extends Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "test_cantCallVerifyDataWithInvalidDataProvider",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "test_cantCallVerifyDataWithMismatchedExtraData",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "test_cantCallVerifyDataWithMismatchedExtraData2",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "test_cantCallVerifyDataWithMismatchedTopics",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -707,19 +662,7 @@ export interface AlloraAdapterTest extends BaseContract {
     "nonpayable"
   >;
 
-  test_canCallVerifyDataWithoutValidTopicId: TypedContractMethod<
-    [],
-    [void],
-    "nonpayable"
-  >;
-
   test_cantCallVerifyDataWhenContractSwitchedOff: TypedContractMethod<
-    [],
-    [void],
-    "nonpayable"
-  >;
-
-  test_cantCallVerifyDataWithDuplicateDataProvider: TypedContractMethod<
     [],
     [void],
     "nonpayable"
@@ -738,24 +681,6 @@ export interface AlloraAdapterTest extends BaseContract {
   >;
 
   test_cantCallVerifyDataWithInvalidDataProvider: TypedContractMethod<
-    [],
-    [void],
-    "nonpayable"
-  >;
-
-  test_cantCallVerifyDataWithMismatchedExtraData: TypedContractMethod<
-    [],
-    [void],
-    "nonpayable"
-  >;
-
-  test_cantCallVerifyDataWithMismatchedExtraData2: TypedContractMethod<
-    [],
-    [void],
-    "nonpayable"
-  >;
-
-  test_cantCallVerifyDataWithMismatchedTopics: TypedContractMethod<
     [],
     [void],
     "nonpayable"
@@ -863,13 +788,7 @@ export interface AlloraAdapterTest extends BaseContract {
     nameOrSignature: "test_canCallVerifyDataWithValidSignature"
   ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
-    nameOrSignature: "test_canCallVerifyDataWithoutValidTopicId"
-  ): TypedContractMethod<[], [void], "nonpayable">;
-  getFunction(
     nameOrSignature: "test_cantCallVerifyDataWhenContractSwitchedOff"
-  ): TypedContractMethod<[], [void], "nonpayable">;
-  getFunction(
-    nameOrSignature: "test_cantCallVerifyDataWithDuplicateDataProvider"
   ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "test_cantCallVerifyDataWithExpiredTime"
@@ -879,15 +798,6 @@ export interface AlloraAdapterTest extends BaseContract {
   ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "test_cantCallVerifyDataWithInvalidDataProvider"
-  ): TypedContractMethod<[], [void], "nonpayable">;
-  getFunction(
-    nameOrSignature: "test_cantCallVerifyDataWithMismatchedExtraData"
-  ): TypedContractMethod<[], [void], "nonpayable">;
-  getFunction(
-    nameOrSignature: "test_cantCallVerifyDataWithMismatchedExtraData2"
-  ): TypedContractMethod<[], [void], "nonpayable">;
-  getFunction(
-    nameOrSignature: "test_cantCallVerifyDataWithMismatchedTopics"
   ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "test_cantCallVerifyDataWithNoData"

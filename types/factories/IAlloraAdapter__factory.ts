@@ -55,41 +55,34 @@ const _abi = [
         internalType: "struct AlloraAdapterNumericData",
         components: [
           {
-            name: "signedNumericData",
-            type: "tuple[]",
-            internalType: "struct SignedNumericData[]",
+            name: "signature",
+            type: "bytes",
+            internalType: "bytes",
+          },
+          {
+            name: "numericData",
+            type: "tuple",
+            internalType: "struct NumericData",
             components: [
               {
-                name: "signature",
+                name: "topicId",
+                type: "uint256",
+                internalType: "uint256",
+              },
+              {
+                name: "timestamp",
+                type: "uint256",
+                internalType: "uint256",
+              },
+              {
+                name: "extraData",
                 type: "bytes",
                 internalType: "bytes",
               },
               {
-                name: "numericData",
-                type: "tuple",
-                internalType: "struct NumericData",
-                components: [
-                  {
-                    name: "topicId",
-                    type: "uint256",
-                    internalType: "uint256",
-                  },
-                  {
-                    name: "timestamp",
-                    type: "uint256",
-                    internalType: "uint256",
-                  },
-                  {
-                    name: "numericValue",
-                    type: "uint256",
-                    internalType: "uint256",
-                  },
-                  {
-                    name: "extraData",
-                    type: "bytes",
-                    internalType: "bytes",
-                  },
-                ],
+                name: "numericValues",
+                type: "uint256[]",
+                internalType: "uint256[]",
               },
             ],
           },
@@ -108,19 +101,9 @@ const _abi = [
         internalType: "uint256",
       },
       {
-        name: "topicId",
-        type: "uint256",
-        internalType: "uint256",
-      },
-      {
-        name: "dataProviders",
-        type: "address[]",
-        internalType: "address[]",
-      },
-      {
-        name: "extraData",
-        type: "bytes",
-        internalType: "bytes",
+        name: "dataProvider",
+        type: "address",
+        internalType: "address",
       },
     ],
     stateMutability: "nonpayable",
@@ -135,41 +118,34 @@ const _abi = [
         internalType: "struct AlloraAdapterNumericData",
         components: [
           {
-            name: "signedNumericData",
-            type: "tuple[]",
-            internalType: "struct SignedNumericData[]",
+            name: "signature",
+            type: "bytes",
+            internalType: "bytes",
+          },
+          {
+            name: "numericData",
+            type: "tuple",
+            internalType: "struct NumericData",
             components: [
               {
-                name: "signature",
+                name: "topicId",
+                type: "uint256",
+                internalType: "uint256",
+              },
+              {
+                name: "timestamp",
+                type: "uint256",
+                internalType: "uint256",
+              },
+              {
+                name: "extraData",
                 type: "bytes",
                 internalType: "bytes",
               },
               {
-                name: "numericData",
-                type: "tuple",
-                internalType: "struct NumericData",
-                components: [
-                  {
-                    name: "topicId",
-                    type: "uint256",
-                    internalType: "uint256",
-                  },
-                  {
-                    name: "timestamp",
-                    type: "uint256",
-                    internalType: "uint256",
-                  },
-                  {
-                    name: "numericValue",
-                    type: "uint256",
-                    internalType: "uint256",
-                  },
-                  {
-                    name: "extraData",
-                    type: "bytes",
-                    internalType: "bytes",
-                  },
-                ],
+                name: "numericValues",
+                type: "uint256[]",
+                internalType: "uint256[]",
               },
             ],
           },
@@ -188,19 +164,9 @@ const _abi = [
         internalType: "uint256",
       },
       {
-        name: "topicId",
-        type: "uint256",
-        internalType: "uint256",
-      },
-      {
-        name: "dataProviders",
-        type: "address[]",
-        internalType: "address[]",
-      },
-      {
-        name: "extraData",
-        type: "bytes",
-        internalType: "bytes",
+        name: "dataProvider",
+        type: "address",
+        internalType: "address",
       },
     ],
     stateMutability: "view",

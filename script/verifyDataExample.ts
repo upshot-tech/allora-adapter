@@ -9,14 +9,14 @@ import * as dotenv from 'dotenv';
 
 const ALLORA_ADAPTER_NAME = 'AlloraAdapter'
 const ALLORA_ADAPTER_VERSION = 1
-const ALLORA_ADAPTER_ADDRESS = '0x238D0abD53fC68fAfa0CCD860446e381b400b5Be'
+const ALLORA_ADAPTER_ADDRESS = '0xBEd9F9B7509288fCfe4d49F761C625C832e6264A'
 const ALLORA_ADAPTER_CHAIN_ID = 11155111
 
 type NumericDataStruct = {
   topicId: BigNumberish
   timestamp: BigNumberish
-  numericValue: BigNumberish
   extraData: BytesLike
+  numericValues: BigNumberish[]
 };
 
 // hex string of the format '0xf9a0b2c3...'
@@ -43,7 +43,7 @@ const constructMessageLocally = async (
 
   const { chainId, alloraAdapterAddress } = config
 
-  const numericDataTypehash = keccak(toBytes('NumericData(uint256 topicId,uint256 timestamp,uint256 numericValue,bytes extraData)'))
+  const numericDataTypehash = keccak(toBytes('NumericData(uint256 topicId,uint256 timestamp,bytes extraData,uint256[] numericValues)'))
 
   const domainSeparator = keccak(coder.encode(
     ['bytes32', 'bytes32', 'bytes32', 'uint256', 'address'],
@@ -57,13 +57,13 @@ const constructMessageLocally = async (
   ))
 
   const intermediateHash = keccak(coder.encode(
-    ['bytes32', 'uint256', 'uint256', 'uint256', 'bytes'],
+    ['bytes32', 'uint256', 'uint256', 'bytes', 'bytes'],
     [
       numericDataTypehash,
       numericData.topicId, 
       numericData.timestamp, 
-      numericData.numericValue, 
-      numericData.extraData
+      numericData.extraData,
+      coder.encode(['uint256[]'], [numericData.numericValues]), 
     ]
   ))
 
@@ -93,7 +93,6 @@ const signMessageLocally = async (
   const messageBytes = hexStringToByteArray(message)
 
   return await wallet.signMessage(messageBytes)
-
 }
 
 const run = async () => {
@@ -110,8 +109,8 @@ const run = async () => {
   const numericData: NumericDataStruct = {
     topicId: 1,
     timestamp: Math.floor(Date.now() / 1000) - (60 * 5),
-    numericValue: '123456789012345678',
     extraData: ethers.toUtf8Bytes(''),
+    numericValues: ['123456789012345678'],
   }
 
   console.info('verifying numericData')
@@ -135,7 +134,8 @@ const run = async () => {
   }
 
   const tx = await alloraAdapter.verifyData({
-    signedNumericData:[{ signature, numericData }],
+    numericData: numericData, 
+    signature: signature,
     extraData: ethers.toUtf8Bytes(''),
   })
   console.info('tx hash:', tx.hash) 

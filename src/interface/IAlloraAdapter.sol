@@ -12,17 +12,13 @@ pragma solidity ^0.8.0;
 struct NumericData {
     uint256 topicId;
     uint256 timestamp;
-    uint256 numericValue; 
     bytes extraData;
-}
-
-struct SignedNumericData { 
-    bytes signature;
-    NumericData numericData;
+    uint256[] numericValues; 
 }
 
 struct AlloraAdapterNumericData {
-    SignedNumericData[] signedNumericData;
+    bytes signature;
+    NumericData numericData;
     bytes extraData;
 }
 
@@ -47,9 +43,7 @@ interface IAlloraAdapter {
      */
     function verifyData(AlloraAdapterNumericData memory nd) external returns (
         uint256 numericValue, 
-        uint256 topicId, 
-        address[] memory dataProviders, 
-        bytes memory extraData
+        address dataProvider 
     );
 
     /**
@@ -59,9 +53,7 @@ interface IAlloraAdapter {
      */
     function verifyDataViewOnly(AlloraAdapterNumericData calldata pd) external view returns (
         uint256 numericValue, 
-        uint256 topicId, 
-        address[] memory dataProviders, 
-        bytes memory extraData
+        address dataProvider 
     );
 
     /**

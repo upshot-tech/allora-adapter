@@ -24,16 +24,21 @@ contract AlloraAdapter is IAlloraAdapter, Ownable2Step, EIP712 {
     /// @dev Whether the AlloraAdapter contract is switched on and usable
     bool public switchedOn = true;
 
+    /// @dev The valid data providers
     mapping(address dataProvider => bool) public validDataProvider;
 
+    /// @dev The typehash for the numeric data
     bytes32 public constant NUMERIC_DATA_TYPEHASH = keccak256(
-        "NumericData(uint256 topicId,uint256 timestamp,uint256 numericValue,bytes extraData)"
+        "NumericData(uint256 topicId,uint256 timestamp,bytes extraData,uint256[] numericValues)"
     );
 
+    /// @dev The aggregator to use for aggregating numeric data
     IAggregator public aggregator;
 
+    /// @dev The number of seconds data is valid for  
     uint48 public dataValiditySeconds = 1 hours;
 
+    /// @dev The constructor
     constructor(AlloraAdapterConstructorArgs memory args) 
         EIP712("AlloraAdapter", "1") 
     {
@@ -47,7 +52,7 @@ contract AlloraAdapter is IAlloraAdapter, Ownable2Step, EIP712 {
     // ***************************************************************
 
     // main interface events
-    event AlloraAdapterV2AdapterVerifiedData(uint256 topicId, uint256 numericData, address[] dataProviders, bytes extraData);
+    event AlloraAdapterV2AdapterVerifiedData(uint256 topicId, uint256 numericData, address dataProvider, bytes extraData);
 
     // adapter admin updates
     event AlloraAdapterV2AdapterAdminTurnedOff();
@@ -64,11 +69,8 @@ contract AlloraAdapter is IAlloraAdapter, Ownable2Step, EIP712 {
     // verification errors
     error AlloraAdapterV2NotSwitchedOn();
     error AlloraAdapterV2NoDataProvided();
-    error AlloraAdapterV2TopicMismatch();
-    error AlloraAdapterV2ExtraDataMismatch();
     error AlloraAdapterV2InvalidDataTime();
     error AlloraAdapterV2InvalidDataProvider();
-    error AlloraAdapterV2DuplicateDataProvider();
 
     // parameter update errors
     error AlloraAdapterV2InvalidAggregator();
@@ -85,18 +87,21 @@ contract AlloraAdapter is IAlloraAdapter, Ownable2Step, EIP712 {
         AlloraAdapterNumericData memory nd
     ) external override returns (
         uint256 numericValue, 
-        uint256 topicId, 
-        address[] memory dataProviders, 
-        bytes memory extraData
+        address dataProvider 
     ) {
-        (numericValue, topicId, dataProviders, extraData) = _verifyData(nd);
+        (numericValue, dataProvider) = _verifyData(nd);
 
-        topicValue[topicId][extraData] = TopicValue({
+        topicValue[nd.numericData.topicId][nd.numericData.extraData] = TopicValue({
             recentValue: _toUint192(numericValue),
             recentValueTime: _toUint64(block.timestamp)
         });
 
-        emit AlloraAdapterV2AdapterVerifiedData(topicId, numericValue, dataProviders, extraData);
+        emit AlloraAdapterV2AdapterVerifiedData(
+            nd.numericData.topicId, 
+            numericValue, 
+            dataProvider, 
+            nd.numericData.extraData
+        );
     }
 
     ///@inheritdoc IAlloraAdapter
@@ -104,11 +109,9 @@ contract AlloraAdapter is IAlloraAdapter, Ownable2Step, EIP712 {
         AlloraAdapterNumericData memory nd
     ) external view override returns (
         uint256 numericValue, 
-        uint256 topicId, 
-        address[] memory dataProviders, 
-        bytes memory extraData
+        address dataProvider
     ) {
-        (numericValue, topicId, dataProviders, extraData) = _verifyData(nd);
+        (numericValue, dataProvider) = _verifyData(nd);
     }
 
     /**
@@ -120,75 +123,37 @@ contract AlloraAdapter is IAlloraAdapter, Ownable2Step, EIP712 {
         AlloraAdapterNumericData memory nd
     ) internal view returns (
         uint256 numericValue, 
-        uint256 topicId, 
-        address[] memory dataProviders, 
-        bytes memory extraData
+        address dataProvider
     ) {
         if (!switchedOn) {
             revert AlloraAdapterV2NotSwitchedOn();
         }
 
-        uint256 dataCount = nd.signedNumericData.length;
+        uint256 dataCount = nd.numericData.numericValues.length;
 
         if (dataCount == 0) {
             revert AlloraAdapterV2NoDataProvided();
         }
 
-        topicId = nd.signedNumericData[0].numericData.topicId;
-        extraData = nd.signedNumericData[0].numericData.extraData;
-
-        uint256[] memory dataList = new uint256[](dataCount);
-        dataProviders = new address[](dataCount);
-        NumericData memory numericData;
-        uint64 _dataValiditySeconds = dataValiditySeconds;
-
-        for(uint256 i = 0; i < dataCount;) {
-            numericData = nd.signedNumericData[i].numericData;
-
-            if (numericData.topicId != topicId) {
-                revert AlloraAdapterV2TopicMismatch();
-            }
-
-            if (!_equalBytes(numericData.extraData, extraData)) {
-                revert AlloraAdapterV2ExtraDataMismatch();
-            }
-
-            if (
-                block.timestamp < numericData.timestamp ||
-                numericData.timestamp + _dataValiditySeconds < block.timestamp
-            ) {
-                revert AlloraAdapterV2InvalidDataTime();
-            }
-
-            address dataProvider = ECDSA.recover(
-                ECDSA.toEthSignedMessageHash(getMessage(numericData)), 
-                nd.signedNumericData[i].signature
-            );
-
-            if (!_isOwnerOrValidDataProvider(dataProvider)) {
-                revert AlloraAdapterV2InvalidDataProvider();
-            }
-
-            for (uint256 j = 0; j < i;) {
-                if (dataProvider == dataProviders[j]) {
-                    revert AlloraAdapterV2DuplicateDataProvider();
-                }
-
-                unchecked { 
-                    ++j; 
-                }
-            }
-
-            dataProviders[i] = dataProvider;
-
-            dataList[i] = numericData.numericValue;
-
-            unchecked {
-                ++i;
-            }
+        if (
+            block.timestamp < nd.numericData.timestamp ||
+            nd.numericData.timestamp + dataValiditySeconds < block.timestamp
+        ) {
+            revert AlloraAdapterV2InvalidDataTime();
         }
 
-        numericValue = aggregator.aggregate(dataList, nd.extraData);
+        dataProvider = ECDSA.recover(
+            ECDSA.toEthSignedMessageHash(getMessage(nd.numericData)), 
+            nd.signature
+        );
+
+        if (!_isOwnerOrValidDataProvider(dataProvider)) {
+            revert AlloraAdapterV2InvalidDataProvider();
+        }
+
+        numericValue = dataCount == 1
+            ? nd.numericData.numericValues[0]
+            : aggregator.aggregate(nd.numericData.numericValues, nd.extraData);
     }
 
     // ***************************************************************
@@ -200,15 +165,14 @@ contract AlloraAdapter is IAlloraAdapter, Ownable2Step, EIP712 {
      * 
      * @param numericData The numerical data to verify
      */
-    function getMessage(
-        NumericData memory numericData
-    ) public view returns (bytes32) {
+
+    function getMessage(NumericData memory numericData) public view returns (bytes32) {
         return _hashTypedDataV4(keccak256(abi.encode(
             NUMERIC_DATA_TYPEHASH,
             numericData.topicId,
             numericData.timestamp,
-            numericData.numericValue,
-            numericData.extraData
+            numericData.extraData,
+            abi.encode(numericData.numericValues)
         )));
     }
 
@@ -312,31 +276,6 @@ contract AlloraAdapter is IAlloraAdapter, Ownable2Step, EIP712 {
      */
     function _isOwnerOrValidDataProvider(address dataProvider) internal view returns (bool) {
         return dataProvider == owner() || validDataProvider[dataProvider];
-    }
-
-    /**
-     * @notice Check if two bytes calldata are equal
-     * 
-     * @param a The first bytes calldata
-     * @param b The second bytes calldata
-     * @return Whether the bytes calldata are equal
-     */
-    function _equalBytes(bytes memory a, bytes memory b) internal pure returns (bool) {
-        uint256 aLength = a.length;
-        // Check if their lengths are equal
-        if (aLength != b.length) {
-            return false;
-        }
-
-        // Compare byte-by-byte
-        for (uint i = 0; i < aLength; i++) {
-            if (a[i] != b[i]) {
-                return false;
-            }
-        }
-
-        // Return true if all bytes are equal
-        return true;
     }
 
     /**
