@@ -172,7 +172,7 @@ contract AlloraAdapter is IAlloraAdapter, Ownable2Step, EIP712 {
             numericData.topicId,
             numericData.timestamp,
             numericData.extraData,
-            keccak256(abi.encodePacked(numericData.numericValues))
+            abi.encode(numericData.numericValues)
         )));
     }
 
